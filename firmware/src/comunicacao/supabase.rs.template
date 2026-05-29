@@ -1,0 +1,593 @@
+//! Cliente Supabase via HTTP/HTTPS usando `esp-idf-svc::http::client`.
+//!
+//! Auth: usa publishable key (anon) em headers `apikey` e `Authorization: Bearer ...`.
+//! TLS: usa o cert bundle global do ESP-IDF (CONFIG_MBEDTLS_CERTIFICATE_BUNDLE=y),
+//! que ja inclui as CAs raiz padrao -- nao precisa colar certificado do Supabase.
+
+use anyhow::{anyhow, Result};
+use embedded_svc::http::client::Client;
+use embedded_svc::http::Method;
+use embedded_svc::io::Write;
+use esp_idf_svc::http::client::{Configuration as HttpConfig, EspHttpConnection};
+
+use crate::config_nuvem::{RESIDENCIA_ID, SUPABASE_ANON_KEY, SUPABASE_URL, TOMADA_ID};
+use crate::persistencia::medicao::Medicao;
+use crate::persistencia::config::Tomada;
+
+/// Faz POST de uma medicao para a tabela `medicoes` do Supabase.
+/// Retorna Ok(()) se 2xx; Err caso contrario.
+pub fn inserir_medicao(m: &Medicao) -> Result<()> {
+    // URL e bearer construidos uma vez por chamada
+    let url = format!("{}/rest/v1/medicoes", SUPABASE_URL);
+    let bearer = format!("Bearer {}", SUPABASE_ANON_KEY);
+
+    // Body JSON construido com format! (evita bug LLVM Xtensa na desserializacao de f32 do serde_json).
+    // Formato `:.2` para p_medida = 2 casas decimais (ex.: "82.40").
+    let body = format!(
+        r#"{{"tomada_id":"{}","timestamp":{},"p_medida":{:.2},"estado":"{}","rele_aberto":{}}}"#,
+        TOMADA_ID,
+        m.timestamp,
+        m.p_medida,
+        m.estado.as_str(),
+        m.rele_aberto,
+    );
+
+    let content_length = body.len().to_string();
+
+    let headers: [(&str, &str); 5] = [
+        ("apikey", SUPABASE_ANON_KEY),
+        ("Authorization", bearer.as_str()),
+        ("Content-Type", "application/json"),
+        ("Prefer", "return=minimal"),       // Supabase nao devolve a linha inserida
+        ("Content-Length", content_length.as_str()),
+    ];
+
+    let config = HttpConfig {
+        use_global_ca_store: true,
+        crt_bundle_attach: Some(esp_idf_svc::sys::esp_crt_bundle_attach),
+        timeout: Some(std::time::Duration::from_secs(10)),
+        ..Default::default()
+    };
+
+    let mut client = Client::wrap(EspHttpConnection::new(&config)?);
+
+    log::info!("[SUPABASE] POST {} ts={} estado={}", url, m.timestamp, m.estado.as_str());
+
+    let mut request = client.request(Method::Post, &url, &headers)?;
+    request.write_all(body.as_bytes())?;
+    request.flush()?;
+
+    let response = request.submit()?;
+    let status = response.status();
+
+    if (200..=299).contains(&status) {
+        log::info!("[SUPABASE] HTTP {} -- ts={} ok", status, m.timestamp);
+        Ok(())
+    } else {
+        Err(anyhow!("[SUPABASE] HTTP {} (esperado 2xx)", status))
+    }
+}
+
+/// POST de um evento (chaveamento, inviabilidade, etc) na tabela `eventos`.
+pub fn inserir_evento(
+    timestamp: i64,
+    tipo: &str,
+    severidade: &str,
+    titulo: &str,
+    detalhes: &str,
+) -> Result<()> {
+    let url = format!("{}/rest/v1/eventos", SUPABASE_URL);
+    let bearer = format!("Bearer {}", SUPABASE_ANON_KEY);
+
+    // JSON manual (escapamos aspas em titulo/detalhes pra evitar quebrar o JSON)
+    let body = format!(
+        r#"{{"tomada_id":"{}","timestamp":{},"tipo":"{}","severidade":"{}","titulo":"{}","detalhes":"{}"}}"#,
+        TOMADA_ID,
+        timestamp,
+        tipo,
+        severidade,
+        escape_json(titulo),
+        escape_json(detalhes),
+    );
+
+    enviar_post(&url, &bearer, &body, &format!("evento {tipo}"))
+}
+
+/// PATCH em `tomadas` atualizando o estado atual decidido pelo solver.
+/// NAO toca em `rele_aberto` (preserva intencao do usuario via dashboard).
+pub fn atualizar_estado_tomada(estado: &str) -> Result<()> {
+    let url = format!("{}/rest/v1/tomadas?id=eq.{}", SUPABASE_URL, TOMADA_ID);
+    let bearer = format!("Bearer {}", SUPABASE_ANON_KEY);
+    let body = format!(r#"{{"estado":"{estado}"}}"#);
+    enviar_patch(&url, &bearer, &body, "atualiza estado")
+}
+
+/// PATCH em `tomadas` publicando os valores calibrados de consumo standby (cstd) e
+/// consumo ativo (con). O dashboard usa esses valores para calcular a economia estimada.
+/// So deve ser chamado quando ambos os valores existem (Some) -- cold start retorna None.
+pub fn atualizar_calibracao(c_std: f32, c_on: f32) -> Result<()> {
+    let url = format!("{}/rest/v1/tomadas?id=eq.{}", SUPABASE_URL, TOMADA_ID);
+    let bearer = format!("Bearer {}", SUPABASE_ANON_KEY);
+    // Cast f32 -> i32 no log: workaround bug Display::fmt no Xtensa.
+    log::info!("[CALIB] sync supabase: cstd={}W con={}W", c_std as i32, c_on as i32);
+    let body = format!(r#"{{"cstd":{:.2},"con":{:.2}}}"#, c_std, c_on);
+    enviar_patch(&url, &bearer, &body, "calibracao")
+}
+
+/// PATCH em `tomadas.config` publicando o `p_limiar_detectado_auto` calculado pelo firmware.
+/// Permite que o dashboard exiba o valor detectado sem configuracao manual do usuario.
+/// Nao altera `config_version` (campo interno do firmware, nao do usuario).
+/// Retorna Ok(()) sem fazer nada se `p_limiar_detectado_auto` for None.
+pub fn atualizar_p_limiar_auto(config: &Tomada) -> Result<()> {
+    let p_auto = match config.p_limiar_detectado_auto {
+        Some(v) => v,
+        None => return Ok(()),
+    };
+
+    let url = format!("{}/rest/v1/tomadas?id=eq.{}", SUPABASE_URL, TOMADA_ID);
+    let bearer = format!("Bearer {}", SUPABASE_ANON_KEY);
+
+    // Serializa config manualmente: evita bug LLVM Xtensa em serde_json f32.
+    let schedule_str: String = config
+        .schedule
+        .iter()
+        .map(|b| if *b { "true" } else { "false" })
+        .collect::<Vec<_>>()
+        .join(",");
+
+    let pi_str: String = config
+        .pi_historico
+        .iter()
+        .map(|v| {
+            let cents = (*v * 100.0) as i32;
+            format!("{}.{:02}", cents / 100, (cents % 100).unsigned_abs())
+        })
+        .collect::<Vec<_>>()
+        .join(",");
+
+    let w_i_int = config.w_i as i32;
+    let p_max_int = config.p_max as i32;
+
+    let body = format!(
+        r#"{{"config":{{"p_limiar_detectado_auto":{:.2},"t_limite":{},"is_critical":{},"schedule":[{}],"w_i":{},"p_max":{},"pi_historico":[{}]}}}}"#,
+        p_auto,
+        config.t_limite,
+        config.is_critical,
+        schedule_str,
+        w_i_int,
+        p_max_int,
+        pi_str,
+    );
+
+    // Cast f32 -> i32 no log: workaround bug Display::fmt no Xtensa.
+    log::info!("[AUTO-P] sync supabase: {}W", p_auto as i32);
+    enviar_patch(&url, &bearer, &body, "p_limiar_auto")
+}
+
+/// Le `rele_aberto` do registro da tomada no Supabase (comando manual do dashboard).
+/// Retorna Some(bool) se conseguiu ler, None se falhou.
+pub fn obter_rele_aberto() -> Option<bool> {
+    let url = format!("{}/rest/v1/tomadas?id=eq.{}&select=rele_aberto", SUPABASE_URL, TOMADA_ID);
+    let bearer = format!("Bearer {}", SUPABASE_ANON_KEY);
+    let content_length = "0";
+
+    let headers: [(&str, &str); 4] = [
+        ("apikey", SUPABASE_ANON_KEY),
+        ("Authorization", bearer.as_str()),
+        ("Content-Type", "application/json"),
+        ("Content-Length", content_length),
+    ];
+
+    let config = HttpConfig {
+        use_global_ca_store: true,
+        crt_bundle_attach: Some(esp_idf_svc::sys::esp_crt_bundle_attach),
+        timeout: Some(std::time::Duration::from_secs(10)),
+        ..Default::default()
+    };
+
+    let conn = match EspHttpConnection::new(&config) {
+        Ok(c) => c,
+        Err(e) => {
+            log::warn!("[SUPABASE] obter_rele_aberto: conexao falhou: {e:?}");
+            return None;
+        }
+    };
+    let mut client = Client::wrap(conn);
+
+    let req = match client.request(Method::Get, &url, &headers) {
+        Ok(r) => r,
+        Err(e) => {
+            log::warn!("[SUPABASE] obter_rele_aberto: request falhou: {e:?}");
+            return None;
+        }
+    };
+
+    let mut response = match req.submit() {
+        Ok(r) => r,
+        Err(e) => {
+            log::warn!("[SUPABASE] obter_rele_aberto: submit falhou: {e:?}");
+            return None;
+        }
+    };
+
+    let status = response.status();
+    if !(200..=299).contains(&status) {
+        log::warn!("[SUPABASE] obter_rele_aberto: HTTP {status}");
+        return None;
+    }
+
+    // Le a resposta JSON: [ { "rele_aberto": true/false } ]
+    let mut body = Vec::new();
+    let mut buf = [0u8; 256];
+    loop {
+        match embedded_svc::io::Read::read(&mut response, &mut buf) {
+            Ok(n) if n == 0 => break,
+            Ok(n) => body.extend_from_slice(&buf[..n]),
+            Err(e) => {
+                log::warn!("[SUPABASE] obter_rele_aberto: leitura falhou: {e:?}");
+                return None;
+            }
+        }
+    }
+
+    let body_str = match std::str::from_utf8(&body) {
+        Ok(s) => s,
+        Err(e) => {
+            log::warn!("[SUPABASE] obter_rele_aberto: utf8 falhou: {e:?}");
+            return None;
+        }
+    };
+
+    // Faz parse simples do JSON (evita serde por causa do bug LLVM Xtensa)
+    // Procura por "rele_aberto": true ou "rele_aberto": false
+    if body_str.contains("\"rele_aberto\":true") {
+        Some(true)
+    } else if body_str.contains("\"rele_aberto\":false") {
+        Some(false)
+    } else {
+        log::warn!("[SUPABASE] obter_rele_aberto: nao encontrou campo na resposta: {body_str}");
+        None
+    }
+}
+
+/// PATCH em `tomadas` publicando a leitura de potencia atual e o timestamp
+/// do ultimo uso ativo. Outros ESP32s usam esses valores para montar o
+/// solver multi-tomada e calcular F_i remoto.
+pub fn atualizar_p_medida_atual(p_atual: f32, ultimo_uso_ativo_ts: i64) -> Result<()> {
+    let url = format!("{}/rest/v1/tomadas?id=eq.{}", SUPABASE_URL, TOMADA_ID);
+    let bearer = format!("Bearer {}", SUPABASE_ANON_KEY);
+    let body = format!(
+        r#"{{"p_medida_atual":{:.2},"ultimo_uso_ativo_ts":{}}}"#,
+        p_atual, ultimo_uso_ativo_ts,
+    );
+    enviar_patch(&url, &bearer, &body, "p_medida_atual")
+}
+
+/// Dado remoto de uma tomada da residencia (parseado do GET).
+pub struct TomadaRemota {
+    pub id: String,
+    pub cstd: f32,
+    pub con: f32,
+    pub p_medida_atual: f32,
+    pub ultimo_uso_ativo_ts: i64,
+    pub config: crate::persistencia::config::Tomada,
+}
+
+/// Busca todas as tomadas da residencia no Supabase.
+/// Cada ESP32 usa essa lista para montar o SolverInput multi-tomada.
+pub fn buscar_todas_tomadas() -> Option<Vec<TomadaRemota>> {
+    let url = format!(
+        "{}/rest/v1/tomadas?residencia_id=eq.{}&select=id,config,cstd,con,p_medida_atual,ultimo_uso_ativo_ts",
+        SUPABASE_URL, RESIDENCIA_ID
+    );
+    let bearer = format!("Bearer {}", SUPABASE_ANON_KEY);
+
+    let headers: [(&str, &str); 4] = [
+        ("apikey", SUPABASE_ANON_KEY),
+        ("Authorization", bearer.as_str()),
+        ("Content-Type", "application/json"),
+        ("Content-Length", "0"),
+    ];
+
+    let config = HttpConfig {
+        use_global_ca_store: true,
+        crt_bundle_attach: Some(esp_idf_svc::sys::esp_crt_bundle_attach),
+        timeout: Some(std::time::Duration::from_secs(10)),
+        ..Default::default()
+    };
+
+    let conn = match EspHttpConnection::new(&config) {
+        Ok(c) => c,
+        Err(e) => {
+            log::warn!("[SUPABASE] buscar_todas_tomadas: conexao falhou: {e:?}");
+            return None;
+        }
+    };
+    let mut client = Client::wrap(conn);
+
+    let req = match client.request(Method::Get, &url, &headers) {
+        Ok(r) => r,
+        Err(e) => {
+            log::warn!("[SUPABASE] buscar_todas_tomadas: request falhou: {e:?}");
+            return None;
+        }
+    };
+
+    let mut response = match req.submit() {
+        Ok(r) => r,
+        Err(e) => {
+            log::warn!("[SUPABASE] buscar_todas_tomadas: submit falhou: {e:?}");
+            return None;
+        }
+    };
+
+    let status = response.status();
+    if !(200..=299).contains(&status) {
+        log::warn!("[SUPABASE] buscar_todas_tomadas: HTTP {status}");
+        return None;
+    }
+
+    let mut body = Vec::new();
+    let mut buf = [0u8; 2048];
+    loop {
+        match embedded_svc::io::Read::read(&mut response, &mut buf) {
+            Ok(0) => break,
+            Ok(n) => body.extend_from_slice(&buf[..n]),
+            Err(e) => {
+                log::warn!("[SUPABASE] buscar_todas_tomadas: leitura falhou: {e:?}");
+                return None;
+            }
+        }
+    }
+
+    let body_str = match std::str::from_utf8(&body) {
+        Ok(s) => s,
+        Err(_) => return None,
+    };
+
+    // Parse array JSON via serde_json
+    #[derive(serde::Deserialize)]
+    struct Row {
+        id: String,
+        #[serde(default)]
+        cstd: f32,
+        #[serde(default)]
+        con: f32,
+        #[serde(default)]
+        p_medida_atual: f32,
+        #[serde(default)]
+        ultimo_uso_ativo_ts: i64,
+        config: crate::persistencia::config::Tomada,
+    }
+
+    let rows: Vec<Row> = match serde_json::from_str(body_str) {
+        Ok(r) => r,
+        Err(e) => {
+            log::warn!("[SUPABASE] buscar_todas_tomadas: parse falhou: {e:?}");
+            return None;
+        }
+    };
+
+    let result = rows
+        .into_iter()
+        .map(|r| TomadaRemota {
+            id: r.id,
+            cstd: r.cstd,
+            con: r.con,
+            p_medida_atual: r.p_medida_atual,
+            ultimo_uso_ativo_ts: r.ultimo_uso_ativo_ts,
+            config: r.config,
+        })
+        .collect();
+
+    Some(result)
+}
+
+// ============================================================
+// Helpers internos
+// ============================================================
+
+fn enviar_post(url: &str, bearer: &str, body: &str, ctx: &str) -> Result<()> {
+    enviar_request(Method::Post, url, bearer, body, ctx)
+}
+
+fn enviar_patch(url: &str, bearer: &str, body: &str, ctx: &str) -> Result<()> {
+    enviar_request(Method::Patch, url, bearer, body, ctx)
+}
+
+fn enviar_request(method: Method, url: &str, bearer: &str, body: &str, ctx: &str) -> Result<()> {
+    let content_length = body.len().to_string();
+    let headers: [(&str, &str); 5] = [
+        ("apikey", SUPABASE_ANON_KEY),
+        ("Authorization", bearer),
+        ("Content-Type", "application/json"),
+        ("Prefer", "return=minimal"),
+        ("Content-Length", content_length.as_str()),
+    ];
+    let config = HttpConfig {
+        use_global_ca_store: true,
+        crt_bundle_attach: Some(esp_idf_svc::sys::esp_crt_bundle_attach),
+        timeout: Some(std::time::Duration::from_secs(10)),
+        ..Default::default()
+    };
+    let mut client = Client::wrap(EspHttpConnection::new(&config)?);
+
+    let mut req = client.request(method, url, &headers)?;
+    req.write_all(body.as_bytes())?;
+    req.flush()?;
+    let response = req.submit()?;
+    let status = response.status();
+
+    if (200..=299).contains(&status) {
+        log::info!("[SUPABASE] {ctx} HTTP {status} ok");
+        Ok(())
+    } else {
+        Err(anyhow!("[SUPABASE] {ctx} HTTP {status} (esperado 2xx)"))
+    }
+}
+
+/// Le `config` e `config_version` do registro da tomada no Supabase.
+/// Retorna Some(Tomada) se havia versao mais nova no servidor, None caso contrario.
+pub fn buscar_config_remota() -> Option<Tomada> {
+    let config_local = match crate::persistencia::config::load() {
+        Ok(c) => c,
+        Err(_) => {
+            log::warn!("[SUPABASE] buscar_config_remota: falhou carregar config local");
+            return None;
+        }
+    };
+
+    let url = format!(
+        "{}/rest/v1/tomadas?id=eq.{}&select=config,config_version",
+        SUPABASE_URL, TOMADA_ID
+    );
+    let bearer = format!("Bearer {}", SUPABASE_ANON_KEY);
+    let content_length = "0";
+
+    let headers: [(&str, &str); 4] = [
+        ("apikey", SUPABASE_ANON_KEY),
+        ("Authorization", bearer.as_str()),
+        ("Content-Type", "application/json"),
+        ("Content-Length", content_length),
+    ];
+
+    let config = HttpConfig {
+        use_global_ca_store: true,
+        crt_bundle_attach: Some(esp_idf_svc::sys::esp_crt_bundle_attach),
+        timeout: Some(std::time::Duration::from_secs(10)),
+        ..Default::default()
+    };
+
+    let conn = match EspHttpConnection::new(&config) {
+        Ok(c) => c,
+        Err(e) => {
+            log::warn!("[SUPABASE] buscar_config_remota: conexao falhou: {e:?}");
+            return None;
+        }
+    };
+    let mut client = Client::wrap(conn);
+
+    let req = match client.request(Method::Get, &url, &headers) {
+        Ok(r) => r,
+        Err(e) => {
+            log::warn!("[SUPABASE] buscar_config_remota: request falhou: {e:?}");
+            return None;
+        }
+    };
+
+    let mut response = match req.submit() {
+        Ok(r) => r,
+        Err(e) => {
+            log::warn!("[SUPABASE] buscar_config_remota: submit falhou: {e:?}");
+            return None;
+        }
+    };
+
+    let status = response.status();
+    if !(200..=299).contains(&status) {
+        log::warn!("[SUPABASE] buscar_config_remota: HTTP {status}");
+        return None;
+    }
+
+    // Le a resposta JSON
+    let mut body = Vec::new();
+    let mut buf = [0u8; 256];
+    loop {
+        match embedded_svc::io::Read::read(&mut response, &mut buf) {
+            Ok(n) if n == 0 => break,
+            Ok(n) => body.extend_from_slice(&buf[..n]),
+            Err(e) => {
+                log::warn!("[SUPABASE] buscar_config_remota: leitura falhou: {e:?}");
+                return None;
+            }
+        }
+    }
+
+    let body_str = match std::str::from_utf8(&body) {
+        Ok(s) => s,
+        Err(e) => {
+            log::warn!("[SUPABASE] buscar_config_remota: utf8 falhou: {e:?}");
+            return None;
+        }
+    };
+
+    // Extrai config_version remota
+    let versao_remota = match extrair_i64(body_str, "config_version") {
+        Some(v) => v,
+        None => {
+            log::warn!("[SUPABASE] buscar_config_remota: nao encontrou config_version: {body_str}");
+            return None;
+        }
+    };
+
+    // Se versao remota nao e maior, nada a fazer
+    if versao_remota <= config_local.config_version {
+        return None;
+    }
+
+    // Extrai a substring JSON do objeto config
+    let config_json = match extrair_json_config(body_str) {
+        Some(json) => json,
+        None => {
+            log::warn!("[SUPABASE] buscar_config_remota: nao encontrou config JSON: {body_str}");
+            return None;
+        }
+    };
+
+    // Parseia com serde_json
+    let mut nova_config = match serde_json::from_str::<Tomada>(config_json) {
+        Ok(c) => c,
+        Err(e) => {
+            log::warn!("[SUPABASE] buscar_config_remota: parse JSON falhou: {e:?}");
+            return None;
+        }
+    };
+
+    nova_config.config_version = versao_remota;
+    Some(nova_config)
+}
+
+// ============================================================
+// Helpers internos
+// ============================================================
+
+/// Extrai um valor i64 de uma chave JSON simples.
+/// Busca "chave": seguido de digitos (com opcional "-" no inicio).
+fn extrair_i64(body: &str, chave: &str) -> Option<i64> {
+    let key = format!("\"{}\":", chave);
+    let pos = body.find(&key)? + key.len();
+    let resto = body[pos..].trim_start();
+    let fim = resto
+        .find(|c: char| !c.is_ascii_digit() && c != '-')
+        .unwrap_or(resto.len());
+    resto[..fim].parse().ok()
+}
+
+/// Extrai a substring JSON do objeto "config" aninhado.
+/// Busca "config":{ e retorna tudo ate o } correspondente.
+fn extrair_json_config(body: &str) -> Option<&str> {
+    let marca = "\"config\":";
+    let inicio = body.find(marca)? + marca.len();
+    let slice = body[inicio..].trim_start();
+
+    // Conta chaves para achar o fechamento correto
+    let mut depth = 0i32;
+    for (i, c) in slice.char_indices() {
+        match c {
+            '{' => depth += 1,
+            '}' => {
+                depth -= 1;
+                if depth == 0 {
+                    return Some(&slice[..=i]);
+                }
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
+/// Escapa minimamente uma string pra ser usada DENTRO de aspas em JSON.
+fn escape_json(s: &str) -> String {
+    s.replace('\\', "\\\\").replace('"', "\\\"")
+}

@@ -1,0 +1,24 @@
+[workspace]
+members = ["firmware"]
+resolver = "2"
+
+# Profiles ficam aqui (raiz) para serem aplicados a todos os membros do workspace.
+
+# Release: otimizado para tamanho.
+# CUIDADO: opt-level >= 1 dispara bug do backend Xtensa LLVM em [2 x float] constant pools
+# (visto em serde_json::de::f32). Se aparecer, baixar para 1 ou 0 por crate via
+# [profile.release.package.<crate>] opt-level = 0
+[profile.release]
+opt-level     = "s"
+lto           = true
+codegen-units = 1
+
+# Workaround conhecido: serde_json dispara bug LLVM Xtensa em opt-level >= 1
+[profile.release.package.serde_json]
+opt-level = 0
+
+# Dev: opt-level = 0 evita o bug LLVM Xtensa.
+# Binario fica maior (~2.4 MB com Wi-Fi) mas cabe na particao de 3.125 MB.
+[profile.dev]
+debug     = true
+opt-level = 0
