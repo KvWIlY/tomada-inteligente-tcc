@@ -12,6 +12,7 @@ import type { Evento, Medicao, Residencia, Tomada } from './types';
 const RESIDENCIA_MOCK: Residencia = {
   id: '00000000-0000-0000-0000-000000000001',
   nome: 'Apto 304 — Bloco B (mock)',
+  p_max: 2540,
   created_at: new Date().toISOString(),
 };
 
@@ -25,6 +26,7 @@ interface TomadaDef {
   perfil: 'esporadico' | 'noturno' | 'critico' | 'carga';
   cstd: number;
   con: number;
+  mac: string;
 }
 
 const TOMADAS_DEF: TomadaDef[] = [
@@ -35,10 +37,10 @@ const TOMADAS_DEF: TomadaDef[] = [
     config: {
       p_limiar_detectado_auto: 8, t_limite: 1800, is_critical: false,
       schedule: [false,false,false,false,false,false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false,false,false],
-      w_i: 10, p_max: 2540,
+      w_i: 10,
       pi_historico: [0.0,0.0,0.0,0.0,0.0,0.0,0.1,0.3,0.5,0.6,0.7,0.5,0.4,0.3,0.5,0.6,0.7,0.6,0.4,0.2,0.1,0.0,0.0,0.0],
     },
-    perfil: 'esporadico', cstd: 3.2, con: 142.8,
+    perfil: 'esporadico', cstd: 3.2, con: 142.8, mac: 'A4:CF:12:00:01:7B',
   },
   {
     id: '00000000-0000-0000-0000-000000000102',
@@ -47,10 +49,10 @@ const TOMADAS_DEF: TomadaDef[] = [
     config: {
       p_limiar_detectado_auto: 12, t_limite: 3600, is_critical: false,
       schedule: [false,false,false,false,false,false,false,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,false],
-      w_i: 10, p_max: 2540,
+      w_i: 10,
       pi_historico: [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.2,0.3,0.5,0.7,0.9,0.95,0.9,0.8,0.6,0.2],
     },
-    perfil: 'noturno', cstd: 6.4, con: 95,
+    perfil: 'noturno', cstd: 6.4, con: 95, mac: 'A4:CF:12:00:02:3C',
   },
   {
     id: '00000000-0000-0000-0000-000000000103',
@@ -59,10 +61,10 @@ const TOMADAS_DEF: TomadaDef[] = [
     config: {
       p_limiar_detectado_auto: 30, t_limite: 1800, is_critical: true,
       schedule: Array(24).fill(true) as boolean[],
-      w_i: 1000, p_max: 2540,
+      w_i: 1000,
       pi_historico: Array(24).fill(0.9) as number[],
     },
-    perfil: 'critico', cstd: 0, con: 95,
+    perfil: 'critico', cstd: 0, con: 95, mac: 'A4:CF:12:00:03:9A',
   },
   {
     id: '00000000-0000-0000-0000-000000000104',
@@ -71,10 +73,10 @@ const TOMADAS_DEF: TomadaDef[] = [
     config: {
       p_limiar_detectado_auto: 4, t_limite: 900, is_critical: false,
       schedule: [false,false,false,false,false,false,true,true,false,false,false,false,false,false,false,false,false,false,true,true,true,true,true,false],
-      w_i: 1, p_max: 2540,
+      w_i: 1,
       pi_historico: [0.0,0.0,0.0,0.0,0.0,0.0,0.3,0.5,0.1,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.4,0.6,0.7,0.8,0.5,0.1],
     },
-    perfil: 'carga', cstd: 2.1, con: 18,
+    perfil: 'carga', cstd: 2.1, con: 18, mac: 'A4:CF:12:00:04:E1',
   },
 ];
 
@@ -217,6 +219,7 @@ export function buildMockData() {
       rele_aberto: ult?.rele_aberto ?? false,
       estado: ult?.estado ?? 'OFF',
       p_medida_atual: ult?.p_medida ?? 0,
+      mac: def.mac,
     });
     medicoesPorTomada[def.id] = meds;
     eventosPorTomada[def.id]  = evs;

@@ -3,15 +3,9 @@
 // =============================================
 //
 // Refletem o SCHEMA REAL do Supabase (UUIDs + bigint timestamp).
-// Adaptado do HANDOFF.md para o que o firmware esta efetivamente enviando.
 
 export type Estado = 'ON' | 'STD' | 'OFF';
 export type Icone = 'printer' | 'tv' | 'fridge' | 'charger' | 'plug';
-export type ScheduleStyle = 'grid' | 'donut' | 'bar';
-export type Theme = 'light' | 'dark';
-export type Accent = 'violet' | 'indigo' | 'teal' | 'orange' | 'pink';
-export type Density = 'compact' | 'comfortable' | 'spacious';
-export type EstadoOverride = 'auto' | Estado;
 
 export interface Config {
   p_limiar_detectado_auto?: number;  // W (detectado automaticamente pelo firmware)
@@ -32,10 +26,11 @@ export interface Tomada {
   config_version: number;
   updated_at: string;     // ISO
   cstd: number;           // W (consumo standby calibrado)
-  con: number;            // W (consumo on calibrado)
+  con: number;            // W (consumo on calibrado / nominal)
   rele_aberto: boolean;
   estado: Estado;
   p_medida_atual: number; // W (leitura atual publicada pelo ESP32)
+  mac?: string;           // identidade do ESP32 (se disponivel no schema)
 }
 
 export interface Medicao {
@@ -62,47 +57,28 @@ export interface Evento {
 export interface Residencia {
   id: string;
   nome: string;
-  p_max: number;         // capacidade do circuito [W] (schema v2)
+  p_max: number;         // capacidade do circuito [W]
   created_at: string;
 }
 
-// Calculado em runtime a partir das medicoes mais recentes
-export interface EstadoAtual {
-  estado: Estado;
-  p_atual: number;
-  tempo_no_estado: number;        // minutos
-  ultima_atualizacao_seg: number;
-}
-
-// Metricas calculadas em runtime
-export interface Metricas {
-  consumida: number;        // Wh
-  consumidaDelta: number;
-  economizada: number;      // Wh
-  economizadaDelta: number;
-  chaveamentos: number;
-  chaveamentosDelta: number;
-  tempoOff: string;         // "Xh YYmin"
-  tempoOffPct: number;
-}
+import type { ToastData, ModalData } from './views/toast';
 
 // Estado global da app
 export interface AppState {
+  phase: 'checking' | 'login' | 'app'; // gate de auth (checking=verificando sessão)
+  userEmail: string | null;
+  usingMock: boolean;
+  semResidencia: boolean;      // logado mas sem residência própria
+
   residencia: Residencia | null;
   tomadas: Tomada[];
   medicoesPorTomada: Record<string, Medicao[]>;
   eventosPorTomada: Record<string, Evento[]>;
-  selectedId: string | null;
-  showAll: boolean;
-
-  // Tweaks (persistidos em localStorage)
-  scheduleStyle: ScheduleStyle;
-  theme: Theme;
-  accent: Accent;
-  density: Density;
-  estadoOverride: EstadoOverride;
+  selectedId: string | null;   // null = visão geral
+  navOpen: boolean;            // sidebar mobile
 
   loading: boolean;
   error: string | null;
-  toast: string | null;
+  toast: ToastData | null;
+  modal: ModalData | null;
 }
