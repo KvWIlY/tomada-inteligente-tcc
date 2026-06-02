@@ -1,5 +1,8 @@
 # Name,   Type, SubType,  Offset,   Size,    Flags
+# factory aumentada p/ caber o binario DEBUG (~3.3MB); storage (LittleFS) usa o resto.
+# Total flash = 4MB (0x400000). factory: 0x10000..0x360000 = 0x350000 (3.46MB).
+# storage: 0x360000..0x400000 = 0xA0000 (640KB).
 nvs,      data, nvs,      0x9000,   0x6000,
 phy_init, data, phy,      0xf000,   0x1000,
-factory,  app,  factory,  0x10000,  0x320000,
-storage,  data, littlefs, 0x330000, 0xD0000,
+factory,  app,  factory,  0x10000,  0x350000,
+storage,  data, littlefs, 0x360000, 0xA0000,

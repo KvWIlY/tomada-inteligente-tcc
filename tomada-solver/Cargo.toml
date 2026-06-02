@@ -1,0 +1,12 @@
+[package]
+name = "tomada-solver"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.82"
+description = "Modelo MILP de otimizacao de tomadas (review_modelo.pdf, topicos 1-4) — host-testavel"
+
+[dependencies]
+minilp = "0.2"
+serde  = { version = "1", features = ["derive"] }
+
+# Profiles ficam no Cargo.toml raiz do workspace.

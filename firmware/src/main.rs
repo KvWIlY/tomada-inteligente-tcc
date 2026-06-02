@@ -1,43 +1,312 @@
-//! Smoke test inicial: monta LittleFS, conecta Wi-Fi, sincroniza relogio via SNTP.
+//! Tomada inteligente — orquestracao do ciclo medir -> decidir -> atuar -> sincronizar.
 //!
-//! A partir daqui voce constroi o dominio do novo projeto. Veja:
-//!   - persistencia::littlefs::base()  -> "/lfs", grave arquivos do dominio aqui
-//!   - comunicacao::supabase.rs.template -> referencia de cliente HTTPS Supabase
+//! Boot: LittleFS -> Wi-Fi -> SNTP -> (provisionamento por-device se necessario) ->
+//! ADC/rele/ESP-NOW. Loop (cadencia 10 s, SC-008):
+//!   medir (RMS V/I) -> trocar heartbeats ESP-NOW -> decidir (MILP) -> atuar rele.
+//! A cada ~60 s (cloud tick): bufferiza medicao (1/min), faz pull do desired state
+//! (config por versao + comando manual de rele), publica telemetria/estado/calibracao,
+//! sincroniza medicoes+eventos EM LOTE (Bearer JWT por-device) e roda a retencao.
+//!
+//! Tudo de nuvem e best-effort: sem conectividade o no decide e atua localmente
+//! (offline-first, Principio VI) e reconcilia ao reconectar.
 
 use anyhow::Result;
-use chrono::Local;
+use chrono::{Local, Timelike};
+use esp_idf_svc::hal::adc::attenuation::DB_12;
+use esp_idf_svc::hal::adc::oneshot::config::AdcChannelConfig;
+use esp_idf_svc::hal::adc::oneshot::{AdcChannelDriver, AdcDriver};
 use esp_idf_svc::hal::peripherals::Peripherals;
 use std::thread;
 use std::time::Duration;
 
 mod comunicacao;
 mod config_nuvem;
+mod decisao;
 mod persistencia;
+mod sensores;
+
+use comunicacao::espnow::{self, Heartbeat};
+use comunicacao::{provisionamento, supabase};
+use decisao::atuador::Atuador;
+use decisao::ciclo::Ciclo;
+use persistencia::config;
+use persistencia::credenciais::{self, CredenciaisLocais};
+use persistencia::medicao::{self, Medicao};
+use persistencia::retencao;
+use tomada_solver::sync::deve_adotar_config;
+
+/// Cadencia do ciclo de decisao (s) — SC-008 (decisao em <=10 s).
+const CICLO_S: u64 = 10;
+/// A cada quantos ciclos fazemos I/O de nuvem (~60 s => medicao 1/min).
+const CICLOS_POR_NUVEM: u64 = 6;
+/// TTL de um peer ESP-NOW (vivo se visto nesse intervalo) — 3x a cadencia.
+const TTL_PEER_S: i64 = (CICLO_S as i64) * 3;
 
 fn main() -> Result<()> {
     esp_idf_svc::sys::link_patches();
     esp_idf_svc::log::EspLogger::initialize_default();
 
-    log::info!("=== y-firmware: smoke test de infra ===");
+    log::info!("=== tomada inteligente: boot ===");
 
     // 1. LittleFS
     persistencia::init()?;
-    let (total, used) = persistencia::littlefs::espaco_livre()?;
-    log::info!("LittleFS pronto: {used} / {total} bytes em uso");
 
-    // 2. Wi-Fi (STA + fallback AP de provisionamento)
+    // 2. Wi-Fi (STA; cai para portal AP se sem credenciais)
     let peripherals = Peripherals::take()?;
     let _wifi = comunicacao::wifi::conectar(peripherals.modem)?;
-    log::info!("Wi-Fi: conectado");
 
-    // 3. SNTP -- sincroniza relogio para que `chrono::Local::now()` seja real
-    comunicacao::sntp::sincronizar()?;
-    log::info!("SNTP: relogio sincronizado -> {}", Local::now());
-
-    log::info!("Infra pronta. Implemente o dominio do novo projeto a partir daqui.");
-
-    loop {
-        thread::sleep(Duration::from_secs(30));
-        log::info!("heartbeat -- {}", Local::now());
+    // 2b. Botao de provisionamento (BOOT/GPIO0): segurar ~3s reabre o portal AP a
+    //     qualquer momento, sem reflashar nem apagar o NVS. Best-effort.
+    if let Err(e) = comunicacao::botao::iniciar(peripherals.pins.gpio0) {
+        log::warn!("[BOOT] botao de provisionamento indisponivel: {e:?}");
     }
+
+    // 3. SNTP (relogio real para timestamps/idempotencia)
+    let _sntp = comunicacao::sntp::sincronizar()?;
+
+    // 4. Identidade/credenciais por-device (provisiona no 1o boot). Tenta ate conseguir
+    //    (modo auto: sem claim, o servidor registra numa residencia padrao).
+    let creds = loop {
+        match obter_ou_provisionar()? {
+            Some(c) => break c,
+            None => {
+                log::warn!("[PROV] nova tentativa de provisionamento em 15s...");
+                thread::sleep(Duration::from_secs(15));
+            }
+        }
+    };
+    log::info!("[BOOT] tomada_id={}", creds.tomada_id);
+
+    // 5. ADC (oneshot): GPIO32 = tensao (ZMPT101B), GPIO35 = corrente (SCT-013).
+    //    NOTA: a API oneshot (AdcChannelConfig/read) pode variar de versao; ponto provavel
+    //    de ajuste fino ao compilar. `read()` devolve mV calibrados (calibration=true).
+    let adc1 = AdcDriver::new(peripherals.adc1)?;
+    // calibration=None (default): `read()` ainda devolve mV via converter direto, sem
+    // depender de esquema de calibracao por hardware (robusto no ESP32 classico).
+    let ch_cfg = AdcChannelConfig {
+        attenuation: DB_12, // ~0..3.1 V (rede atenuada cabe na faixa)
+        ..Default::default()
+    };
+    let mut ch_v = AdcChannelDriver::new(&adc1, peripherals.pins.gpio32, &ch_cfg)?;
+    let mut ch_i = AdcChannelDriver::new(&adc1, peripherals.pins.gpio35, &ch_cfg)?;
+
+    // 6. Rele (GPIO26, Opcao A). Comeca aberto (OFF).
+    let mut atuador = Atuador::novo(peripherals.pins.gpio26)?;
+
+    // 7. ESP-NOW (best-effort; exige a residencia_key da casa p/ autenticar — Principio
+    //    VIII). Sem chave valida (credencial antiga), a coordenacao fica DESABILITADA
+    //    (fail-closed) e o no opera sozinho ate re-provisionar.
+    let espnow = match parse_chave_hex(&creds.residencia_key) {
+        Some(key) => match espnow::iniciar(key) {
+            Ok(e) => Some(e),
+            Err(e) => {
+                log::warn!("[BOOT] ESP-NOW indisponivel ({e}); operando sozinho");
+                None
+            }
+        },
+        None => {
+            log::warn!(
+                "[BOOT] sem residencia_key valida -> ESP-NOW DESABILITADO (re-provisione p/ \
+                 coordenar). Operando sozinho."
+            );
+            None
+        }
+    };
+
+    // 8. Estado do ciclo
+    let mut config = config::load()?;
+    let agora0 = provisionamento::agora_epoch();
+    let mut ciclo = Ciclo::novo(&config, 0.0, 0.0, agora0);
+    let short_id = short_id(&creds.tomada_id);
+    // MAC proprio: chave de ordenacao canonica da coordenacao ESP-NOW (decide a posicao
+    // deste no na lista resolvida pelo MILP, identica em todos os nos).
+    let proprio_mac = provisionamento::obter_mac_bytes().unwrap_or([0u8; 6]);
+    let mut rele_manual: Option<bool> = None;
+
+    log::info!("[BOOT] entrando no loop principal (ciclo={CICLO_S}s)");
+
+    let mut n: u64 = 0;
+    loop {
+        let agora = provisionamento::agora_epoch();
+        let hora = Local::now().hour() as u8;
+        let h = (hora % 24) as usize;
+        let cloud_tick = n % CICLOS_POR_NUVEM == 0;
+
+        // --- MEDIR (RMS de V e I; ADC isolado em closures) ---
+        let leitura = sensores::medir(
+            || ch_v.read().unwrap_or(0) as f32,
+            || ch_i.read().unwrap_or(0) as f32,
+        );
+
+        // --- COORDENACAO ESP-NOW (peers vivos + carga fixa dos ausentes) ---
+        let (peers_vivos, carga_fixa) = espnow
+            .as_ref()
+            .map(|_| espnow::montar_coordenacao(agora, TTL_PEER_S))
+            .unwrap_or((Vec::new(), 0.0));
+
+        // --- DECIDIR (MILP) ---
+        let decisao = ciclo.decidir(
+            &config,
+            leitura,
+            &peers_vivos,
+            carga_fixa,
+            proprio_mac,
+            rele_manual,
+            hora,
+            agora,
+        );
+
+        // --- ATUAR ---
+        if let Err(e) = atuador.aplicar(decisao.estado) {
+            log::error!("[CICLO] falha ao atuar rele: {e:?}");
+        }
+        log::info!(
+            "[CICLO] V={:.1} I={:.2} P={:.1}W estado={} rele_aberto={} peers={} carga_fixa={:.0}",
+            leitura.vrms, leitura.irms, leitura.p, decisao.estado.as_str(),
+            decisao.rele_aberto, peers_vivos.len(), carga_fixa,
+        );
+
+        // --- DIFUNDIR HEARTBEAT ---
+        if let Some(en) = &espnow {
+            let hb = Heartbeat::novo(
+                short_id,
+                agora as u32,
+                decisao.p_medida,
+                decisao.estado.idx() as u8,
+                decisao.u_i,
+                decisao.f_i,
+                rele_manual.unwrap_or(false),
+                config.schedule[h],
+                decisao.cstd,
+                decisao.con,
+                config.pi_historico[h],
+                config.w_efetivo(),
+            );
+            let _ = espnow::difundir(en, &hb);
+        }
+
+        // --- Eventos do ciclo -> fila (enviados no cloud tick) ---
+        for e in &decisao.eventos {
+            supabase::registrar_evento(e.tipo, e.severidade, &e.titulo, &e.detalhes);
+        }
+
+        // --- NUVEM (a cada ~60 s) ---
+        if cloud_tick {
+            // medicao 1/min (buffer em RAM; flush/sync abaixo)
+            medicao::registrar(Medicao::novo(
+                &creds.tomada_id,
+                agora,
+                decisao.p_medida,
+                decisao.estado,
+                decisao.rele_aberto,
+            ));
+
+            // pull do desired state (config por versao + comando manual)
+            match supabase::buscar_desired_state() {
+                Ok(ds) => {
+                    rele_manual = ds.rele_aberto;
+                    if let Some(remota) = ds.config {
+                        if deve_adotar_config(remota.config_version, config.config_version) {
+                            if let Err(e) = config::save(&remota) {
+                                log::warn!("[NUVEM] falha salvando config remota: {e:?}");
+                            } else {
+                                log::info!(
+                                    "[NUVEM] config adotada v{} -> v{}",
+                                    config.config_version, remota.config_version
+                                );
+                                config = remota;
+                            }
+                        }
+                    }
+                }
+                Err(e) => log::warn!("[NUVEM] pull desired_state falhou: {e:?}"),
+            }
+
+            // publica telemetria/estado/calibracao (best-effort)
+            let _ = supabase::atualizar_telemetria(decisao.p_medida, decisao.ultimo_uso_ativo_ts);
+            let _ = supabase::atualizar_estado(decisao.estado.as_str());
+            if decisao.cstd > 0.0 || decisao.con > 0.0 {
+                let _ = supabase::atualizar_calibracao(decisao.cstd, decisao.con);
+            }
+
+            // sync EM LOTE (Bearer JWT) + eventos
+            match supabase::sincronizar_medicoes() {
+                Ok(k) if k > 0 => log::info!("[NUVEM] {k} medicoes sincronizadas"),
+                Ok(_) => {}
+                Err(e) => log::warn!("[NUVEM] sync medicoes falhou: {e:?}"),
+            }
+            if let Err(e) = supabase::sincronizar_eventos() {
+                log::warn!("[NUVEM] sync eventos falhou: {e:?}");
+            }
+
+            // retencao/purga (roda de fato a cada 5 dias)
+            if let Err(e) = retencao::talvez_purgar(agora) {
+                log::warn!("[NUVEM] retencao falhou: {e:?}");
+            }
+
+            // limpeza de peers muito antigos
+            espnow::esquecer_antigos(agora, TTL_PEER_S * 10);
+        }
+
+        n = n.wrapping_add(1);
+        thread::sleep(Duration::from_secs(CICLO_S));
+    }
+}
+
+/// Carrega credenciais; se ausentes, provisiona. Prioridade do claim-code:
+///   1) portal AP (LittleFS)  2) `.env` (CLAIM_CODE)  3) VAZIO => modo AUTO (sem login).
+/// No modo auto o servidor registra o MAC numa residencia padrao (demo single-tenant).
+/// `Ok(None)` em falha transitoria (rede/servidor) — o caller tenta de novo.
+fn obter_ou_provisionar() -> Result<Option<CredenciaisLocais>> {
+    if let Some(c) = credenciais::load()? {
+        return Ok(Some(c));
+    }
+    let mac = provisionamento::obter_mac()?;
+
+    let portal = credenciais::ler_claim_pendente();
+    let claim = portal
+        .as_deref()
+        .filter(|c| !c.is_empty())
+        .or_else(|| {
+            let c = config_nuvem::CLAIM_CODE.trim();
+            if c.is_empty() { None } else { Some(c) }
+        })
+        .unwrap_or("");
+
+    log::info!(
+        "[PROV] provisionando MAC={mac} (modo={})...",
+        if claim.is_empty() { "AUTO (sem claim)" } else { "claim-code" }
+    );
+    match provisionamento::provisionar(&mac, claim) {
+        Ok(creds) => {
+            credenciais::limpar_claim_pendente(); // uso unico (se veio do portal)
+            Ok(Some(creds))
+        }
+        Err(e) => {
+            log::warn!("[PROV] provisionamento falhou: {e}");
+            Ok(None) // transitorio: o caller repete
+        }
+    }
+}
+
+/// Converte uma chave hex de 64 chars (32 bytes) em `[u8;32]`. `None` se invalida.
+/// Byte-safe (opera em `as_bytes`, nao fatia por char — evita panico com UTF-8).
+fn parse_chave_hex(s: &str) -> Option<[u8; 32]> {
+    let b = s.trim().as_bytes();
+    if b.len() != 64 {
+        return None;
+    }
+    let mut out = [0u8; 32];
+    for i in 0..32 {
+        let hi = (b[i * 2] as char).to_digit(16)?;
+        let lo = (b[i * 2 + 1] as char).to_digit(16)?;
+        out[i] = (hi * 16 + lo) as u8;
+    }
+    Some(out)
+}
+
+/// Indice curto (0..255) estavel derivado do `tomada_id` UUID (informativo no heartbeat;
+/// a tabela de peers e chaveada pelo MAC do remetente, sem depender deste id).
+fn short_id(tomada_id: &str) -> u8 {
+    tomada_id.bytes().fold(0u8, |a, b| a.wrapping_add(b))
 }

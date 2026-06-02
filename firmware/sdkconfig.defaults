@@ -13,3 +13,10 @@ CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="C:/y/firmware/partitions.csv"
 
 # Tick FreeRTOS 1 ms
 CONFIG_FREERTOS_HZ=1000
+
+# Servidor HTTP do portal de provisionamento: navegadores de celular mandam headers
+# grandes (User-Agent, Accept, Cookie, Upgrade-Insecure-Requests...). O padrao de 512
+# bytes estoura e o httpd responde 431 "Request Header Fields Too Large" antes de servir
+# a pagina (carrega pra sempre). Aumenta o buffer de header e de URI.
+CONFIG_HTTPD_MAX_REQ_HDR_LEN=2048
+CONFIG_HTTPD_MAX_URI_LEN=1024

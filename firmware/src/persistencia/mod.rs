@@ -9,6 +9,12 @@
 
 pub mod littlefs;
 
+// Dominio (001/002): config versionada, credenciais por-device, medicoes em lote, purga.
+pub mod config;
+pub mod credenciais;
+pub mod medicao;
+pub mod retencao;
+
 use anyhow::Result;
 
 pub fn init() -> Result<()> {

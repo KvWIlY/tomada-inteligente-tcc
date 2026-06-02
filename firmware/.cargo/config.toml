@@ -1,0 +1,31 @@
+# Config de build do firmware ESP32 (esp-idf-svc, std).
+# Fica em firmware/ (NAO na raiz) de proposito:
+#   - `cd firmware && cargo build/run`  -> compila p/ o ESP32 (Xtensa)
+#   - `cargo test -p tomada-solver` (na raiz) -> roda no host (solver testavel)
+# Ajuste ESP_IDF_VERSION conforme o ambiente esp instalado (esp-idf-svc 0.52 ~ v5.2).
+
+[build]
+target = "xtensa-esp32-espidf"
+
+[target.xtensa-esp32-espidf]
+linker = "ldproxy"
+# --partition-table: sem isso o espflash usa a tabela DEFAULT (nvs/phy_init/factory) e a
+# particao `storage` do LittleFS nunca e gravada -> esp_vfs_littlefs_register falha (261).
+runner = "espflash flash --monitor --partition-table partitions.csv"
+rustflags = ["--cfg", "espidf_time64"]
+
+[unstable]
+build-std = ["std", "panic_abort"]
+
+[env]
+MCU = "esp32"
+ESP_IDF_VERSION = "v5.2.3"
+# Workspace VIRTUAL (raiz so tem [workspace]): cargo_metadata.root_package() = None, entao
+# o esp-idf-sys nao acha o "root crate" e IGNORA silenciosamente o
+# [package.metadata.esp-idf-sys] (extra_components/bindings_header) -> littlefs nao e
+# baixado/compilado/bindado. Apontar o root crate resolve (necessario em workspace).
+ESP_IDF_SYS_ROOT_CRATE = "y-firmware"
+# Pelo mesmo motivo (build roda da raiz), o esp-idf-sys procura sdkconfig.defaults em C:\y
+# e NAO em firmware/ -> a stack da main task fica no default 3584 (estoura no LittleFS e
+# corrompe o heap). Apontar explicitamente o arquivo (caminho absoluto).
+ESP_IDF_SDKCONFIG_DEFAULTS = "C:/y/firmware/sdkconfig.defaults"
