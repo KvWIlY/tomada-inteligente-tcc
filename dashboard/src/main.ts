@@ -1,361 +1,454 @@
 // =============================================
-// Bootstrap do dashboard -- conecta tudo
+// Bootstrap do dashboard -- gate de auth + conecta tudo (idioma verde/branco)
 // =============================================
 
 import { buildMockData } from './mock';
-import { createStore, loadTweaks, saveTweaks } from './store';
+import { consumoTotalAtual, efficiencyScore, temConexaoRecente } from './derive';
+import { createStore } from './store';
 import * as supa from './supabase';
-import type { AppState } from './types';
-import { aplicarTweaks, calcEstadoAtual } from './utils';
-import { renderChart, type ChartWindow } from './views/chart';
-import { renderConfig } from './views/config';
-import { renderEvents, type EventFilter } from './views/events';
-import { renderHero } from './views/hero';
-import { renderMetrics } from './views/metrics';
+import type { AppState, Config, Tomada } from './types';
+import { renderSidebar } from './views/sidebar';
 import { renderOverview } from './views/overview';
-import { renderPicker } from './views/picker';
-import { renderToast } from './views/toast';
-import { renderTopbar } from './views/topbar';
-import { renderTweaks } from './views/tweaks';
+import { renderDetail } from './views/detail';
+import { renderLogin } from './views/login';
+import { renderToast, renderModal, type ModalData, type ToastData } from './views/toast';
+import { escapeHtml } from './views/components';
 
-const RESIDENCIA_ID = import.meta.env.VITE_RESIDENCIA_ID as string | undefined;
+const FORCAR_RESIDENCIA = (import.meta.env.VITE_RESIDENCIA_ID as string | undefined)?.trim() || undefined;
 
-// === 1. Tweaks persistidos ===
-const tweaks = loadTweaks();
-
-// === 2. Store inicial (tudo vazio enquanto fetch nao volta) ===
+// === Store inicial ===
 const store = createStore<AppState>({
+  phase: 'checking',
+  userEmail: null,
+  usingMock: false,
+  semResidencia: false,
   residencia: null,
   tomadas: [],
   medicoesPorTomada: {},
   eventosPorTomada: {},
   selectedId: null,
-  showAll: true,
-  scheduleStyle: (tweaks.scheduleStyle as AppState['scheduleStyle']) ?? 'grid',
-  theme:         (tweaks.theme         as AppState['theme'])         ?? 'light',
-  accent:        (tweaks.accent        as AppState['accent'])        ?? 'violet',
-  density:       (tweaks.density       as AppState['density'])       ?? 'comfortable',
-  estadoOverride:(tweaks.estadoOverride as AppState['estadoOverride'])?? 'auto',
+  navOpen: false,
   loading: true,
   error: null,
   toast: null,
+  modal: null,
 });
 
-// === 3. Aplica tweaks visuais ===
-{
-  const s = store.get();
-  aplicarTweaks(s.theme, s.accent, s.density);
-}
-
-// === 4. Estado de UI local (chart window, event filter) ===
-let chartWindow: ChartWindow = '24h';
-let eventFilter: EventFilter = 'all';
+// === Estado de UI local (não reativo) ===
+let detailSeg: '24h' | '7d' = '24h';
+let cfgDraftId: string | null = null;
+let draftSchedule: boolean[] = [];
+let draftCritical = false;
 let savingConfig = false;
+let realtimeReady = false;
 
-// Helper de toast: seta a msg e agenda LIMPEZA do store apos 2.8s.
-// Sem isso, qualquer re-render (ex.: nova medicao via Realtime) re-mostra o toast.
+// Auth (tela de login)
+let authMode: 'login' | 'signup' = 'login';
+let authEmail = '';
+let authSenha = '';
+let authBusy = false;
+let authError: string | null = null;
+let authInfo: string | null = null;
+
+// === Toast helper ===
 let toastTimer: number | null = null;
-function showToast(msg: string): void {
-  store.set({ toast: msg });
+function showToast(msg: string, kind: ToastData['kind'] = 'ok'): void {
+  store.set({ toast: { msg, kind } });
   if (toastTimer !== null) clearTimeout(toastTimer);
   toastTimer = window.setTimeout(() => {
     store.set({ toast: null });
     toastTimer = null;
-  }, 2800);
+  }, 3000);
 }
 
-// === 5. Carrega dados iniciais ===
-async function bootstrap() {
-  if (!supa.hasSupabase || !RESIDENCIA_ID) {
-    console.warn('[dashboard] Supabase nao configurado -- usando dados MOCK');
-    const mock = buildMockData();
-    store.set({
-      residencia: mock.residencia,
-      tomadas: mock.tomadas,
-      medicoesPorTomada: mock.medicoesPorTomada,
-      eventosPorTomada: mock.eventosPorTomada,
-      selectedId: mock.tomadas[0]?.id ?? null,
-      loading: false,
-    });
-    return;
+function ensureDraft(t: Tomada): void {
+  if (cfgDraftId !== t.id) {
+    cfgDraftId = t.id;
+    draftSchedule = [...t.config.schedule];
+    draftCritical = t.config.is_critical;
+    detailSeg = '24h';
   }
+}
+function draftDirty(t: Tomada): boolean {
+  return draftCritical !== t.config.is_critical || draftSchedule.some((v, i) => v !== t.config.schedule[i]);
+}
 
-  try {
-    const [residencia, tomadas] = await Promise.all([
-      supa.fetchResidencia(RESIDENCIA_ID),
-      supa.fetchTomadas(RESIDENCIA_ID),
-    ]);
+// === Carga de dados reais de uma residência ===
+async function carregarResidencia(residenciaId: string): Promise<void> {
+  const tomadas = await supa.fetchTomadas(residenciaId);
+  const medicoesPorTomada: Record<string, Awaited<ReturnType<typeof supa.fetchMedicoes>>> = {};
+  const eventosPorTomada: Record<string, Awaited<ReturnType<typeof supa.fetchEventos>>> = {};
+  await Promise.all(
+    tomadas.map(async (t) => {
+      const [meds, evs] = await Promise.all([supa.fetchMedicoes(t.id, 24), supa.fetchEventos(t.id, 100)]);
+      medicoesPorTomada[t.id] = meds;
+      eventosPorTomada[t.id] = evs;
+    }),
+  );
+  store.set({ tomadas, medicoesPorTomada, eventosPorTomada });
 
-    if (!residencia) {
-      store.set({ loading: false, error: 'Residencia nao encontrada' });
-      return;
-    }
-
-    // Carrega medicoes + eventos de cada tomada em paralelo
-    const medicoesPorTomada: Record<string, Awaited<ReturnType<typeof supa.fetchMedicoes>>> = {};
-    const eventosPorTomada: Record<string, Awaited<ReturnType<typeof supa.fetchEventos>>> = {};
-    await Promise.all(
-      tomadas.map(async (t) => {
-        const [meds, evs] = await Promise.all([
-          supa.fetchMedicoes(t.id, 24),
-          supa.fetchEventos(t.id, 100),
-        ]);
-        medicoesPorTomada[t.id] = meds;
-        eventosPorTomada[t.id] = evs;
-      }),
-    );
-
-    store.set({
-      residencia,
-      tomadas,
-      medicoesPorTomada,
-      eventosPorTomada,
-      selectedId: tomadas[0]?.id ?? null,
-      loading: false,
-    });
-
-    // === 6. Realtime: nova medicao chega, atualiza store ===
+  if (!realtimeReady) {
+    realtimeReady = true;
     for (const t of tomadas) {
       supa.subscribeMedicoes(t.id, (m) => {
         const cur = store.get();
         const arr = cur.medicoesPorTomada[t.id] ?? [];
-        store.set({
-          medicoesPorTomada: { ...cur.medicoesPorTomada, [t.id]: [...arr, m].slice(-2000) },
-        });
+        store.set({ medicoesPorTomada: { ...cur.medicoesPorTomada, [t.id]: [...arr, m].slice(-2000) } });
       });
       supa.subscribeEventos(t.id, (e) => {
         const cur = store.get();
         const arr = cur.eventosPorTomada[t.id] ?? [];
-        store.set({
-          eventosPorTomada: { ...cur.eventosPorTomada, [t.id]: [e, ...arr].slice(0, 200) },
-        });
+        store.set({ eventosPorTomada: { ...cur.eventosPorTomada, [t.id]: [e, ...arr].slice(0, 200) } });
       });
     }
-    supa.subscribeTomadas(RESIDENCIA_ID, (t) => {
+    supa.subscribeTomadas(residenciaId, (t) => {
       const cur = store.get();
-      const tomadasNovas = cur.tomadas.map((tt) => (tt.id === t.id ? t : tt));
-      store.set({ tomadas: tomadasNovas });
-    });
-  } catch (err) {
-    console.error('[dashboard] bootstrap falhou:', err);
-    store.set({
-      loading: false,
-      error: err instanceof Error ? err.message : 'Erro desconhecido',
+      store.set({ tomadas: cur.tomadas.map((tt) => (tt.id === t.id ? t : tt)) });
     });
   }
 }
 
-// === 7. Subscriptions: cada view re-renderiza quando estado muda ===
-const elPicker  = document.getElementById('picker')!;
-const elTopbar  = document.getElementById('topbar')!;
-const elContent = document.getElementById('content')!;
-const elTweaks  = document.getElementById('tweaks-panel')!;
-const elToast   = document.getElementById('toast')!;
+// Após login: resolve a residência do dono e carrega.
+async function bootstrapDono(): Promise<void> {
+  store.set({ phase: 'app', loading: true, error: null, semResidencia: false });
+  try {
+    const minhas = await supa.fetchMinhasResidencias();
+    let residencia = FORCAR_RESIDENCIA
+      ? (minhas.find((r) => r.id === FORCAR_RESIDENCIA) ?? (await supa.fetchResidencia(FORCAR_RESIDENCIA)))
+      : minhas[0] ?? null;
+
+    if (!residencia) {
+      store.set({ loading: false, residencia: null, tomadas: [], semResidencia: true });
+      return;
+    }
+    store.set({ residencia, loading: false });
+    await carregarResidencia(residencia.id);
+  } catch (err) {
+    console.error('[dashboard] bootstrapDono:', err);
+    store.set({ loading: false, error: err instanceof Error ? err.message : 'Erro ao carregar dados' });
+  }
+}
+
+// === Entrada: mock OU auth ===
+async function iniciar(): Promise<void> {
+  if (!supa.hasSupabase) {
+    console.warn('[dashboard] Supabase não configurado -- usando dados MOCK');
+    const mock = buildMockData();
+    store.set({
+      phase: 'app',
+      usingMock: true,
+      residencia: mock.residencia,
+      tomadas: mock.tomadas,
+      medicoesPorTomada: mock.medicoesPorTomada,
+      eventosPorTomada: mock.eventosPorTomada,
+      loading: false,
+    });
+    return;
+  }
+
+  // Observa login/logout (persistência de sessão é do supabase-js).
+  supa.onAuth((s) => {
+    if (s) {
+      store.set({ userEmail: s.email });
+      if (store.get().phase !== 'app') void bootstrapDono();
+    } else {
+      realtimeReady = false;
+      store.set({
+        phase: 'login', userEmail: null, residencia: null, tomadas: [],
+        medicoesPorTomada: {}, eventosPorTomada: {}, selectedId: null, semResidencia: false,
+      });
+    }
+  });
+
+  const sessao = await supa.getSessao();
+  if (sessao) {
+    store.set({ userEmail: sessao.email });
+    await bootstrapDono();
+  } else {
+    store.set({ phase: 'login' });
+  }
+}
+
+// === Ações de tomada ===
+async function persistRele(t: Tomada, aberto: boolean): Promise<void> {
+  const cur = store.get();
+  store.set({ tomadas: cur.tomadas.map((tt) => (tt.id === t.id ? { ...tt, rele_aberto: aberto } : tt)) });
+  showToast(aberto ? 'Desligando · aguardando ESP32' : 'Ligando · aguardando ESP32');
+  if (supa.hasSupabase && !cur.usingMock) {
+    try {
+      await supa.setReleAberto(t.id, aberto);
+    } catch (err) {
+      console.error('[main] setReleAberto:', err);
+      store.set({ tomadas: cur.tomadas });
+      showToast('Falha ao enviar comando', 'alert');
+    }
+  }
+}
+
+function onToggleRele(t: Tomada): void {
+  const s = store.get();
+  const ligando = t.rele_aberto;
+  if (ligando) {
+    const pMax = s.residencia?.p_max ?? 2540;
+    const projecao = consumoTotalAtual(s.tomadas) + 0.95 * t.con;
+    if (projecao > pMax) {
+      showToast(`Recusado: ligar excederia o teto (${Math.round(projecao)} W > ${pMax} W)`, 'alert');
+      return;
+    }
+    void persistRele(t, false);
+    return;
+  }
+  if (t.config.is_critical) {
+    store.set({
+      modal: {
+        title: 'Desligar tomada crítica?',
+        body: `"${t.nome}" está marcada como crítica. Desligá-la manualmente pode interromper um aparelho essencial.`,
+        confirmLabel: 'Desligar mesmo assim',
+        danger: true,
+        onConfirm: () => {
+          store.set({ modal: null });
+          void persistRele(t, true);
+        },
+        onCancel: () => store.set({ modal: null }),
+      },
+    });
+    return;
+  }
+  void persistRele(t, true);
+}
+
+async function saveConfig(t: Tomada): Promise<void> {
+  savingConfig = true;
+  store.set({});
+  const novaVersao = t.config_version + 1;
+  const novaConfig: Config = { ...t.config, schedule: [...draftSchedule], is_critical: draftCritical };
+  try {
+    if (supa.hasSupabase && !store.get().usingMock) await supa.saveConfig(t.id, novaConfig, novaVersao);
+    const cur = store.get();
+    store.set({
+      tomadas: cur.tomadas.map((tt) =>
+        tt.id === t.id ? { ...tt, config: novaConfig, config_version: novaVersao, updated_at: new Date().toISOString() } : tt,
+      ),
+    });
+    cfgDraftId = null;
+    showToast(`Configuração salva · v${novaVersao}`);
+  } catch (err) {
+    console.error('[main] saveConfig:', err);
+    showToast('Erro ao salvar configuração', 'alert');
+  } finally {
+    savingConfig = false;
+    store.set({});
+  }
+}
+
+async function savePMax(w: number): Promise<void> {
+  const s = store.get();
+  if (!s.residencia) return;
+  const ant = s.residencia.p_max;
+  store.set({ residencia: { ...s.residencia, p_max: w } });
+  if (supa.hasSupabase && !s.usingMock) {
+    try {
+      await supa.savePMax(s.residencia.id, w);
+      showToast(`Teto do circuito · ${w.toLocaleString('pt-BR')} W`);
+    } catch (err) {
+      console.error('[main] savePMax:', err);
+      store.set({ residencia: { ...s.residencia, p_max: ant } });
+      showToast('Erro ao salvar P_max', 'alert');
+    }
+  } else {
+    showToast(`Teto do circuito · ${w.toLocaleString('pt-BR')} W`);
+  }
+}
+
+async function criarResidenciaDemo(): Promise<void> {
+  try {
+    const r = await supa.criarResidencia('Minha Casa', 3000);
+    if (r) {
+      showToast('Residência criada');
+      await bootstrapDono();
+    }
+  } catch (err) {
+    console.error('[main] criarResidencia:', err);
+    showToast('Erro ao criar residência', 'alert');
+  }
+}
+
+// === Ações de auth ===
+function setAuth(patch: Partial<{ mode: 'login' | 'signup'; email: string; senha: string; busy: boolean; error: string | null; info: string | null }>): void {
+  if (patch.mode !== undefined) authMode = patch.mode;
+  if (patch.email !== undefined) authEmail = patch.email;
+  if (patch.senha !== undefined) authSenha = patch.senha;
+  if (patch.busy !== undefined) authBusy = patch.busy;
+  if (patch.error !== undefined) authError = patch.error;
+  if (patch.info !== undefined) authInfo = patch.info;
+  store.set({});
+}
+
+async function submitAuth(): Promise<void> {
+  if (!authEmail || !authSenha) {
+    setAuth({ error: 'Preencha e-mail e senha.', info: null });
+    return;
+  }
+  setAuth({ busy: true, error: null, info: null });
+  try {
+    if (authMode === 'login') {
+      await supa.entrar(authEmail, authSenha);
+      // onAuth dispara o bootstrap.
+    } else {
+      const { precisaConfirmar } = await supa.cadastrar(authEmail, authSenha);
+      if (precisaConfirmar) {
+        setAuth({ busy: false, mode: 'login', info: 'Conta criada. Confirme pelo e-mail e entre.', senha: '' });
+        return;
+      }
+      // signUp com sessão imediata → onAuth cuida.
+    }
+  } catch (err) {
+    const m = err instanceof Error ? err.message : 'Falha na autenticação';
+    setAuth({ busy: false, error: traduzErroAuth(m) });
+  }
+}
+
+function traduzErroAuth(m: string): string {
+  if (/invalid login credentials/i.test(m)) return 'E-mail ou senha incorretos.';
+  if (/already registered/i.test(m)) return 'E-mail já cadastrado. Tente entrar.';
+  if (/password should be at least/i.test(m)) return 'Senha muito curta (mínimo 6 caracteres).';
+  return m;
+}
+
+// === Render ===
+const elSidebar = document.getElementById('sidebar')!;
+const elTopbar = document.getElementById('topbar')!;
+const elView = document.getElementById('view')!;
+const elScrim = document.getElementById('scrim')!;
+const elToast = document.getElementById('toast')!;
+const elModal = document.getElementById('modal')!;
+
+function renderTopbar(s: AppState, total: number): void {
+  const titulo = s.selectedId ? s.tomadas.find((t) => t.id === s.selectedId)?.nome ?? 'Tomada' : 'Visão Geral';
+  elTopbar.innerHTML = `
+    <div class="topbar">
+      <button class="topbar__burger" data-role="burger" aria-label="Menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <span class="topbar__title">${escapeHtml(titulo)}</span>
+      <span class="topbar__w tnum">${Math.round(total).toLocaleString('pt-BR')}<small> W</small></span>
+    </div>`;
+  elTopbar.querySelector('[data-role="burger"]')?.addEventListener('click', () => store.set({ navOpen: true }));
+}
 
 store.subscribe((s) => {
-  // Aplica tweaks visuais sempre que mudarem
-  aplicarTweaks(s.theme, s.accent, s.density);
-
-  // Picker (sidebar)
-  renderPicker(elPicker, {
-    tomadas: s.tomadas,
-    medicoesPorTomada: s.medicoesPorTomada,
-    selectedId: s.selectedId,
-    showAll: s.showAll,
-    onSelect: (id) => store.set({ selectedId: id, showAll: false }),
-    onShowAll: () => store.set({ showAll: true }),
-  });
-
-  // Topbar
-  renderTopbar(elTopbar, {
-    residencia: s.residencia,
-    tomadas: s.tomadas,
-    medicoesPorTomada: s.medicoesPorTomada,
-    online: !s.error,
-  });
-
-  // Tweaks panel
-  renderTweaks(elTweaks, {
-    theme: s.theme,
-    accent: s.accent,
-    density: s.density,
-    scheduleStyle: s.scheduleStyle,
-    estadoOverride: s.estadoOverride,
-    onChangeTheme: (t) => store.set({ theme: t }),
-    onChangeAccent: (a) => store.set({ accent: a }),
-    onChangeDensity: (d) => store.set({ density: d }),
-    onChangeScheduleStyle: (st) => store.set({ scheduleStyle: st }),
-    onChangeEstadoOverride: (e) => store.set({ estadoOverride: e }),
-  });
-
-  // Toast
   renderToast(elToast, s.toast);
+  renderModal(elModal, s.modal);
 
-  // Content
+  // Tela de login: ocupa tudo, sem sidebar/topbar.
+  if (s.phase === 'login') {
+    elSidebar.innerHTML = '';
+    elTopbar.innerHTML = '';
+    elScrim.className = 'scrim';
+    renderLogin(elView, {
+      mode: authMode, email: authEmail, senha: authSenha, busy: authBusy, error: authError, info: authInfo,
+      onInput: (campo, valor) => setAuth(campo === 'email' ? { email: valor } : { senha: valor }),
+      onSubmit: () => void submitAuth(),
+      onToggleMode: () => setAuth({ mode: authMode === 'login' ? 'signup' : 'login', error: null, info: null }),
+    });
+    return;
+  }
+  if (s.phase === 'checking') {
+    elSidebar.innerHTML = '';
+    elTopbar.innerHTML = '';
+    elView.innerHTML = `<div class="placeholder"><h2>Carregando…</h2></div>`;
+    return;
+  }
+
+  // App autenticado (ou mock)
+  const total = consumoTotalAtual(s.tomadas);
+  const online = !s.error && temConexaoRecente(s.tomadas, s.medicoesPorTomada);
+
+  elScrim.className = `scrim${s.navOpen ? ' scrim--show' : ''}`;
+  elScrim.onclick = () => store.set({ navOpen: false });
+
+  renderSidebar(elSidebar, {
+    tomadas: s.tomadas,
+    selectedId: s.selectedId,
+    total,
+    navOpen: s.navOpen,
+    userEmail: s.usingMock ? null : s.userEmail,
+    onSelect: (id) => store.set({ selectedId: id, navOpen: false }),
+    onCloseNav: () => store.set({ navOpen: false }),
+    onInfo: (msg) => showToast(msg),
+    onLogout: s.usingMock ? undefined : () => void supa.sair(),
+  });
+  renderTopbar(s, total);
+
   if (s.loading) {
-    elContent.innerHTML = `<div class="placeholder"><p>Carregando dados do Supabase...</p></div>`;
+    elView.innerHTML = `<div class="placeholder"><h2>Carregando…</h2><p>Buscando dados do Supabase.</p></div>`;
+    return;
+  }
+  if (s.semResidencia) {
+    elView.innerHTML = `
+      <div class="placeholder">
+        <h2>Sua conta ainda não tem residência</h2>
+        <p>Crie uma para começar a parear tomadas a ela.</p>
+        <button class="btn btn--green" data-role="criar-res" style="margin-top:16px">Criar minha residência</button>
+      </div>`;
+    elView.querySelector('[data-role="criar-res"]')?.addEventListener('click', () => void criarResidenciaDemo());
     return;
   }
   if (s.error) {
-    elContent.innerHTML = `
+    elView.innerHTML = `
       <div class="placeholder">
-        <h2 style="color:var(--off)">Erro: ${escapeHtml(s.error)}</h2>
-        <p>Verifique <code>.env</code> e o painel do Supabase. Caindo em modo offline.</p>
-      </div>
-    `;
+        <h2>Erro: ${escapeHtml(s.error)}</h2>
+        <p>Verifique o painel do Supabase e suas permissões.</p>
+      </div>`;
     return;
   }
   if (s.tomadas.length === 0) {
-    elContent.innerHTML = `
+    elView.innerHTML = `
       <div class="placeholder">
-        <h2>Nenhuma tomada cadastrada</h2>
-        <p>Crie uma tomada na residencia ${escapeHtml(s.residencia?.nome ?? '')} no Supabase.</p>
-      </div>
-    `;
+        <h2>Nenhuma tomada nesta residência</h2>
+        <p>Pareie uma tomada ESP32 à residência ${escapeHtml(s.residencia?.nome ?? '')} (provisionamento do firmware).</p>
+      </div>`;
     return;
   }
 
-  // === Visao geral ===
-  if (s.showAll) {
-    elContent.innerHTML = '';
-    renderOverview(elContent, {
+  if (s.selectedId === null) {
+    renderOverview(elView, {
       residencia: s.residencia,
       tomadas: s.tomadas,
       medicoesPorTomada: s.medicoesPorTomada,
-      onOpenTomada: (id) => store.set({ selectedId: id, showAll: false }),
+      eventosPorTomada: s.eventosPorTomada,
+      total,
+      score: efficiencyScore(s.tomadas, s.medicoesPorTomada),
+      online,
+      onSelect: (id) => store.set({ selectedId: id }),
     });
     return;
   }
 
-  // === Detalhe de uma tomada ===
-  const tomada = s.tomadas.find((t) => t.id === s.selectedId) ?? s.tomadas[0];
-  if (!tomada) return;
-  const medicoes = s.medicoesPorTomada[tomada.id] ?? [];
-  const eventos = s.eventosPorTomada[tomada.id] ?? [];
-  const estadoAtual = calcEstadoAtual(
-    tomada,
-    medicoes,
-    s.estadoOverride === 'auto' ? null : s.estadoOverride,
-  );
-
-  elContent.innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:6px">
-      <div id="hero-slot"></div>
-      <div id="metrics-slot"></div>
-      <div id="chart-slot"></div>
-      <div class="grid-2col">
-        <div id="events-slot"></div>
-        <div id="config-slot"></div>
-      </div>
-    </div>
-  `;
-
-  renderHero(document.getElementById('hero-slot')!, {
+  const tomada = s.tomadas.find((t) => t.id === s.selectedId);
+  if (!tomada) {
+    store.set({ selectedId: null });
+    return;
+  }
+  ensureDraft(tomada);
+  renderDetail(elView, {
     tomada,
     residencia: s.residencia,
-    estadoAtual,
-    onToggleRele: async () => {
-      const novoAberto = !tomada.rele_aberto;
-      // Otimista
-      const tomadasNovas = s.tomadas.map((t) =>
-        t.id === tomada.id ? { ...t, rele_aberto: novoAberto } : t,
-      );
-      store.set({ tomadas: tomadasNovas });
-      showToast('Comando enviado · aguardando ESP32');
-
-      if (supa.hasSupabase) {
-        try {
-          await supa.setReleAberto(tomada.id, novoAberto);
-        } catch (err) {
-          console.error('[main] setReleAberto:', err);
-          // Reverte em caso de erro
-          store.set({ tomadas: s.tomadas });
-          showToast('Falha ao enviar comando');
-        }
-      }
-    },
-  });
-
-  renderMetrics(document.getElementById('metrics-slot')!, {
-    medicoes,
-    cstd: tomada.cstd,
-    chaveamentos: eventos.filter((e) => e.tipo === 'chaveamento').length,
-  });
-
-  renderChart(document.getElementById('chart-slot')!, {
-    medicoes,
-    pLimiar: tomada.config.p_limiar_detectado_auto ?? 5,
-    win: chartWindow,
-    onChangeWin: (w) => {
-      chartWindow = w;
-      // Re-render so do chart
-      renderChart(document.getElementById('chart-slot')!, {
-        medicoes,
-        pLimiar: tomada.config.p_limiar_detectado_auto ?? 5,
-        win: chartWindow,
-        onChangeWin: (w2) => {
-          chartWindow = w2;
-          store.set({}); // forca re-render geral
-        },
-      });
-    },
-  });
-
-  renderEvents(document.getElementById('events-slot')!, {
-    eventos,
-    filter: eventFilter,
-    onChangeFilter: (f) => {
-      eventFilter = f;
-      store.set({}); // re-render
-    },
-  });
-
-  renderConfig(document.getElementById('config-slot')!, {
-    tomada,
-    scheduleStyle: s.scheduleStyle,
-    onChangeScheduleStyle: (style) => store.set({ scheduleStyle: style }),
+    medicoes: s.medicoesPorTomada[tomada.id] ?? [],
+    online,
+    seg: detailSeg,
+    draftSchedule,
+    draftCritical,
+    dirty: draftDirty(tomada),
     saving: savingConfig,
-    onSave: async (newConfig) => {
-      savingConfig = true;
-      showToast('Salvando configuracao...');
-      const novaVersao = tomada.config_version + 1;
-      try {
-        if (supa.hasSupabase) {
-          await supa.saveConfig(tomada.id, newConfig, novaVersao);
-        }
-        const tomadasNovas = s.tomadas.map((t) =>
-          t.id === tomada.id
-            ? { ...t, config: newConfig, config_version: novaVersao, updated_at: new Date().toISOString() }
-            : t,
-        );
-        store.set({ tomadas: tomadasNovas });
-        showToast('Configuracao salva');
-      } catch (err) {
-        console.error('[main] saveConfig:', err);
-        showToast('Erro ao salvar');
-      } finally {
-        savingConfig = false;
-      }
-    },
-  });
-
-  // Persiste tweaks
-  saveTweaks({
-    theme: s.theme,
-    accent: s.accent,
-    density: s.density,
-    scheduleStyle: s.scheduleStyle,
-    estadoOverride: s.estadoOverride,
+    onToggleRele: () => onToggleRele(tomada),
+    onChangeSeg: (sg) => { detailSeg = sg; store.set({}); },
+    onScheduleToggle: (h) => { draftSchedule = draftSchedule.map((v, i) => (i === h ? !v : v)); store.set({}); },
+    onToggleCritical: () => { draftCritical = !draftCritical; store.set({}); },
+    onSaveConfig: () => void saveConfig(tomada),
+    onSavePMax: (w) => void savePMax(w),
   });
 });
 
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-// === Inicia o carregamento ===
-bootstrap();
+// === Inicia ===
+void iniciar();

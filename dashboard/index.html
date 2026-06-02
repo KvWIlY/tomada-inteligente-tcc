@@ -3,26 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tomada Inteligente · TCC Dashboard</title>
+    <title>SmartHome · Gerenciador de Energia</title>
+    <link rel="icon" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,500&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <div id="app">
-      <div class="app app-with-picker">
-        <aside id="picker" class="plug-picker"></aside>
-        <main class="main-col">
-          <header id="topbar" class="topbar"></header>
-          <div id="content"></div>
+    <div id="root">
+      <div class="app">
+        <aside id="sidebar" class="sidebar"></aside>
+        <main class="content">
+          <div id="topbar"></div>
+          <div id="view"></div>
         </main>
-        <div id="tweaks-panel"></div>
-        <div id="toast" class="toast"></div>
       </div>
+      <div id="scrim" class="scrim"></div>
+      <div id="toast"></div>
+      <div id="modal"></div>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

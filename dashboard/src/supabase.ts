@@ -21,8 +21,92 @@ if (hasSupabase) {
 export const supabase: SupabaseClient | null = client;
 
 // =============================================
+// Auth (login do dono — Supabase Auth)
+// =============================================
+//
+// A sessao do dono e persistida em localStorage pelo supabase-js; toda query passa a
+// levar o JWT `authenticated`, e a RLS (`usr_*`) libera so as linhas de owner_id = auth.uid().
+
+export interface SessaoDono {
+  userId: string;
+  email: string | null;
+}
+
+function mapSession(s: { user: { id: string; email?: string } } | null): SessaoDono | null {
+  if (!s) return null;
+  return { userId: s.user.id, email: s.user.email ?? null };
+}
+
+export async function getSessao(): Promise<SessaoDono | null> {
+  if (!client) return null;
+  const { data } = await client.auth.getSession();
+  return mapSession(data.session as never);
+}
+
+/** Observa mudancas de auth (login/logout). Retorna unsubscribe. */
+export function onAuth(cb: (s: SessaoDono | null) => void): () => void {
+  if (!client) return () => {};
+  const { data } = client.auth.onAuthStateChange((_evt, session) => cb(mapSession(session as never)));
+  return () => data.subscription.unsubscribe();
+}
+
+export async function entrar(email: string, senha: string): Promise<void> {
+  if (!client) throw new Error('Supabase nao configurado');
+  const { error } = await client.auth.signInWithPassword({ email, password: senha });
+  if (error) throw error;
+}
+
+export async function cadastrar(email: string, senha: string): Promise<{ precisaConfirmar: boolean }> {
+  if (!client) throw new Error('Supabase nao configurado');
+  const { data, error } = await client.auth.signUp({ email, password: senha });
+  if (error) throw error;
+  // Sem sessao apos signUp => projeto exige confirmacao de e-mail.
+  return { precisaConfirmar: !data.session };
+}
+
+export async function sair(): Promise<void> {
+  if (!client) return;
+  await client.auth.signOut();
+}
+
+// =============================================
 // Queries
 // =============================================
+
+function mapResidencia(res: Record<string, unknown>): Residencia {
+  return {
+    id: res.id as string,
+    nome: res.nome as string,
+    p_max: Number(res.p_max ?? 2540),
+    created_at: (res.criado_em ?? res.created_at ?? new Date().toISOString()) as string,
+  };
+}
+
+/** Residencias do dono logado (RLS filtra por owner_id = auth.uid()). */
+export async function fetchMinhasResidencias(): Promise<Residencia[]> {
+  if (!client) return [];
+  const { data, error } = await client.from('residencias').select('*').order('criado_em');
+  if (error) {
+    console.error('[supabase] fetchMinhasResidencias:', error);
+    return [];
+  }
+  return (data ?? []).map((r) => mapResidencia(r as Record<string, unknown>));
+}
+
+/** Cria uma residencia para o dono logado (owner_id = auth.uid(), exigido pela RLS). */
+export async function criarResidencia(nome: string, pMax = 3000): Promise<Residencia | null> {
+  if (!client) return null;
+  const { data: u } = await client.auth.getUser();
+  const ownerId = u.user?.id;
+  if (!ownerId) throw new Error('sem sessao');
+  const { data, error } = await client
+    .from('residencias')
+    .insert({ nome, p_max: pMax, owner_id: ownerId })
+    .select('*')
+    .single();
+  if (error) throw error;
+  return mapResidencia(data as Record<string, unknown>);
+}
 
 export async function fetchResidencia(residenciaId: string): Promise<Residencia | null> {
   if (!client) return null;
@@ -31,13 +115,7 @@ export async function fetchResidencia(residenciaId: string): Promise<Residencia 
     console.error('[supabase] fetchResidencia:', error);
     return null;
   }
-  const res = data as Record<string, unknown>;
-  return {
-    id: res.id as string,
-    nome: res.nome as string,
-    p_max: Number(res.p_max ?? 2540),
-    created_at: res.created_at as string,
-  };
+  return mapResidencia(data as Record<string, unknown>);
 }
 
 export async function fetchTomadas(residenciaId: string): Promise<Tomada[]> {
@@ -104,22 +182,27 @@ export async function setReleAberto(tomadaId: string, aberto: boolean): Promise<
   if (error) throw error;
 }
 
-/** Salva nova config (colunas flat) + insere evento de "config" para a timeline. */
+/** Salva nova config no JSONB `config` (schema real) + bump de versao + evento na timeline. */
 export async function saveConfig(
   tomadaId: string,
   config: Config,
   novaVersao: number,
 ): Promise<void> {
   if (!client) throw new Error('Supabase nao configurado');
+  // `config` e uma coluna JSONB (espelha o struct Tomada do firmware), NAO colunas flat.
+  const configJson: Record<string, unknown> = {
+    is_critical: config.is_critical,
+    w_i: config.w_i,
+    t_limite: config.t_limite,
+    schedule: config.schedule,
+    pi_historico: config.pi_historico,
+  };
+  if (config.p_limiar_detectado_auto !== undefined) {
+    configJson.p_limiar_detectado_auto = config.p_limiar_detectado_auto;
+  }
   const { error: e1 } = await client
     .from('tomadas')
-    .update({
-      t_limite: config.t_limite,
-      is_critical: config.is_critical,
-      schedule: config.schedule,
-      w_i: config.w_i,
-      config_version: novaVersao,
-    })
+    .update({ config: configJson, config_version: novaVersao })
     .eq('id', tomadaId);
   if (e1) throw e1;
 
@@ -231,5 +314,6 @@ function normalizeTomada(raw: Record<string, unknown>): Tomada {
     rele_aberto: Boolean(raw.rele_aberto ?? false),
     estado: ((raw.estado as string) || 'OFF') as Tomada['estado'],
     p_medida_atual: Number(raw.p_medida_atual ?? 0),
+    mac: (raw.mac as string | undefined) ?? undefined,
   };
 }
