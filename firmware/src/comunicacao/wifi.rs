@@ -22,7 +22,7 @@ use esp_idf_svc::{
     wifi::{BlockingWifi, ClientConfiguration, Configuration, EspWifi},
 };
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Duration;
 
 use crate::config_nuvem::{WIFI_PASSWORD, WIFI_SSID};
@@ -31,12 +31,16 @@ use super::wifi_provisioning;
 const NVS_NAMESPACE: &str = "wifi_creds";
 const NVS_KEY_SSID: &str = "ssid";
 const NVS_KEY_PWD:  &str = "pwd";
+/// Flag (NVS) que o botao seta para forcar o portal AP no proximo boot.
+const NVS_KEY_FORCAR: &str = "forcar_prov";
 
 const MAX_TENTATIVAS: u32 = 3;
 const BACKOFF_SEGUNDOS: [u64; 3] = [5, 10, 20];
 const INTERVALO_RECONEXAO_S: u64 = 30;
 
 static CONECTADO: AtomicBool = AtomicBool::new(false);
+/// Particao NVS guardada no boot para o botao de provisionamento setar a flag depois.
+static NVS_PART: OnceLock<EspDefaultNvsPartition> = OnceLock::new();
 
 /// Mantem o radio Wi-Fi vivo e da acesso ao loop de reconexao via Mutex.
 pub struct WifiHandle {
@@ -55,6 +59,8 @@ pub fn esta_conectado() -> bool {
 pub fn conectar(modem: Modem<'static>) -> Result<WifiHandle> {
     let sysloop = EspSystemEventLoop::take()?;
     let nvs_part = EspDefaultNvsPartition::take()?;
+    // Guarda a particao para o botao de provisionamento setar a flag depois (best-effort).
+    let _ = NVS_PART.set(nvs_part.clone());
 
     // Cria a Wi-Fi UMA VEZ (modem so pode ser consumido uma vez)
     let mut wifi = BlockingWifi::wrap(
@@ -62,10 +68,11 @@ pub fn conectar(modem: Modem<'static>) -> Result<WifiHandle> {
         sysloop,
     )?;
 
-    // Tenta resolver credenciais (NVS -> .env -> None)
-    let creds = resolver_credenciais(&nvs_part);
-
-    if let Some(c) = creds {
+    // Decide STA x portal AP. O botao tem prioridade: se a flag estiver setada, ignora
+    // as credenciais salvas e abre o portal direto.
+    if ler_e_limpar_flag_provisionamento(&nvs_part) {
+        log::warn!("[WIFI] provisionamento FORCADO pelo botao -- abrindo portal AP");
+    } else if let Some(c) = resolver_credenciais(&nvs_part) {
         log::info!("[WIFI] credenciais disponiveis (SSID={}), tentando STA", c.ssid);
         match tentar_sta_com_retry(&mut wifi, &c) {
             Ok(()) => {
@@ -90,8 +97,14 @@ pub fn conectar(modem: Modem<'static>) -> Result<WifiHandle> {
     if let Err(e) = salvar_credenciais_nvs(&nvs_part, &novas.ssid, &novas.pwd) {
         log::error!("[WIFI] falha salvando NVS: {e:?}");
     }
-    log::info!("[WIFI] credenciais salvas. Reiniciando ESP32 em 2s...");
-    std::thread::sleep(Duration::from_secs(2));
+    // Persiste o claim-code do portal em LittleFS p/ o provisionamento pos-restart.
+    if let Err(e) = crate::persistencia::credenciais::salvar_claim_pendente(&novas.claim_code) {
+        log::error!("[WIFI] falha salvando claim-code: {e:?}");
+    }
+    // Folga antes do restart: o AP (e o HTTP server) so caem aqui. 4s dao tempo
+    // do celular renderizar a pagina "Configuracao salva" antes do AP sumir.
+    log::info!("[WIFI] credenciais salvas. Reiniciando ESP32 em 4s...");
+    std::thread::sleep(Duration::from_secs(4));
     unsafe { esp_idf_svc::sys::esp_restart(); }
     // unreachable -- esp_restart nao retorna
 }
@@ -144,6 +157,54 @@ pub(super) fn salvar_credenciais_nvs(
     nvs.set_str(NVS_KEY_SSID, ssid)?;
     nvs.set_str(NVS_KEY_PWD, pwd)?;
     Ok(())
+}
+
+// =============================================
+// Botao de provisionamento (flag no NVS + restart)
+// =============================================
+
+/// Chamado pela task do botao (super::botao) ao detectar 3s de pressao: grava a flag de
+/// provisionamento no NVS e reinicia. No proximo boot, `conectar` ve a flag e sobe o AP.
+/// Nao retorna (reinicia o chip).
+pub fn solicitar_provisionamento_e_reiniciar() -> ! {
+    if let Some(part) = NVS_PART.get() {
+        match EspNvs::new(part.clone(), NVS_NAMESPACE, true) {
+            Ok(nvs) => {
+                if let Err(e) = nvs.set_str(NVS_KEY_FORCAR, "1") {
+                    log::error!("[WIFI] falha gravando flag de provisionamento: {e:?}");
+                }
+            }
+            Err(e) => log::error!("[WIFI] NVS indisponivel p/ flag de provisionamento: {e:?}"),
+        }
+    } else {
+        log::error!("[WIFI] particao NVS nao inicializada -- nao da p/ forcar provisionamento");
+    }
+
+    log::warn!("[WIFI] ===========================================");
+    log::warn!("[WIFI] PROVISIONAMENTO FORCADO pelo botao.");
+    log::warn!("[WIFI] >>> SOLTE O BOTAO <<< Reiniciando em 2s...");
+    log::warn!("[WIFI] ===========================================");
+    std::thread::sleep(Duration::from_secs(2));
+    unsafe { esp_idf_svc::sys::esp_restart() } // -> ! (nao retorna)
+}
+
+/// Le a flag de provisionamento forcado e a limpa (uso unico). `true` => abrir portal AP.
+fn ler_e_limpar_flag_provisionamento(nvs_part: &EspDefaultNvsPartition) -> bool {
+    let nvs = match EspNvs::new(nvs_part.clone(), NVS_NAMESPACE, true) {
+        Ok(n) => n,
+        Err(_) => return false,
+    };
+    let mut buf = [0_u8; 8];
+    let setada = nvs
+        .get_str(NVS_KEY_FORCAR, &mut buf)
+        .ok()
+        .flatten()
+        .map(|s| !s.is_empty())
+        .unwrap_or(false);
+    if setada {
+        let _ = nvs.remove(NVS_KEY_FORCAR); // consome: nao reabre o portal no boot seguinte
+    }
+    setada
 }
 
 // =============================================

@@ -20,11 +20,19 @@ serde_json    = "1"
 anyhow        = "1"
 dotenvy_macro = "0.15"
 chrono        = { version = "0.4", default-features = false, features = ["clock"] }
+# HMAC-SHA256 para autenticar os heartbeats ESP-NOW (protocolo v3, chave por-residencia).
+# RustCrypto puro (sem asm) -> compila sob xtensa-esp32-espidf.
+sha2          = { version = "0.10", default-features = false }
+hmac          = { version = "0.12", default-features = false }
+# Modelo MILP + tipos + logica pura de sync (host-testavel; linkado tambem sob esp-idf std).
+tomada-solver = { path = "../tomada-solver" }
 
 [build-dependencies]
 embuild = "0.33"
 
 [package.metadata.esp-idf-sys]
+# `bindings_header` faz o esp-idf-sys gerar bindings p/ a API do littlefs (ver bindings.h).
+# Sem `bindings_module`, os simbolos entram na raiz de `esp_idf_sys` (=> `sys::esp_vfs_littlefs_*`).
 extra_components = [
-  { remote_component = { name = "joltwallet/littlefs", version = "1.21.1" } }
+  { remote_component = { name = "joltwallet/littlefs", version = "1.21.1" }, bindings_header = "bindings.h" }
 ]

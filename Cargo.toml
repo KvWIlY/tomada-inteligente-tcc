@@ -1,5 +1,5 @@
 [workspace]
-members = ["firmware"]
+members = ["firmware", "tomada-solver"]
 resolver = "2"
 
 # Profiles ficam aqui (raiz) para serem aplicados a todos os membros do workspace.
@@ -17,8 +17,16 @@ codegen-units = 1
 [profile.release.package.serde_json]
 opt-level = 0
 
+# Mitigacao do mesmo bug LLVM Xtensa em codigo float-pesado do solver (minilp).
+# Se o spike (T006) confirmar que opt-level >= 1 funciona, esta linha pode sair.
+[profile.release.package.minilp]
+opt-level = 0
+
 # Dev: opt-level = 0 evita o bug LLVM Xtensa.
 # Binario fica maior (~2.4 MB com Wi-Fi) mas cabe na particao de 3.125 MB.
+# codegen-units = 1: no Windows, o default (256) gera ~257 .o e estoura o limite de
+# ~32 KB da linha de comando do linker (os error 206). Com 1 unidade vira 1 .o.
 [profile.dev]
-debug     = true
-opt-level = 0
+debug         = true
+opt-level     = 0
+codegen-units = 1
