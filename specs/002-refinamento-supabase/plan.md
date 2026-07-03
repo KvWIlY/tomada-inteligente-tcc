@@ -41,7 +41,8 @@ medições/eventos com flag `confirmado` em baldes por dia; Supabase (PostgREST)
 
 **Identidade/Auth**: identidade por MAC → `tomada_id` UUID; autenticação por **JWT
 por-dispositivo** (role `device`, claims `residencia_id`/`tomada_id`) no header
-`Authorization: Bearer <jwt>` — **sem** header `apikey` com anon key. Renovação via Edge
+`Authorization: Bearer <jwt>` + header `apikey` com a **publishable key pública** (exigida
+pelo gateway hospedado, sem acesso sob RLS) — **nunca** anon key nem `service_role`. Renovação via Edge
 Function `renovar(tomada_id, device_secret)`. Schema com **RLS default-deny** + menor
 privilégio por coluna (`device` não escreve `rele_aberto`/`p_max`/`mac`/`residencia_id`).
 
@@ -151,8 +152,9 @@ real. Isso mantém o Princípio II (sem complexidade nova) e corrige o Princípi
 ## Complexity Tracking
 
 > Sem violações da Constituição que exijam justificativa. O refinamento **remove** uma
-> violação (anon key no binário) e não adiciona dependências.
+> violação (anon key no binário) e não adiciona dependências. Abaixo, **uma decisão
+> esclarecida** (não é violação): a publishable key pública no `.bin`.
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
-| (nenhuma) | — | — |
+| Publishable key pública (`apikey`) embutida no `.bin`, compartilhada entre nós | O gateway hospedado **exige** `apikey` em `/rest/v1/*` (responde `401 "No API key found"` antes da RLS). A publishable key (`sb_publishable_…`) é pública por design. | Omitir o header não é opção (gateway recusa). Reusar a antiga anon key **foi rejeitado**: concedia acesso a dados. A publishable key **não concede acesso** (RLS default-deny, verificado 15/15 em T017) → respeita o Princípio VIII; o único segredo de dados continua sendo o JWT por-device. |

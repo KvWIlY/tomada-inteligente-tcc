@@ -1,10 +1,15 @@
 <!-- SPECKIT START -->
-Active feature plan: specs/002-refinamento-supabase/plan.md
-Related (002): spec.md, research.md, data-model.md, contracts/ (supabase-client.md,
-rls-verification.md), quickstart.md in the same dir. Refines the Supabase layer of 001:
-migrates firmware client from shared anon key to per-device JWT (Princ. VIII), adds
-batch+confirm+idempotent sync, config/rele pull, and end-to-end RLS verification.
-Parent feature (001): specs/001-otimizacao-tomadas-milp/plan.md — spec.md, research.md,
+Active feature plan: specs/003-fallback-coordenacao-nuvem/plan.md
+Related (003): spec.md, research.md, data-model.md, contracts/ (cloud-fallback.md),
+quickstart.md in the same dir. Wires the orphan `buscar_todas_tomadas` into the decision
+cycle: when online AND ESP-NOW has zero live peers, sum sibling `p_medida_atual` (fresh
+via `ultimo_uso_ativo_ts`, excluding self) as `carga_fixa` subtracted from P_max — a
+degraded, conservative coordination path for mesh partition. Shallow (not a MILP decision
+var); gated on `peers_vivos.is_empty()` to avoid MAC↔UUID dedup. Pure logic host-tested in
+`tomada-solver::coordenacao`. No schema/auth/flash changes.
+Ancestor feature (002): specs/002-refinamento-supabase/plan.md — per-device JWT (Princ.
+VIII), batch+confirm+idempotent sync, config/rele pull, end-to-end RLS verification.
+Ancestor feature (001): specs/001-otimizacao-tomadas-milp/plan.md — spec.md, research.md,
 data-model.md, contracts/ (supabase-schema.sql, provisioning-api.md, espnow-protocol.md,
 solver-api.md), quickstart.md. The 001 schema + provisioning contracts remain authoritative.
 

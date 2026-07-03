@@ -15,7 +15,9 @@ export interface SidebarProps {
   onSelect: (id: string | null) => void; // null = overview
   onCloseNav: () => void;
   onInfo: (msg: string) => void;
+  onRename?: (id: string) => void; // lapis discreto no item (renomeia a tomada)
   onLogout?: () => void;     // ausente no modo mock
+  onAddDevice?: () => void;  // gera claim-code (ausente no modo mock)
 }
 
 export function renderSidebar(el: HTMLElement, p: SidebarProps): void {
@@ -28,6 +30,7 @@ export function renderSidebar(el: HTMLElement, p: SidebarProps): void {
       return `
         <button class="nav__item${active ? ' nav__item--active' : ''}" data-id="${t.id}">
           ${applianceIcon(t)}<span class="nav__name">${escapeHtml(t.nome)}</span>
+          <span class="nav__edit" data-edit title="Renomear tomada" aria-label="Renomear tomada">${icon('edit', 16)}</span>
           <span class="nav__w tnum">${w}</span>
         </button>`;
     })
@@ -70,8 +73,17 @@ export function renderSidebar(el: HTMLElement, p: SidebarProps): void {
       }
     });
   });
-  el.querySelector('[data-add]')?.addEventListener('click', () =>
-    p.onInfo('Parear novo dispositivo — use o provisionamento do firmware.'),
-  );
+  // Lapis (sobre o W, aparece no hover): renomeia sem disparar o select do item.
+  el.querySelectorAll<HTMLElement>('.nav__edit[data-edit]').forEach((sp) => {
+    sp.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = sp.closest<HTMLElement>('.nav__item')?.dataset.id;
+      if (id) p.onRename?.(id);
+    });
+  });
+  el.querySelector('[data-add]')?.addEventListener('click', () => {
+    if (p.onAddDevice) p.onAddDevice();
+    else p.onInfo('Parear novo dispositivo — use o provisionamento do firmware.');
+  });
   el.querySelector('[data-logout]')?.addEventListener('click', () => p.onLogout?.());
 }

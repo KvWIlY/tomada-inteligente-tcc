@@ -29,12 +29,13 @@ export function consumoTotalAtual(tomadas: Tomada[]): number {
 /**
  * Pontuação de eficiência (0–100): de toda a energia fantasma que poderia ter
  * sido gasta enquanto a tomada estava ociosa (não-ON), quanto % foi evitada
- * abrindo o relé (estado OFF). Sem standby calibrado em nenhuma tomada → 95.
+ * abrindo o relé (estado OFF). Retorna `null` quando não há standby calibrado em
+ * nenhuma tomada (sem base para o cálculo) — a UI mostra "—" em vez de inventar um número.
  */
 export function efficiencyScore(
   tomadas: Tomada[],
   medicoesPorTomada: Record<string, Medicao[]>,
-): number {
+): number | null {
   let evitada = 0;
   let potencial = 0;
   for (const t of tomadas) {
@@ -46,7 +47,7 @@ export function efficiencyScore(
     evitada += minOff * t.cstd * ih;
     potencial += minIdle * t.cstd * ih;
   }
-  if (potencial <= 0) return 95;
+  if (potencial <= 0) return null;
   return Math.round((evitada / potencial) * 100);
 }
 

@@ -3,6 +3,7 @@
 // =============================================
 
 import { buildMockData } from './mock';
+import { icon } from './icons';
 import { consumoTotalAtual, efficiencyScore, temConexaoRecente } from './derive';
 import { createStore } from './store';
 import * as supa from './supabase';
@@ -11,7 +12,7 @@ import { renderSidebar } from './views/sidebar';
 import { renderOverview } from './views/overview';
 import { renderDetail } from './views/detail';
 import { renderLogin } from './views/login';
-import { renderToast, renderModal, type ModalData, type ToastData } from './views/toast';
+import { renderToast, renderModal, type ToastData } from './views/toast';
 import { escapeHtml } from './views/components';
 
 const FORCAR_RESIDENCIA = (import.meta.env.VITE_RESIDENCIA_ID as string | undefined)?.trim() || undefined;
@@ -260,6 +261,45 @@ async function savePMax(w: number): Promise<void> {
   }
 }
 
+// === Renomear tomada (nome exibido na sidebar/topo) ===
+async function persistNome(t: Tomada, nome: string): Promise<void> {
+  const cur = store.get();
+  store.set({ tomadas: cur.tomadas.map((tt) => (tt.id === t.id ? { ...tt, nome } : tt)) });
+  showToast(`Renomeada para "${nome}"`);
+  if (supa.hasSupabase && !cur.usingMock) {
+    try {
+      await supa.renameTomada(t.id, nome);
+    } catch (err) {
+      console.error('[main] renameTomada:', err);
+      store.set({ tomadas: cur.tomadas }); // rollback
+      showToast('Falha ao renomear', 'alert');
+    }
+  }
+}
+
+function abrirRenomear(t: Tomada): void {
+  store.set({
+    modal: {
+      title: 'Renomear tomada',
+      body: '',
+      bodyHtml: `
+        <p class="modal__body" style="margin-bottom:14px">Esse nome aparece na barra lateral e no topo da página.</p>
+        <input class="auth__input" data-role="rename-input" type="text" maxlength="40" autofocus
+          value="${escapeHtml(t.nome)}" placeholder="Nome da tomada" style="width:100%" />`,
+      confirmLabel: 'Salvar',
+      danger: false,
+      onConfirm: () => {
+        const input = elModal.querySelector<HTMLInputElement>('[data-role="rename-input"]');
+        const novo = (input?.value ?? '').trim();
+        store.set({ modal: null });
+        if (!novo || novo === t.nome) return;
+        void persistNome(t, novo);
+      },
+      onCancel: () => store.set({ modal: null }),
+    },
+  });
+}
+
 async function criarResidenciaDemo(): Promise<void> {
   try {
     const r = await supa.criarResidencia('Minha Casa', 3000);
@@ -270,6 +310,56 @@ async function criarResidenciaDemo(): Promise<void> {
   } catch (err) {
     console.error('[main] criarResidencia:', err);
     showToast('Erro ao criar residência', 'alert');
+  }
+}
+
+// === Adicionar dispositivo (gera claim-code de pareamento) ===
+function gerarClaimCode(): string {
+  const alf = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const rnd = crypto.getRandomValues(new Uint32Array(6));
+  let s = '';
+  for (let i = 0; i < 6; i++) s += alf[rnd[i] % alf.length];
+  return `TOMADA-${s}`;
+}
+
+async function abrirNovoDispositivo(): Promise<void> {
+  const s = store.get();
+  if (s.usingMock || !s.residencia) {
+    showToast('Crie uma residência primeiro', 'alert');
+    return;
+  }
+  const code = gerarClaimCode();
+  try {
+    const expiraEm = await supa.criarClaim(s.residencia.id, code, 6);
+    const quando = new Date(expiraEm).toLocaleString('pt-BR');
+    store.set({
+      modal: {
+        title: 'Parear novo dispositivo',
+        body: '',
+        bodyHtml: `
+          <p class="modal__body" style="text-align: justify;">Código de <b>uso único</b> (expira ${escapeHtml(quando)}). Digite-o no
+            <b>portal AP</b> da tomada (ou em <code>firmware/.env</code> como <code>CLAIM_CODE</code>)
+            e ligue a tomada. No 1º boot ela se pareia a <b>${escapeHtml(s.residencia.nome)}</b>.</p>
+          <div class="claim-code">
+            <code class="claim-code__val" data-role="claim-code">${escapeHtml(code)}</code>
+          </div>`,
+        confirmLabel: 'Concluído',
+        danger: false,
+        className: 'modal--device',
+        secondaryLabel: 'Copiar',
+        onConfirm: () => store.set({ modal: null }),
+        onCancel: () => store.set({ modal: null }),
+        onSecondary: () => {
+          navigator.clipboard?.writeText(code).then(
+            () => showToast('Código copiado'),
+            () => showToast('Não foi possível copiar', 'alert'),
+          );
+        },
+      },
+    });
+  } catch (err) {
+    console.error('[main] criarClaim:', err);
+    showToast('Erro ao gerar claim-code', 'alert');
   }
 }
 
@@ -316,6 +406,7 @@ function traduzErroAuth(m: string): string {
 }
 
 // === Render ===
+const elApp = document.querySelector<HTMLElement>('.app')!;
 const elSidebar = document.getElementById('sidebar')!;
 const elTopbar = document.getElementById('topbar')!;
 const elView = document.getElementById('view')!;
@@ -324,21 +415,27 @@ const elToast = document.getElementById('toast')!;
 const elModal = document.getElementById('modal')!;
 
 function renderTopbar(s: AppState, total: number): void {
-  const titulo = s.selectedId ? s.tomadas.find((t) => t.id === s.selectedId)?.nome ?? 'Tomada' : 'Visão Geral';
+  const tomada = s.selectedId ? s.tomadas.find((t) => t.id === s.selectedId) ?? null : null;
+  const titulo = tomada ? tomada.nome : s.selectedId ? 'Tomada' : 'Visão Geral';
   elTopbar.innerHTML = `
     <div class="topbar">
       <button class="topbar__burger" data-role="burger" aria-label="Menu">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
       </button>
       <span class="topbar__title">${escapeHtml(titulo)}</span>
+      ${tomada ? `<button class="icon-btn" data-role="rename" title="Renomear tomada" aria-label="Renomear tomada">${icon('edit', 16)}</button>` : ''}
       <span class="topbar__w tnum">${Math.round(total).toLocaleString('pt-BR')}<small> W</small></span>
     </div>`;
   elTopbar.querySelector('[data-role="burger"]')?.addEventListener('click', () => store.set({ navOpen: true }));
+  if (tomada) elTopbar.querySelector('[data-role="rename"]')?.addEventListener('click', () => abrirRenomear(tomada));
 }
 
 store.subscribe((s) => {
   renderToast(elToast, s.toast);
   renderModal(elModal, s.modal);
+
+  // Login/checking: sem sidebar — colapsa o grid e some com a barra lateral.
+  elApp.classList.toggle('app--auth', s.phase === 'login' || s.phase === 'checking');
 
   // Tela de login: ocupa tudo, sem sidebar/topbar.
   if (s.phase === 'login') {
@@ -347,7 +444,9 @@ store.subscribe((s) => {
     elScrim.className = 'scrim';
     renderLogin(elView, {
       mode: authMode, email: authEmail, senha: authSenha, busy: authBusy, error: authError, info: authInfo,
-      onInput: (campo, valor) => setAuth(campo === 'email' ? { email: valor } : { senha: valor }),
+      // Não re-renderiza a cada tecla (senão o <input> é recriado e perde o foco):
+      // os campos são uncontrolled; só guardamos o valor para o submit.
+      onInput: (campo, valor) => { if (campo === 'email') authEmail = valor; else authSenha = valor; },
       onSubmit: () => void submitAuth(),
       onToggleMode: () => setAuth({ mode: authMode === 'login' ? 'signup' : 'login', error: null, info: null }),
     });
@@ -376,7 +475,9 @@ store.subscribe((s) => {
     onSelect: (id) => store.set({ selectedId: id, navOpen: false }),
     onCloseNav: () => store.set({ navOpen: false }),
     onInfo: (msg) => showToast(msg),
+    onRename: (id) => { const t = s.tomadas.find((tt) => tt.id === id); if (t) abrirRenomear(t); },
     onLogout: s.usingMock ? undefined : () => void supa.sair(),
+    onAddDevice: s.usingMock ? undefined : () => void abrirNovoDispositivo(),
   });
   renderTopbar(s, total);
 

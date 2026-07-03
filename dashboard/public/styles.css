@@ -63,6 +63,14 @@ button { font-family: inherit; cursor: pointer; }
 
 /* ============================================================ App shell */
 .app { display: grid; grid-template-columns: var(--sidebar-w) 1fr; height: 100%; min-height: 0; }
+/* Tela de login/checking: sem barra lateral — uma coluna ocupando a tela toda.
+   `grid-template-rows: 100%` impede a linha de colapsar quando a sidebar (que antes
+   esticava a altura) some; `#view` estica e o `.auth` centraliza de verdade. Em telas
+   baixas o card cresce além de 100% e o `.content` rola (responsivo). */
+.app--auth { grid-template-columns: 1fr; grid-template-rows: 100%; }
+.app--auth .sidebar { display: none; }
+.app--auth .content { display: flex; flex-direction: column; }
+.app--auth #view { flex: 1 1 auto; min-height: 0; }
 
 /* ---------------- Sidebar ---------------- */
 .sidebar {
@@ -103,8 +111,23 @@ button { font-family: inherit; cursor: pointer; }
   border-radius: 0 3px 3px 0; background: var(--green);
 }
 .nav__name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.nav__w { font-size: 12.5px; font-weight: 700; color: var(--ink-faint); white-space: nowrap; }
+.nav__w { font-size: 12.5px; font-weight: 700; color: var(--ink-faint); white-space: nowrap; transition: opacity .14s; }
 .nav__item--active .nav__w { color: var(--green); }
+
+/* Lapis discreto do item: fica sobre o W e so aparece ao passar o mouse (desktop).
+   Renomeia a tomada; o nome editado e o rotulo exibido na propria sidebar.
+   Seletores qualificados com .nav__item p/ vencer a regra generica `.nav__item svg`. */
+.nav__edit { position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  display: grid; place-items: center; width: 30px; height: 30px; border-radius: 7px;
+  cursor: pointer; opacity: 0; pointer-events: none; z-index: 2;
+  transition: opacity .14s, background .14s; }
+/* svg sem pointer-events: a caixa inteira do botao vira o alvo (o vao do icone
+   `fill:none` nao cria zona morta de clique/hover). */
+.nav__item .nav__edit svg { width: 16px; height: 16px; color: var(--ink-faint); pointer-events: none; transition: color .14s; }
+.nav__item:hover .nav__edit { opacity: .65; pointer-events: auto; }
+.nav__item:hover .nav__w { opacity: 0; pointer-events: none; }
+.nav__edit:hover { opacity: 1; background: var(--green-bg); }
+.nav__item .nav__edit:hover svg { color: var(--green); }
 
 /* status dot */
 .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
@@ -231,6 +254,12 @@ button { font-family: inherit; cursor: pointer; }
 /* ============================================================ Detail */
 .dhero { display: grid; grid-template-columns: 1fr auto; gap: 26px; align-items: stretch; }
 .dhero__titrow { display: flex; align-items: center; gap: 13px; flex-wrap: wrap; margin-bottom: 6px; }
+
+/* Botao-icone discreto (ex.: lapis de renomear no topbar mobile) — some no repouso. */
+.icon-btn { display: inline-grid; place-items: center; width: 32px; height: 32px; padding: 0;
+  border: 0; border-radius: 9px; background: transparent; color: var(--ink-faint);
+  cursor: pointer; opacity: .6; transition: opacity .15s, background .15s, color .15s; }
+.icon-btn:hover { opacity: 1; background: var(--green-bg); color: var(--green); }
 .dhero__title { font-size: 29px; font-weight: 700; letter-spacing: -0.018em; margin: 0; }
 .dhero__num { font-size: clamp(40px, 5.5vw, 54px); margin: 8px 0 12px; }
 .dhero__sync { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--ink-soft); font-weight: 600; }
@@ -333,6 +362,13 @@ button { font-family: inherit; cursor: pointer; }
 .modal__title { font-size: 21px; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 9px; }
 .modal__body { font-size: 14px; color: var(--ink-soft); line-height: 1.55; margin: 0 0 22px; font-weight: 500; }
 .modal__actions { display: flex; gap: 10px; justify-content: flex-end; }
+.modal__actions--split { justify-content: space-between; }
+/* Variante "dispositivo": título ao lado do ícone (em linha). */
+.modal--device .modal__head { display: flex; align-items: center; gap: 13px; margin-bottom: 16px; }
+.modal--device .modal__icon { margin-bottom: 0; }
+.modal--device .modal__title { margin-bottom: 0; }
+/* Respiro entre o código e os botões; Copiar na ponta esquerda, Concluído na direita. */
+.modal--device .modal__actions { margin-top: 24px; }
 .btn { border: 0; border-radius: 11px; padding: 11px 18px; font-size: 14px; font-weight: 700; transition: filter .15s, background .15s; }
 .btn--ghost { background: var(--lav); color: var(--ink); }
 .btn--ghost:hover { background: var(--lav-track); }
@@ -364,8 +400,8 @@ button { font-family: inherit; cursor: pointer; }
   .app { grid-template-columns: 1fr; }
   .topbar { display: flex; align-items: center; gap: 14px; padding: 12px 16px; background: var(--card); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 22; }
   .topbar__burger { width: 42px; height: 42px; border-radius: 11px; border: 1px solid var(--line); background: var(--card); display: grid; place-items: center; color: var(--ink); }
-  .topbar__title { font-size: 17px; font-weight: 700; flex: 1; color: var(--green-deep); }
-  .topbar__w { font-size: 16px; font-weight: 800; letter-spacing: -.02em; }
+  .topbar__title { font-size: 17px; font-weight: 700; color: var(--green-deep); }
+  .topbar__w { font-size: 16px; font-weight: 800; letter-spacing: -.02em; margin-left: auto; }
   .topbar__w small { font-size: 12px; color: var(--ink-faint); font-weight: 700; }
 
   .sidebar { position: fixed; inset: 0 auto 0 0; width: 290px; max-width: 86vw; transform: translateX(-104%); transition: transform .28s cubic-bezier(.3,.8,.3,1); box-shadow: 0 0 70px rgba(20,20,40,.22); }
@@ -406,3 +442,10 @@ button { font-family: inherit; cursor: pointer; }
 .auth__msg--err { background: var(--red-bg); color: var(--red-ink); }
 .auth__msg--ok { background: var(--green-bg); color: var(--green-ink); }
 .auth__card .brand__mark { width: 40px; height: 40px; }
+
+/* ============================================================ Claim-code (parear dispositivo) */
+.claim-code { margin-top: 14px; }
+.claim-code__val { display: block; font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 20px; font-weight: 700; letter-spacing: 0.06em; text-align: center; color: var(--green-deep);
+  background: var(--lav); border: 1px dashed var(--green); border-radius: var(--r); padding: 14px;
+  user-select: all; overflow-wrap: anywhere; }

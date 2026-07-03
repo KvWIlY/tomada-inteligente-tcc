@@ -1,4 +1,3 @@
-pub mod botao;
 pub mod sntp;
 pub mod wifi;
 pub mod wifi_provisioning;

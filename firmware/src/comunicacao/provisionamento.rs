@@ -53,6 +53,16 @@ pub fn obter_mac() -> Result<String> {
     ))
 }
 
+/// Erro de provisionamento classificado para o loop de boot decidir o que fazer:
+/// claim ruim (reabrir o portal — retry com o mesmo claim e inutil) vs transitorio
+/// (rede/5xx/parse — pode resolver sozinho, vale tentar de novo).
+pub enum ErroProv {
+    /// HTTP 401: claim invalido/expirado/usado.
+    ClaimInvalido,
+    /// Falha que pode ser transitoria.
+    Transitorio(anyhow::Error),
+}
+
 #[derive(Deserialize)]
 struct RespProvisionar {
     tomada_id: String,
@@ -72,7 +82,7 @@ struct RespRenovar {
 
 /// 1o boot: chama `provisionar`, grava credenciais em LittleFS e retorna-as.
 /// `claim_code` vem do portal AP (dashboard do dono).
-pub fn provisionar(mac: &str, claim_code: &str) -> Result<CredenciaisLocais> {
+pub fn provisionar(mac: &str, claim_code: &str) -> Result<CredenciaisLocais, ErroProv> {
     let url = format!("{}/functions/v1/provisionar", SUPABASE_URL);
     // Corpo so com strings (sem f32) -> serde_json seguro.
     let body = format!(
@@ -80,12 +90,19 @@ pub fn provisionar(mac: &str, claim_code: &str) -> Result<CredenciaisLocais> {
         escape_json(mac),
         escape_json(claim_code)
     );
-    let (status, resp) = post_funcao(&url, &body)?;
-    if !(200..=299).contains(&status) {
-        return Err(anyhow!("[PROV] provisionar HTTP {status}: {resp}"));
+    let (status, resp) = post_funcao(&url, &body).map_err(ErroProv::Transitorio)?;
+    // 401 = claim invalido/expirado/usado: retry com o mesmo claim e inutil -> reabrir portal.
+    if status == 401 {
+        return Err(ErroProv::ClaimInvalido);
     }
-    let p: RespProvisionar =
-        serde_json::from_str(&resp).context("parse resposta de provisionar")?;
+    if !(200..=299).contains(&status) {
+        return Err(ErroProv::Transitorio(anyhow!(
+            "[PROV] provisionar HTTP {status}: {resp}"
+        )));
+    }
+    let p: RespProvisionar = serde_json::from_str(&resp)
+        .context("parse resposta de provisionar")
+        .map_err(ErroProv::Transitorio)?;
     let creds = CredenciaisLocais {
         mac: mac.to_string(),
         tomada_id: p.tomada_id,
@@ -95,14 +112,16 @@ pub fn provisionar(mac: &str, claim_code: &str) -> Result<CredenciaisLocais> {
         jwt: p.jwt,
         jwt_exp: p.jwt_exp,
     };
-    credenciais::save(&creds)?;
+    credenciais::save(&creds).map_err(ErroProv::Transitorio)?;
     log::info!("[PROV] provisionado (tomada_id={})", creds.tomada_id);
     Ok(creds)
 }
 
 /// Troca o `device_secret` por um JWT novo. Retorna `(jwt, jwt_exp)`.
+/// A renovacao e servida como subpath da funcao `provisionar` (roteamento interno
+/// `action == "renovar"`), nao como funcao separada — por isso `provisionar/renovar`.
 pub fn renovar(tomada_id: &str, device_secret: &str) -> Result<(String, i64)> {
-    let url = format!("{}/functions/v1/renovar", SUPABASE_URL);
+    let url = format!("{}/functions/v1/provisionar/renovar", SUPABASE_URL);
     let body = format!(
         r#"{{"tomada_id":"{}","device_secret":"{}"}}"#,
         escape_json(tomada_id),
@@ -154,6 +173,9 @@ fn post_funcao(url: &str, body: &str) -> Result<(u16, String)> {
         use_global_ca_store: true,
         crt_bundle_attach: Some(esp_idf_svc::sys::esp_crt_bundle_attach),
         timeout: Some(std::time::Duration::from_secs(15)),
+        // Folga p/ headers (resposta com muitos headers do gateway + Bearer longo no request).
+        buffer_size: Some(4096),
+        buffer_size_tx: Some(2048),
         ..Default::default()
     };
     let mut client = Client::wrap(EspHttpConnection::new(&config)?);

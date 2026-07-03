@@ -10,7 +10,6 @@
 
 use anyhow::{anyhow, Result};
 use embedded_svc::io::Write;
-use embedded_svc::io::Read as _;
 use esp_idf_svc::{
     http::{
         server::{Configuration as HttpServerConfig, EspHttpServer},
@@ -104,7 +103,7 @@ pub fn iniciar(wifi: &mut BlockingWifi<EspWifi<'static>>) -> Result<CredsRecebid
 
     // 3. Sobe HTTP server e bloqueia ate receber form
     let (tx, rx) = mpsc::channel::<CredsRecebidas>();
-    let _server = subir_http_server(redes, tx)?; // mantem vivo enquanto _server existir
+    let _server = subir_http_server(redes, tx, ip_ap.clone())?; // mantem vivo enquanto _server existir
 
     log::info!("[PROV] aguardando credenciais via formulario HTTP...");
 
@@ -145,18 +144,30 @@ fn fazer_scan(wifi: &mut BlockingWifi<EspWifi<'static>>) -> Result<Vec<String>> 
 fn subir_http_server(
     redes: Vec<String>,
     tx: mpsc::Sender<CredsRecebidas>,
+    ip_ap: String,
 ) -> Result<EspHttpServer<'static>> {
     // uri_match_wildcard: deixa um unico handler GET "/*" responder QUALQUER caminho.
+    // stack_size: o DEFAULT (6144) ESTOURA ao formatar/escrever HTML no handler Rust
+    // (era a causa do "A stack overflow in task httpd" ao submeter o /save). 10240 da folga.
     let mut server = EspHttpServer::new(&HttpServerConfig {
         uri_match_wildcard: true,
+        stack_size: 10240,
         ..Default::default()
     })?;
     let html = montar_html_form(&redes);
 
-    // GET /* -> serve o formulario para qualquer caminho (captive portal). As URLs de
-    // checagem de internet do SO (/generate_204, /hotspot-detect.html, /ncsi.txt...)
-    // caem aqui em vez do 204/sucesso esperado -> o celular abre o portal sozinho.
+    // GET /* (captive portal):
+    //   - "/" serve o formulario.
+    //   - qualquer outro caminho (os probes do SO: /generate_204, /hotspot-detect.html,
+    //     /ncsi.txt, /connecttest.txt...) responde 302 -> http://<ip>/ . Isso faz o
+    //     Android/iOS mostrarem "entrar na rede" e abrirem o navegador direto no form.
     server.fn_handler::<anyhow::Error, _>("/*", Method::Get, move |req| {
+        if req.uri() != "/" {
+            let location = format!("http://{ip_ap}/");
+            let headers = [("Location", location.as_str()), ("Content-Length", "0")];
+            req.into_response(302, Some("Found"), &headers)?;
+            return Ok(());
+        }
         let mut resp = req.into_ok_response()?;
         resp.write_all(html.as_bytes())?;
         Ok(())

@@ -40,10 +40,11 @@ export function miniBars(data: number[], estado: Estado): string {
   return `<svg class="tcard__bars" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">${bars}</svg>`;
 }
 
-/** Anel de eficiência (0–100). */
-export function efficiencyRing(value: number): string {
+/** Anel de eficiência (0–100). `null` = sem dados → anel vazio com "—". */
+export function efficiencyRing(value: number | null): string {
   const size = 150, sw = 13, r = (size - sw) / 2, c = 2 * Math.PI * r;
-  const off = c * (1 - value / 100);
+  const semDados = value === null;
+  const off = semDados ? c : c * (1 - value / 100); // sem dados => anel vazio
   return `
     <div class="eff__ring">
       <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
@@ -53,7 +54,7 @@ export function efficiencyRing(value: number): string {
           stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}"
           transform="rotate(-90 ${size / 2} ${size / 2})" style="transition:stroke-dashoffset .8s cubic-bezier(.2,.7,.2,1)"/>
       </svg>
-      <div class="eff__val tnum">${Math.round(value)}</div>
+      <div class="eff__val tnum">${semDados ? '—' : Math.round(value)}</div>
     </div>`;
 }
 

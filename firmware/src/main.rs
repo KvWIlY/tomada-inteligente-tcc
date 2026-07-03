@@ -55,12 +55,6 @@ fn main() -> Result<()> {
     let peripherals = Peripherals::take()?;
     let _wifi = comunicacao::wifi::conectar(peripherals.modem)?;
 
-    // 2b. Botao de provisionamento (BOOT/GPIO0): segurar ~3s reabre o portal AP a
-    //     qualquer momento, sem reflashar nem apagar o NVS. Best-effort.
-    if let Err(e) = comunicacao::botao::iniciar(peripherals.pins.gpio0) {
-        log::warn!("[BOOT] botao de provisionamento indisponivel: {e:?}");
-    }
-
     // 3. SNTP (relogio real para timestamps/idempotencia)
     let _sntp = comunicacao::sntp::sincronizar()?;
 
@@ -68,8 +62,10 @@ fn main() -> Result<()> {
     //    (modo auto: sem claim, o servidor registra numa residencia padrao).
     let creds = loop {
         match obter_ou_provisionar()? {
-            Some(c) => break c,
-            None => {
+            Provisao::Pronto(c) => break c,
+            // Claim ruim: retry e inutil. Reabre o portal AP (nao retorna -> reinicia).
+            Provisao::ReabrirPortal => comunicacao::wifi::forcar_portal_e_reiniciar(),
+            Provisao::Retentar => {
                 log::warn!("[PROV] nova tentativa de provisionamento em 15s...");
                 thread::sleep(Duration::from_secs(15));
             }
@@ -133,9 +129,16 @@ fn main() -> Result<()> {
         let cloud_tick = n % CICLOS_POR_NUVEM == 0;
 
         // --- MEDIR (RMS de V e I; ADC isolado em closures) ---
-        let leitura = sensores::medir(
+        let (leitura, diag) = sensores::medir(
             || ch_v.read().unwrap_or(0) as f32,
             || ch_i.read().unwrap_or(0) as f32,
+        );
+        // DIAGNOSTICO (temporario): RMS bruto em mV antes da calibracao, p/ caracterizar
+        // o piso de ruido no console (nada plugado) e cravar o limiar do gate. Remover
+        // depois de calibrar. v_ac/i_ac = componente AC; v_dc/i_dc = bias DC do canal.
+        log::info!(
+            "[DIAG] V_dc={:.0}mV V_ac={:.1}mV | I_dc={:.0}mV I_ac={:.2}mV",
+            diag.v_dc_mv, diag.v_ac_mv, diag.i_dc_mv, diag.i_ac_mv,
         );
 
         // --- COORDENACAO ESP-NOW (peers vivos + carga fixa dos ausentes) ---
@@ -222,6 +225,21 @@ fn main() -> Result<()> {
                 Err(e) => log::warn!("[NUVEM] pull desired_state falhou: {e:?}"),
             }
 
+            // P_max canonico vem da RESIDENCIA (fonte de verdade, editavel no dashboard),
+            // nao do jsonb da tomada. Aplica por cima da config (mesmo recem-adotada) e
+            // persiste so quando muda (offline-first; evita desgaste da flash).
+            match supabase::buscar_p_max_residencia() {
+                Ok(Some(pmax)) if (pmax - config.p_max).abs() > 0.5 => {
+                    log::info!("[NUVEM] P_max da residencia: {:.0} -> {:.0} W", config.p_max, pmax);
+                    config.p_max = pmax;
+                    if let Err(e) = config::save(&config) {
+                        log::warn!("[NUVEM] falha persistindo P_max: {e:?}");
+                    }
+                }
+                Ok(_) => {}
+                Err(e) => log::warn!("[NUVEM] pull P_max falhou: {e:?}"),
+            }
+
             // publica telemetria/estado/calibracao (best-effort)
             let _ = supabase::atualizar_telemetria(decisao.p_medida, decisao.ultimo_uso_ativo_ts);
             let _ = supabase::atualizar_estado(decisao.estado.as_str());
@@ -253,13 +271,22 @@ fn main() -> Result<()> {
     }
 }
 
+/// Resultado de uma tentativa de provisionamento (decidido pelo caller no loop de boot).
+enum Provisao {
+    /// Credenciais prontas (ja existiam ou provisionou agora).
+    Pronto(CredenciaisLocais),
+    /// Claim invalido/expirado/usado: reabrir o portal AP p/ um novo codigo.
+    ReabrirPortal,
+    /// Falha transitoria (rede/servidor): tentar de novo depois.
+    Retentar,
+}
+
 /// Carrega credenciais; se ausentes, provisiona. Prioridade do claim-code:
 ///   1) portal AP (LittleFS)  2) `.env` (CLAIM_CODE)  3) VAZIO => modo AUTO (sem login).
 /// No modo auto o servidor registra o MAC numa residencia padrao (demo single-tenant).
-/// `Ok(None)` em falha transitoria (rede/servidor) — o caller tenta de novo.
-fn obter_ou_provisionar() -> Result<Option<CredenciaisLocais>> {
+fn obter_ou_provisionar() -> Result<Provisao> {
     if let Some(c) = credenciais::load()? {
-        return Ok(Some(c));
+        return Ok(Provisao::Pronto(c));
     }
     let mac = provisionamento::obter_mac()?;
 
@@ -280,11 +307,16 @@ fn obter_ou_provisionar() -> Result<Option<CredenciaisLocais>> {
     match provisionamento::provisionar(&mac, claim) {
         Ok(creds) => {
             credenciais::limpar_claim_pendente(); // uso unico (se veio do portal)
-            Ok(Some(creds))
+            Ok(Provisao::Pronto(creds))
         }
-        Err(e) => {
+        Err(provisionamento::ErroProv::ClaimInvalido) => {
+            log::error!("[PROV] claim invalido/expirado/usado -- descartando e reabrindo portal");
+            credenciais::limpar_claim_pendente(); // nao reutiliza o claim ruim
+            Ok(Provisao::ReabrirPortal)
+        }
+        Err(provisionamento::ErroProv::Transitorio(e)) => {
             log::warn!("[PROV] provisionamento falhou: {e}");
-            Ok(None) // transitorio: o caller repete
+            Ok(Provisao::Retentar)
         }
     }
 }

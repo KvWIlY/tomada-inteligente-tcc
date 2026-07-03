@@ -67,6 +67,19 @@ pub fn pendentes_ram() -> usize {
     buffer().lock().unwrap().len()
 }
 
+/// Apaga TODOS os baldes de medicao em disco + o buffer de RAM. Usado no reset de
+/// identidade (build novo/reprovisionamento): medicoes gravadas com o `tomada_id` antigo
+/// nao passam no `with check` da RLS sob o JWT novo (403) e, como nunca confirmam,
+/// travariam o sync — descarta-las evita esse deadlock.
+pub fn limpar_tudo() {
+    buffer().lock().unwrap().clear();
+    if let Ok(dias) = dias_em_disco() {
+        for dia in dias {
+            let _ = std::fs::remove_file(caminho_balde(dia));
+        }
+    }
+}
+
 pub(crate) fn caminho_balde(dia: i64) -> String {
     format!("{}/med_{}.txt", littlefs::base(), dia)
 }
