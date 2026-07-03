@@ -1,32 +1,58 @@
-# Rust
+# ─────────────────────────────────────────────────────────────
+# IA / ferramentas spec-driven (Claude, speckit/skills, specs)
+# ─────────────────────────────────────────────────────────────
+.claude/
+.agents/
+.specify/
+skills-lock.json
+specs/
+
+# Markdown na raiz: sobe só o README.md.
+# (ignora CLAUDE.md, BRIEFING-DASHBOARD.md, ANALISE-CONFORMIDADE-MODELO.md, etc.)
+/*.md
+!/README.md
+C:\y\CLAUDE.md
+# Documentação/notas do projeto (fluxo, TODOs)
+docs/
+
+# ─────────────────────────────────────────────────────────────
+# Segredos / ambiente local (sobe só os .example)
+# ─────────────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ─────────────────────────────────────────────────────────────
+# Build — Rust / host (solver)
+# ─────────────────────────────────────────────────────────────
 target/
 *.rs.bk
 *.pdb
+# Artefatos regeneráveis do experimento do dataset (CSVs de saída).
+# O CSV canônico de ENTRADA (tomada-solver/tests/data/) fica versionado.
+saida_dataset/
 
-# ESP-IDF build artifacts
+# Build — ESP-IDF / firmware
 .embuild/
 build/
+sdkconfig
 sdkconfig.old
+*.bin
+*.elf
 
-# Node.js (dashboard)
+# Build — Node.js (dashboard)
 node_modules/
 dist/
+dist-ssr/
+*.local
 *.log
 
-# Secrets
-.env
-.env.local
-
-# IDE
+# ─────────────────────────────────────────────────────────────
+# Editor / IDE / OS
+# ─────────────────────────────────────────────────────────────
 .vscode/
 .idea/
 *.swp
-
-# Local agent tooling (installed skills — reproducible, not project code)
-.claude/
-.agents/
-skills-lock.json
-
-# OS
+*.swo
 .DS_Store
 Thumbs.db

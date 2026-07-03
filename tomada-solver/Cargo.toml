@@ -9,4 +9,8 @@ description = "Modelo MILP de otimizacao de tomadas (review_modelo.pdf, topicos 
 minilp = "0.2"
 serde  = { version = "1", features = ["derive"] }
 
+# Apenas para testes/exemplos no host (NAO entra no firmware): ingestao do dataset CSV.
+[dev-dependencies]
+csv = "1"
+
 # Profiles ficam no Cargo.toml raiz do workspace.

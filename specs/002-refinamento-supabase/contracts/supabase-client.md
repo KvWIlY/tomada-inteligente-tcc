@@ -9,8 +9,9 @@ refinamento. Não redefine o schema nem a Edge Function — apenas o comportamen
 
 ## Regras transversais (todas as operações)
 
-- **Headers**: `Authorization: Bearer <jwt>` + `Content-Type: application/json`
-  (+ `Prefer` conforme a operação). **NUNCA** enviar `apikey` nem anon key.
+- **Headers**: `apikey: <publishable key pública>` (exigido pelo gateway — ver §1 das notas
+  pós-integração) + `Authorization: Bearer <jwt>` + `Content-Type: application/json`
+  (+ `Prefer` conforme a operação). **NUNCA** enviar anon key nem `service_role`.
 - **JWT**: obtido por `provisionamento::obter_jwt_valido()` (renova por margem antes de
   `jwt_exp`). Em `401/403`: renovar uma vez e repetir a operação; nova falha ⇒ registrar
   evento e retornar erro (modo offline), sem travar.

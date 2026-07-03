@@ -26,6 +26,9 @@ existirem, as tarefas Foundational abaixo os exigem como bloqueio.
 - **[P]**: Pode rodar em paralelo (arquivos diferentes, sem dependência pendente)
 - **[Story]**: US1–US4 conforme spec.md (só nas fases de user story)
 - Caminhos de arquivo relativos à raiz do repo (`C:\y`)
+- **Estado da caixa**: `[X]` = concluído **e verificado** · `[~]` = código escrito e
+  commitado, **pendente de verificação** on-device (toolchain esp + hardware) · `[ ]` =
+  não iniciado / aguardando ambiente
 
 ## Path Conventions
 
@@ -59,10 +62,10 @@ autenticada + tipos de sync. **Bloqueia todas as user stories** (todas acessam a
 
 **⚠️ CRITICAL**: Nenhuma user story começa antes desta fase.
 
-- [ ] T004 [P] Garantir que `firmware/src/persistencia/credenciais.rs` (001 T017) lê de LittleFS `{tomada_id, residencia_id, device_secret, jwt, jwt_exp}` e expõe getters; se ausente, criar conforme `data-model.md` §1 e `provisioning-api.md`
-- [ ] T005 [P] Garantir que `firmware/src/comunicacao/provisionamento.rs` (001 T019) expõe `obter_jwt_valido() -> Result<String>` (renova por margem antes de `jwt_exp`) e `renovar()`; se ausente, criar conforme `provisioning-api.md`
+- [~] T004 [P] Garantir que `firmware/src/persistencia/credenciais.rs` (001 T017) lê de LittleFS `{tomada_id, residencia_id, device_secret, jwt, jwt_exp}` e expõe getters; se ausente, criar conforme `data-model.md` §1 e `provisioning-api.md`
+- [~] T005 [P] Garantir que `firmware/src/comunicacao/provisionamento.rs` (001 T019) expõe `obter_jwt_valido() -> Result<String>` (renova por margem antes de `jwt_exp`) e `renovar()`; se ausente, criar conforme `provisioning-api.md`
 - [X] T006 [P] Definir a função pura `deve_renovar(jwt_exp: i64, agora: i64, margem_s: i64) -> bool` em `tomada-solver/src/sync.rs`
-- [ ] T007 Implementar o helper de requisição autenticada em `firmware/src/comunicacao/supabase.rs` (promovido de `.template`): monta headers **só** com `Authorization: Bearer <jwt>` (de `obter_jwt_valido`) + `Content-Type` + `Prefer`; em `401/403` chama renovação e repete **uma** vez; sem header `apikey`. Registrar `pub mod supabase;` em `firmware/src/comunicacao/mod.rs`
+- [~] T007 Implementar o helper de requisição autenticada em `firmware/src/comunicacao/supabase.rs` (promovido de `.template`): monta headers com `apikey: <publishable pública>` (exigido pelo gateway) + `Authorization: Bearer <jwt>` (de `obter_jwt_valido`) + `Content-Type` + `Prefer`; em `401/403` chama renovação e repete **uma** vez; **nunca** anon key/`service_role`. Registrar `pub mod supabase;` em `firmware/src/comunicacao/mod.rs`. **Código escrito** (`supabase.rs:44-114`), pendente de compilação esp
 - [X] T008 [P] Tipo `SyncRecord { tomada_id, timestamp, p_medida, estado, rele_aberto, confirmado }` definido em `tomada-solver/src/sync.rs` (espelha o futuro `Medicao`). Mapeamento `Medicao → SyncRecord` fica no firmware (bloqueado: domínio 001 ausente)
 
 **Checkpoint**: Cliente autentica com JWT por-device; credenciais e renovação disponíveis.
@@ -80,10 +83,10 @@ escritas usam só o JWT e (b) binário/bootstrap não revelam chave de dados nem
 ### Implementation for User Story 1
 
 - [X] T009 [US1] `firmware/src/config_nuvem.rs` reduzido a `SUPABASE_URL` + Wi-Fi de bootstrap; `SUPABASE_ANON_KEY` removido (doc atualizado, Princípio VIII / FR-002). `TOMADA_ID`/`RESIDENCIA_ID` já não existiam como constantes
-- [ ] T010 [US1] Migrar **todas** as operações de `firmware/src/comunicacao/supabase.rs` para usar o helper autenticado (T007) e `tomada_id`/`residencia_id` de `CredenciaisLocais` (T004); eliminar referências a `SUPABASE_ANON_KEY`/`apikey` e às constantes removidas (FR-001/004)
-- [ ] T011 [US1] Implementar a renovação reativa+proativa do JWT ligando `deve_renovar` (T006) e o retry de `401/403` (T007) em `firmware/src/comunicacao/supabase.rs`; em falha persistente, retornar erro sem travar (modo offline)
+- [~] T010 [US1] Migrar **todas** as operações de `firmware/src/comunicacao/supabase.rs` para usar o helper autenticado (T007) e `tomada_id`/`residencia_id` de `CredenciaisLocais` (T004); eliminar referências a `SUPABASE_ANON_KEY`/`apikey` e às constantes removidas (FR-001/004)
+- [~] T011 [US1] Implementar a renovação reativa+proativa do JWT ligando `deve_renovar` (T006) e o retry de `401/403` (T007) em `firmware/src/comunicacao/supabase.rs`; em falha persistente, retornar erro sem travar (modo offline)
 - [X] T012 [P] [US1] `firmware/.env.example` atualizado à superfície mínima (`WIFI_SSID`/`WIFI_PASSWORD`/`PROJECT_URL`); `PUBLIC_KEY` removido
-- [ ] T013 [US1] Verificação de `.bin` genérico (FR-002/SC-001/SC-002): `grep -rn "ANON_KEY\|RESIDENCIA_ID\|TOMADA_ID\|apikey" firmware/src` retorna 0; confirmar no smoke test que nenhuma chave de dados é enviada
+- [ ] T013 [US1] Verificação de `.bin` genérico (FR-002/SC-001/SC-002): `grep -rni "ANON_KEY" firmware/src` retorna 0 **e** nenhuma constante `TOMADA_ID`/`RESIDENCIA_ID` por-dispositivo em compile-time (ocorrências de `apikey`/`PUBLISHABLE` são **legítimas** — publishable key pública). Confirmar no smoke test que nenhuma **chave de acesso a dados** é enviada (só publishable pública + JWT por-device)
 
 **Checkpoint**: Firmware fala com a nuvem só por JWT por-device; binário genérico. MVP de segurança.
 
@@ -128,9 +131,9 @@ reenvio não duplica; purga remove só confirmados; nada local > 7 d.
 
 - [X] T020 [P] [US3] `montar_corpo_lote(&[SyncRecord], &[usize]) -> String` implementado em `tomada-solver/src/sync.rs` (JSON manual `{:.2}` p/ `f32`, escape, sem `confirmado`); coberto por T018
 - [X] T021 [P] [US3] Implementar `selecionar_pendentes(&[SyncRecord], max) -> Vec<usize>` (ordenado por `timestamp`) em `tomada-solver/src/sync.rs`
-- [ ] T022 [US3] Adicionar a flag `confirmado` ao `Medicao` e ao buffer (baldes por dia) em `firmware/src/persistencia/medicao.rs` (`false` ao gravar)
-- [ ] T023 [US3] Implementar `sincronizar_medicoes(lote)` e `sincronizar_eventos(lote)` em `firmware/src/comunicacao/supabase.rs`: POST de **um** array com `Prefer: return=minimal, resolution=ignore-duplicates`; em 2xx marcar todos como `confirmado=true` numa **única** consolidação na flash (FR-010/011/013, Princípio III)
-- [ ] T024 [US3] Implementar/ajustar a purga em `firmware/src/persistencia/retencao.rs`: remover só `confirmado=true`; descartar qualquer registro com idade > 7 d mesmo sem confirmação (cap rígido) (FR-014, SC-006/SC-007)
+- [~] T022 [US3] Adicionar a flag `confirmado` ao `Medicao` e ao buffer (baldes por dia) em `firmware/src/persistencia/medicao.rs` (`false` ao gravar)
+- [~] T023 [US3] Implementar `sincronizar_medicoes(lote)` e `sincronizar_eventos(lote)` em `firmware/src/comunicacao/supabase.rs`: POST de **um** array com `Prefer: return=minimal, resolution=ignore-duplicates`; em 2xx marcar todos como `confirmado=true` numa **única** consolidação na flash (FR-010/011/013, Princípio III)
+- [~] T024 [US3] Implementar/ajustar a purga em `firmware/src/persistencia/retencao.rs`: remover só `confirmado=true`; descartar qualquer registro com idade > 7 d mesmo sem confirmação (cap rígido) (FR-014, SC-006/SC-007)
 
 **Checkpoint**: Pipeline de sync em lote, idempotente e offline-first; retenção segura.
 
@@ -151,8 +154,8 @@ versão) e aplica o comando manual, exceto quando violaria o teto elétrico.
 ### Implementation for User Story 4
 
 - [X] T026 [US4] Implementar `deve_adotar_config(versao_remota, versao_local) -> bool` em `tomada-solver/src/sync.rs`
-- [ ] T027 [US4] Implementar `buscar_desired_state()` em `firmware/src/comunicacao/supabase.rs`: um GET `select=config,config_version,rele_aberto`; parse manual do `f32` no `config` (FR-015/016)
-- [ ] T028 [US4] Aplicar o pull no ciclo: adotar config via `deve_adotar_config` e gravar `config_version` em `firmware/src/persistencia/config.rs`; entregar `rele_aberto` ao ciclo de decisão **subordinado a `P_max`** em `firmware/src/decisao/ciclo.rs` (FR-016)
+- [~] T027 [US4] Implementar `buscar_desired_state()` em `firmware/src/comunicacao/supabase.rs`: um GET `select=config,config_version,rele_aberto`; parse manual do `f32` no `config` (FR-015/016)
+- [~] T028 [US4] Aplicar o pull no ciclo: adotar config via `deve_adotar_config` e gravar `config_version` em `firmware/src/persistencia/config.rs`; entregar `rele_aberto` ao ciclo de decisão **subordinado a `P_max`** em `firmware/src/decisao/ciclo.rs` (FR-016)
 
 **Checkpoint**: Fluxo bidirecional nuvem↔dispositivo fechado; comando manual respeita a segurança elétrica.
 
@@ -162,8 +165,8 @@ versão) e aplica o comando manual, exceto quando violaria o teto elétrico.
 
 **Purpose**: Observabilidade, integração no loop e validação ponta-a-ponta.
 
-- [ ] T029 Registrar falhas de sync como `eventos` (auth falha persistente, credencial revogada, schema ausente, falha de renovação) sem vazar segredos, em `firmware/src/comunicacao/supabase.rs` (FR-017, SC-010)
-- [ ] T030 [P] Integrar o sync autenticado em lote no loop principal `medir → decidir → atuar → sincronizar (Bearer JWT)` em `firmware/src/main.rs`
+- [~] T029 Registrar falhas de sync como `eventos` (auth falha persistente, credencial revogada, schema ausente, falha de renovação) sem vazar segredos, em `firmware/src/comunicacao/supabase.rs` (FR-017, SC-010)
+- [~] T030 [P] Integrar o sync autenticado em lote no loop principal `medir → decidir → atuar → sincronizar (Bearer JWT)` em `firmware/src/main.rs`
 - [ ] T031 Executar a validação ponta-a-ponta do `quickstart.md` mapeada a SC-001..SC-010 (grep, verify-rls, offline/lote, pull, eventos)
 
 ---
@@ -236,11 +239,42 @@ T007 helper autenticado (supabase.rs) — consome T004/T005
 
 - [P] = arquivos diferentes, sem dependência pendente
 - **Não** redefinir o schema nem a Edge Function da 001 — apenas aplicar/consumir (Princípios VI/VIII)
-- **Nunca** header `apikey`/anon key no firmware; só `Authorization: Bearer <jwt>` (Princípio VIII)
+- **Nunca** anon key nem `service_role` no firmware; o acesso a **dados** é só `Authorization: Bearer <jwt>` por-device. O header `apikey` leva a **publishable key pública** (exigida pelo gateway, sem acesso sob RLS) — não é credencial de dados (Princípio VIII)
 - Sync **em lote**, `confirmado` consolidado em lote — sem escrita na flash por minuto/registro (Princípio III)
 - Idempotência por `(tomada_id, timestamp)` casando no `unique` do schema
 - Eventos de erro nunca incluem `device_secret`/`jwt`/claims
 - Commit após cada tarefa ou grupo lógico
+
+---
+
+## Atualização (2026-06-02) — firmware COMPILA na toolchain esp
+
+O gargalo do status de 31/05 (toolchain esp ausente) foi resolvido. Ambiente agora tem
+`rustc esp`, `espflash` e `firmware/.env` preenchido. Resultado de `cd firmware && cargo build`:
+
+- ✅ **`Finished dev profile in 3m 12s`, 0 erros** (10 warnings benignos — 9 `dead_code`
+  de superfície de API ainda não cabeada + 1 `unused import` já removido).
+- ✅ ELF real gerado: `target/xtensa-esp32-espidf/debug/y-firmware` — **34 MB, Xtensa
+  ESP32, statically linked, debug_info**.
+- ✅ Os dois pontos de risco previstos (API ADC oneshot, assinatura `register_recv_cb` do
+  ESP-NOW) **compilaram** sem ajuste.
+- ✅ Host segue verde: `cargo test -p tomada-solver` = 16/16 (9 sync + 7 modelo).
+
+**Efeito nas tarefas:** o **código** de T004/T005/T007/T010/T011/T022/T023/T024/T027/
+T028/T029/T030 agora **compila limpo** (antes era só "escrito"). Permanecem `[~]` — não
+`[X]` — porque a verificação **funcional** (sync real contra o Supabase, semântica de
+purga em runtime, comando manual subordinado ao P_max no ciclo) só se prova on-device.
+
+**Histórico de hardware (notas de sessão de 31/05, não re-verificável agora — sem placa
+conectada neste ambiente):** o `.bin` foi reportadamente **gravado e bootou** no ESP32
+(COM3, MAC `a0:a3:b3:ab:24:ac`) com partições/sdkconfig ajustados (stack 40960; `factory`
+0x350000; `storage` 0x360000/0xA0000). Como nenhuma porta serial é detectada agora, este
+passo não é confirmável nesta sessão.
+
+**Falta (gate de hardware, requer placa física conectada):** confirmar runtime
+LittleFS→WiFi→SNTP→**provisionar** (claim-code) → ciclo medir/decidir/atuar/sync →
+**T013** (smoke do `.bin` genérico) → **T031** (quickstart ponta-a-ponta SC-001..010).
+Calibrar `FATOR_TENSAO`/`FATOR_CORRENTE` no hardware real.
 
 ---
 

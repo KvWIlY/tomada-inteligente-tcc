@@ -119,3 +119,10 @@ pub fn ler_claim_pendente() -> Option<String> {
 pub fn limpar_claim_pendente() {
     let _ = std::fs::remove_file(caminho_claim());
 }
+
+/// Apaga TODA a identidade provisionada (cred.json + claim pendente). Usado no reset de
+/// build novo (dev) para forcar um reprovisionamento limpo. Best-effort (ignora ausencia).
+pub fn limpar_tudo() {
+    let _ = std::fs::remove_file(caminho());
+    let _ = std::fs::remove_file(caminho_claim());
+}

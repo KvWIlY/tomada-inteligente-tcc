@@ -36,6 +36,11 @@ fn http_config() -> HttpConfig {
         use_global_ca_store: true,
         crt_bundle_attach: Some(esp_idf_svc::sys::esp_crt_bundle_attach),
         timeout: Some(std::time::Duration::from_secs(10)),
+        // Supabase devolve muitos headers (CORS, rate-limit, CF...) e nosso request leva um
+        // Bearer JWT longo: os 512 B default estouram ("HTTP_HEADER: Buffer length is
+        // small to fit all the headers"). Folga no rx (resposta) e no tx (request).
+        buffer_size: Some(4096),
+        buffer_size_tx: Some(2048),
         ..Default::default()
     }
 }
@@ -323,6 +328,22 @@ pub fn buscar_desired_state() -> Result<DesiredState> {
     };
 
     Ok(DesiredState { config, rele_aberto })
+}
+
+/// GET do `P_max` canonico da residencia (`residencias.p_max`) — a FONTE DE VERDADE do
+/// teto eletrico, editavel no dashboard (slider). O `config.p_max` do jsonb da tomada NAO
+/// e fonte (o dashboard nem o escreve; o default do firmware e so fallback offline). O
+/// ciclo usa este valor no solver e o persiste localmente (offline-first, Principio VI).
+/// `Ok(None)` se a residencia nao retornou linha (ex.: RLS/ausente).
+pub fn buscar_p_max_residencia() -> Result<Option<f32>> {
+    let rid = residencia_id()?;
+    let url = format!("{SUPABASE_URL}/rest/v1/residencias?id=eq.{rid}&select=p_max");
+    let (status, body) = requisicao(Method::Get, &url, None, None)?;
+    if !(200..=299).contains(&status) {
+        return Err(anyhow!("[SUPABASE] buscar_p_max_residencia HTTP {status}: {body}"));
+    }
+    // Corpo `[{"p_max":3000}]` — unico campo, `extrair_i64` e inequivoco aqui.
+    Ok(extrair_i64(&body, "p_max").map(|v| v as f32))
 }
 
 // ============================================================

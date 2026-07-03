@@ -14,7 +14,7 @@ export interface OverviewProps {
   medicoesPorTomada: Record<string, Medicao[]>;
   eventosPorTomada: Record<string, Evento[]>;
   total: number;
-  score: number;
+  score: number | null;
   online: boolean;
   onSelect: (id: string) => void;
 }

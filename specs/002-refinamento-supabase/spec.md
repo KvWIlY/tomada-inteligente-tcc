@@ -61,9 +61,10 @@ chave de acesso a dados nem identificadores de outra residência/tomada.
 **Acceptance Scenarios**:
 
 1. **Given** uma tomada recém-gravada com a imagem genérica, **When** ela é provisionada,
-   **Then** todo acesso subsequente à nuvem usa o JWT por-dispositivo e a configuração de
-   bootstrap contém apenas o endereço do serviço e os dados de rede — nenhuma chave de
-   acesso a dados nem `tomada_id`/`residencia_id` fixos.
+   **Then** todo acesso subsequente a **dados** na nuvem usa o JWT por-dispositivo e a
+   configuração de bootstrap contém apenas endereço do serviço, dados de rede, a publishable
+   key pública e (opcionalmente) o claim-code por-residência — nenhuma **chave de acesso a
+   dados** nem `tomada_id`/`residencia_id` por-dispositivo fixos.
 2. **Given** um JWT expirado ou prestes a expirar, **When** a tomada precisa sincronizar,
    **Then** ela renova a credencial automaticamente (com o segredo durável) e retoma a
    sincronização sem intervenção, sem nunca reusar uma chave compartilhada.
@@ -188,13 +189,21 @@ comando manual, exceto quando ele violaria o teto elétrico.
 
 **Autenticação e identidade (Princípio VIII)**
 
-- **FR-001**: O cliente de nuvem do firmware MUST autenticar exclusivamente com o **JWT
-  por-dispositivo** provisionado em runtime, enviado como credencial de portador; MUST NOT
-  usar uma chave de acesso compartilhada (anon key) para acessar dados.
-- **FR-002**: O binário distribuído MUST ser genérico: nenhuma credencial por-dispositivo
-  (segredo durável, JWT, `tomada_id`, `residencia_id`) e nenhuma chave de acesso a dados
-  MUST estar embutida em tempo de compilação. A configuração de bootstrap MUST conter
-  apenas o endereço do serviço de nuvem e os dados de rede necessários ao primeiro acesso.
+- **FR-001**: O cliente de nuvem do firmware MUST autenticar o acesso a **dados**
+  exclusivamente com o **JWT por-dispositivo** provisionado em runtime, enviado como
+  credencial de portador (`Authorization: Bearer`); MUST NOT usar uma **chave de acesso a
+  dados compartilhada** (anon key ou `service_role`). O header `apikey` com a **publishable
+  key pública** (`sb_publishable_…`) — exigido apenas pelo gateway hospedado e que **não
+  concede acesso algum** sob RLS default-deny — é permitido e NÃO constitui credencial de
+  dados.
+- **FR-002**: O binário distribuído MUST ser genérico: nenhuma credencial **por-dispositivo**
+  (segredo durável, JWT, `tomada_id`, `residencia_id`) e nenhuma **chave de acesso a dados**
+  (anon/`service_role`) MUST estar embutida em tempo de compilação. A configuração de
+  bootstrap MUST conter apenas: endereço do serviço de nuvem, dados de rede, a **publishable
+  key pública** (não concede acesso) e, opcionalmente, um **claim-code de uso único
+  por-residência** para o primeiro provisionamento — nunca um segredo nem identificador
+  por-dispositivo. O claim-code SHOULD ser coletado no portal AP; se embutido no `.env` de
+  build, queima no primeiro uso e não identifica a tomada individual.
 - **FR-003**: O cliente MUST renovar o JWT automaticamente quando ele estiver perto de
   expirar ou quando a nuvem responder com acesso negado, usando o segredo durável
   provisionado; após falha de renovação, MUST registrar o erro e degradar para operação

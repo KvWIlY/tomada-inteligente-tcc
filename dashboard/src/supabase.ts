@@ -182,6 +182,14 @@ export async function setReleAberto(tomadaId: string, aberto: boolean): Promise<
   if (error) throw error;
 }
 
+/** Renomeia a tomada (coluna `nome` — o rotulo exibido na sidebar/topo). A RLS
+ *  `usr_tomadas_all` exige que a residencia seja do dono (owner_id = auth.uid()). */
+export async function renameTomada(tomadaId: string, nome: string): Promise<void> {
+  if (!client) throw new Error('Supabase nao configurado');
+  const { error } = await client.from('tomadas').update({ nome }).eq('id', tomadaId);
+  if (error) throw error;
+}
+
 /** Salva nova config no JSONB `config` (schema real) + bump de versao + evento na timeline. */
 export async function saveConfig(
   tomadaId: string,
@@ -215,6 +223,32 @@ export async function saveConfig(
     detalhes: `config_version → v${novaVersao}`,
   });
   if (e2) console.error('[supabase] evento config insert:', e2);
+}
+
+// =============================================
+// Provisionamento (claim-codes de pareamento)
+// =============================================
+
+/** sha256 hex minúsculo — DEVE casar com o `sha256Hex` da Edge Function `provisionar`
+ *  e do `scripts/criar-claim.ps1`. Requer contexto seguro (localhost/https). */
+async function sha256Hex(s: string): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+/** Cria um claim-code de uso único para a residência (guarda só o hash). A RLS
+ *  `usr_claims_all` exige `owner_id = auth.uid()`. Retorna o instante de expiração (ISO). */
+export async function criarClaim(residenciaId: string, code: string, horas = 6): Promise<string> {
+  if (!client) throw new Error('Supabase nao configurado');
+  const codeHash = await sha256Hex(code);
+  const expiraEm = new Date(Date.now() + horas * 3_600_000).toISOString();
+  const { error } = await client
+    .from('provisioning_claims')
+    .insert({ residencia_id: residenciaId, code_hash: codeHash, expira_em: expiraEm });
+  if (error) throw error;
+  return expiraEm;
 }
 
 // =============================================
