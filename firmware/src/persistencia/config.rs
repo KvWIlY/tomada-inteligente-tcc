@@ -75,37 +75,6 @@ impl Tomada {
         if self.is_critical { W_CRITICO } else { self.w_i }
     }
 
-    /// Monta APENAS o objeto jsonb `config` (sem `config_version`) para publicar na nuvem.
-    /// JSON manual com `{:.2}` nos floats (bug LLVM Xtensa em serde de f32). Espelha a
-    /// "Estrutura esperada de config" do schema 001.
-    pub fn montar_config_jsonb(&self) -> String {
-        let schedule_str = self
-            .schedule
-            .iter()
-            .map(|b| if *b { "true" } else { "false" })
-            .collect::<Vec<_>>()
-            .join(",");
-        let pi_str = self
-            .pi_historico
-            .iter()
-            .map(|v| format!("{:.4}", v))
-            .collect::<Vec<_>>()
-            .join(",");
-        let p_limiar_str = match self.p_limiar_detectado_auto {
-            Some(v) => format!("{:.2}", v),
-            None => "null".to_string(),
-        };
-        format!(
-            r#"{{"is_critical":{},"w_i":{:.2},"p_max":{:.2},"t_limite":{},"schedule":[{}],"pi_historico":[{}],"p_limiar_detectado_auto":{}}}"#,
-            self.is_critical,
-            self.w_i,
-            self.p_max,
-            self.t_limite,
-            schedule_str,
-            pi_str,
-            p_limiar_str,
-        )
-    }
 }
 
 fn caminho() -> String {

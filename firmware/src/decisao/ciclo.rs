@@ -35,7 +35,6 @@ pub struct Decisao {
     pub cstd: f32,
     pub con: f32,
     pub ultimo_uso_ativo_ts: i64,
-    pub p_limiar: f32,
     /// `U_i` vigente (uso ativo) — usado p/ montar o heartbeat ESP-NOW.
     pub u_i: bool,
     /// `F_i` vigente (fantasma) — usado p/ montar o heartbeat ESP-NOW.
@@ -188,7 +187,6 @@ impl Ciclo {
             cstd: self.cstd,
             con: self.con,
             ultimo_uso_ativo_ts: self.ultimo_uso_ativo_ts,
-            p_limiar: self.p_limiar,
             u_i,
             f_i,
             eventos,
