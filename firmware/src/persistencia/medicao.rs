@@ -62,11 +62,6 @@ pub fn registrar(m: Medicao) {
     buffer().lock().unwrap().push(m);
 }
 
-/// Quantos registros aguardam flush em RAM.
-pub fn pendentes_ram() -> usize {
-    buffer().lock().unwrap().len()
-}
-
 /// Apaga TODOS os baldes de medicao em disco + o buffer de RAM. Usado no reset de
 /// identidade (build novo/reprovisionamento): medicoes gravadas com o `tomada_id` antigo
 /// nao passam no `with check` da RLS sob o JWT novo (403) e, como nunca confirmam,

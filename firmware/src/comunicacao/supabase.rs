@@ -204,16 +204,6 @@ pub fn atualizar_telemetria(p_atual: f32, ultimo_uso_ativo_ts: i64) -> Result<()
     patch_tomada(&body, "atualizar_telemetria")
 }
 
-/// Publica a config + `config_version` (ex.: apos autodetecao de `p_limiar`/Π no edge).
-pub fn publicar_config(config: &Tomada) -> Result<()> {
-    let body = format!(
-        r#"{{"config":{},"config_version":{}}}"#,
-        config.montar_config_jsonb(),
-        config.config_version
-    );
-    patch_tomada(&body, "publicar_config")
-}
-
 // ============================================================
 // Escrita: eventos (observabilidade, Principio VII / FR-017). Fila em RAM + flush em lote.
 // ============================================================
@@ -393,6 +383,7 @@ fn escape_json(s: &str) -> String {
 // ============================================================
 
 /// Dado remoto de uma tomada-irma (parseado do GET). Fallback quando ESP-NOW nao cobre.
+#[allow(dead_code)] // feature 003 (fallback coordenacao nuvem) liga isto no ciclo de decisao
 pub struct TomadaRemota {
     pub id: String,
     pub cstd: f32,
@@ -403,6 +394,7 @@ pub struct TomadaRemota {
 
 /// GET das tomadas da residencia (RLS filtra por `residencia_id` do claim). Fallback de
 /// coordenacao quando o ESP-NOW esta incompleto; processa so os campos numericos simples.
+#[allow(dead_code)] // feature 003 (fallback coordenacao nuvem) liga isto no ciclo de decisao
 pub fn buscar_todas_tomadas() -> Result<Vec<TomadaRemota>> {
     let rid = residencia_id()?;
     let url = format!(

@@ -55,11 +55,6 @@ pub fn load() -> Result<Option<CredenciaisLocais>> {
     }
 }
 
-/// `true` se ja existe credencial provisionada.
-pub fn existe() -> bool {
-    std::path::Path::new(&caminho()).exists()
-}
-
 /// Persiste o conjunto completo de credenciais (apos `provisionar`).
 pub fn save(c: &CredenciaisLocais) -> Result<()> {
     let path = caminho();

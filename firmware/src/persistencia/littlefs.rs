@@ -32,13 +32,3 @@ pub fn mount() -> Result<()> {
 pub fn base() -> &'static str {
     BASE_PATH
 }
-
-pub fn espaco_livre() -> Result<(usize, usize)> {
-    let label = CString::new(PARTITION_LABEL)?;
-    let (mut total, mut used) = (0usize, 0usize);
-    let err = unsafe { sys::esp_littlefs_info(label.as_ptr(), &mut total, &mut used) };
-    if err != sys::ESP_OK as i32 {
-        return Err(anyhow!("esp_littlefs_info falhou (cod {err})"));
-    }
-    Ok((total, used))
-}
