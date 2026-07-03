@@ -383,22 +383,18 @@ fn escape_json(s: &str) -> String {
 // ============================================================
 
 /// Dado remoto de uma tomada-irma (parseado do GET). Fallback quando ESP-NOW nao cobre.
-#[allow(dead_code)] // feature 003 (fallback coordenacao nuvem) liga isto no ciclo de decisao
 pub struct TomadaRemota {
     pub id: String,
-    pub cstd: f32,
-    pub con: f32,
     pub p_medida_atual: f32,
     pub ultimo_uso_ativo_ts: i64,
 }
 
 /// GET das tomadas da residencia (RLS filtra por `residencia_id` do claim). Fallback de
 /// coordenacao quando o ESP-NOW esta incompleto; processa so os campos numericos simples.
-#[allow(dead_code)] // feature 003 (fallback coordenacao nuvem) liga isto no ciclo de decisao
 pub fn buscar_todas_tomadas() -> Result<Vec<TomadaRemota>> {
     let rid = residencia_id()?;
     let url = format!(
-        "{SUPABASE_URL}/rest/v1/tomadas?residencia_id=eq.{rid}&select=id,cstd,con,p_medida_atual,ultimo_uso_ativo_ts"
+        "{SUPABASE_URL}/rest/v1/tomadas?residencia_id=eq.{rid}&select=id,p_medida_atual,ultimo_uso_ativo_ts"
     );
     let (status, body) = requisicao(Method::Get, &url, None, None)?;
     if !(200..=299).contains(&status) {
@@ -407,10 +403,6 @@ pub fn buscar_todas_tomadas() -> Result<Vec<TomadaRemota>> {
     #[derive(serde::Deserialize)]
     struct Row {
         id: String,
-        #[serde(default)]
-        cstd: f32,
-        #[serde(default)]
-        con: f32,
         #[serde(default)]
         p_medida_atual: f32,
         #[serde(default)]
@@ -421,8 +413,6 @@ pub fn buscar_todas_tomadas() -> Result<Vec<TomadaRemota>> {
         .into_iter()
         .map(|r| TomadaRemota {
             id: r.id,
-            cstd: r.cstd,
-            con: r.con,
             p_medida_atual: r.p_medida_atual,
             ultimo_uso_ativo_ts: r.ultimo_uso_ativo_ts,
         })

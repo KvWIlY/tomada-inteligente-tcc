@@ -7,6 +7,7 @@
 //! Deterministico => reproduzivel (Constituicao, Principio VII).
 //! Testavel no host: `cargo test -p tomada-solver`.
 
+pub mod coordenacao;
 pub mod modelo;
 pub mod solver;
 pub mod sync;
