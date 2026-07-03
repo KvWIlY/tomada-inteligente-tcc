@@ -3,6 +3,8 @@
 //! Boot: LittleFS -> Wi-Fi -> SNTP -> (provisionamento por-device se necessario) ->
 //! ADC/rele/ESP-NOW. Loop (cadencia 10 s, SC-008):
 //!   medir (RMS V/I) -> trocar heartbeats ESP-NOW -> decidir (MILP) -> atuar rele.
+//! Sem NENHUM peer ESP-NOW vivo e online (003): irmas lidas da nuvem no cloud tick
+//! viram carga fixa contra o P_max (cache RAM; zera em falha — local-only).
 //! A cada ~60 s (cloud tick): bufferiza medicao (1/min), faz pull do desired state
 //! (config por versao + comando manual de rele), publica telemetria/estado/calibracao,
 //! sincroniza medicoes+eventos EM LOTE (Bearer JWT por-device) e roda a retencao.
@@ -33,6 +35,7 @@ use persistencia::config;
 use persistencia::credenciais::{self, CredenciaisLocais};
 use persistencia::medicao::{self, Medicao};
 use persistencia::retencao;
+use tomada_solver::coordenacao::{carga_fixa_nuvem, contar_frescas, RemoteTomada};
 use tomada_solver::sync::deve_adotar_config;
 
 /// Cadencia do ciclo de decisao (s) — SC-008 (decisao em <=10 s).
@@ -41,6 +44,9 @@ const CICLO_S: u64 = 10;
 const CICLOS_POR_NUVEM: u64 = 6;
 /// TTL de um peer ESP-NOW (vivo se visto nesse intervalo) — 3x a cadencia.
 const TTL_PEER_S: i64 = (CICLO_S as i64) * 3;
+/// Janela de frescor do fallback de coordenacao pela nuvem (003): irma contada
+/// sse `agora - ultimo_uso_ativo_ts <= janela` (~5 cloud ticks de folga).
+const JANELA_FRESCOR_S: i64 = 300;
 
 fn main() -> Result<()> {
     esp_idf_svc::sys::link_patches();
@@ -118,6 +124,9 @@ fn main() -> Result<()> {
     // deste no na lista resolvida pelo MILP, identica em todos os nos).
     let proprio_mac = provisionamento::obter_mac_bytes().unwrap_or([0u8; 6]);
     let mut rele_manual: Option<bool> = None;
+    // Cache RAM do fallback de coordenacao pela nuvem (003): recalculado no cloud
+    // tick, aplicado nos ciclos intermediarios, zerado em falha/quando ha peer vivo.
+    let mut carga_nuvem: f32 = 0.0;
 
     log::info!("[BOOT] entrando no loop principal (ciclo={CICLO_S}s)");
 
@@ -146,6 +155,52 @@ fn main() -> Result<()> {
             .as_ref()
             .map(|_| espnow::montar_coordenacao(agora, TTL_PEER_S))
             .unwrap_or((Vec::new(), 0.0));
+
+        // --- FALLBACK DE COORDENACAO PELA NUVEM (003) ---
+        // So quando o mesh nao trouxe NENHUM peer vivo: fontes nunca se misturam
+        // (sem correlacao MAC<->UUID confiavel => dedup impossivel; ver research D2).
+        if !peers_vivos.is_empty() {
+            carga_nuvem = 0.0; // mesh tem prioridade; invalida o cache
+        } else if cloud_tick {
+            carga_nuvem = if comunicacao::wifi::esta_conectado() {
+                match supabase::buscar_todas_tomadas() {
+                    Ok(remotas) => {
+                        let irmas: Vec<RemoteTomada> = remotas
+                            .into_iter()
+                            .map(|t| RemoteTomada {
+                                tomada_id: t.id,
+                                p_medida_atual: t.p_medida_atual,
+                                ultimo_uso_ativo_ts: t.ultimo_uso_ativo_ts,
+                            })
+                            .collect();
+                        let carga = carga_fixa_nuvem(
+                            &creds.tomada_id, agora, JANELA_FRESCOR_S, &irmas,
+                        );
+                        if carga > 0.0 {
+                            let frescas =
+                                contar_frescas(&creds.tomada_id, agora, JANELA_FRESCOR_S, &irmas);
+                            let total =
+                                irmas.iter().filter(|t| t.tomada_id != creds.tomada_id).count();
+                            supabase::registrar_evento(
+                                "coordenacao_nuvem",
+                                "info",
+                                "Fallback de coordenacao pela nuvem",
+                                &format!("carga_fixa={carga:.1}W irmas_frescas={frescas}/{total}"),
+                            );
+                        }
+                        carga
+                    }
+                    Err(e) => {
+                        // Sem dado confiavel neste periodo -> local-only (research D3).
+                        log::warn!("[NUVEM] fallback coordenacao: GET falhou ({e}); carga=0");
+                        0.0
+                    }
+                }
+            } else {
+                0.0 // offline: comportamento local-only ja validado
+            };
+        }
+        let carga_fixa = carga_fixa + carga_nuvem;
 
         // --- DECIDIR (MILP) ---
         let decisao = ciclo.decidir(
