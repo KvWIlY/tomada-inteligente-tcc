@@ -1,9 +1,15 @@
 //! Lógica **pura** de sincronização com a nuvem (host-testável, sem esp-idf).
 //!
-//! Feature 002-refinamento-supabase. Estas funções não fazem I/O: montam corpos
-//! JSON, selecionam registros pendentes e decidem renovação de JWT / adoção de
-//! config. O firmware (`firmware/src/comunicacao/supabase.rs`) as chama e cuida do
-//! transporte HTTP. Contrato: `specs/002-refinamento-supabase/contracts/supabase-client.md`.
+//! Estas funções não fazem I/O: montam corpos JSON, selecionam registros pendentes e
+//! decidem renovação de JWT / adoção de config. O firmware
+//! (`firmware/src/comunicacao/backend.rs`) as chama e cuida do transporte HTTP.
+//!
+//! Contrato vigente: `specs/004-backend-actix-mysql/contracts/backend-api.md`
+//! (`POST /telemetria`). Originalmente escrito para a feature 002 contra PostgREST; a
+//! feature 004 trocou a camada de nuvem pelo backend próprio e a lógica **não mudou** —
+//! o backend ignora o `tomada_id` que `montar_corpo_lote` inclui em cada registro e usa
+//! o claim do JWT, e a dedup deixou de ser `on_conflict` para ser
+//! `INSERT ... ON DUPLICATE KEY UPDATE` sobre o mesmo `UNIQUE (tomada_id, timestamp)`.
 //!
 //! Floats são formatados **manualmente** (`{:.2}`) para casar com o caminho do
 //! firmware, que evita `serde_json` em `f32`/`[2 x float]` por causa do bug LLVM Xtensa.

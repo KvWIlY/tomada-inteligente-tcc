@@ -1,12 +1,16 @@
-//! Modo provisioning -- ESP32 vira AP + HTTP server pra receber credenciais.
+//! Portal AP v2 — configuracao local da tomada (feature 005, `contracts/portal-ap.md`).
 //!
-//! Fluxo:
-//! 1. Scan de redes proximas (em modo STA temporario)
-//! 2. Reconfigura como AP "Tomada-XXXX" senha "tomadatcc"
-//! 3. Sobe HTTP server na porta 80
-//! 4. GET / -> serve HTML form com lista de redes
-//! 5. POST /save -> recebe SSID+senha, sinaliza thread principal via channel
-//! 6. Bloqueia ate receber, retorna as credenciais
+//! Diferencas para o v1 (todas motivadas por falhas reais de campo):
+//!   - **AP+STA**: enquanto o portal esta aberto, o no continua tentando a rede salva a
+//!     cada 30 s. Sem isso, uma queda de energia em que o roteador volta depois da
+//!     tomada deixava o no preso no portal PARA SEMPRE (FR-002).
+//!   - **Corpo por `Content-Length`**: o v1 fazia um unico `read` de 512 B e gravava
+//!     senha truncada em silencio (FR-015).
+//!   - **Modos**: nuvem | standalone | parear — a tomada deixa de exigir servidor e
+//!     claim-code para funcionar (FR-004/008).
+//!   - **Banner de causa** e **preservacao do Wi-Fi salvo** (FR-017/019).
+//!
+//! A validacao vive em `tomada_solver::portal` (pura, testada no host); aqui so ha I/O.
 
 use anyhow::{anyhow, Result};
 use embedded_svc::io::Write;
@@ -16,29 +20,59 @@ use esp_idf_svc::{
         Method,
     },
     wifi::{
-        AccessPointConfiguration, AuthMethod, BlockingWifi, ClientConfiguration,
-        Configuration, EspWifi,
+        AccessPointConfiguration, AuthMethod, BlockingWifi, ClientConfiguration, Configuration,
+        EspWifi,
     },
 };
 use std::net::UdpSocket;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
+
+use tomada_solver::portal::{
+    self, ErroForm, FormPortal, Modo, MotivoPortal, ResolucaoWifi, MAX_SSID_BYTES,
+};
 
 const AP_PASSWORD: &str = "tomadatcc";
 const AP_CHANNEL: u8 = 1;
 const AP_MAX_CLIENTS: u16 = 4;
+/// Intervalo entre tentativas de reconexao STA com o portal aberto (FR-002).
+/// 30 s + associacao/DHCP (~20 s no pior caso) cabe folgado nos 2 min do SC-001.
+const INTERVALO_RETRY_STA: Duration = Duration::from_secs(30);
 
-pub struct CredsRecebidas {
-    pub ssid: String,
-    pub pwd: String,
-    /// Codigo de pareamento (claim-code) digitado no portal. Vazio se nao informado.
-    /// O firmware o usa UMA vez em `provisionar`; o device nunca cunha o proprio claim
-    /// (Principio VIII — cunhar exige service_role/dono, ver scripts/criar-claim.ps1).
-    pub claim_code: String,
+/// O que o portal devolve ao fluxo de boot.
+pub enum SaidaPortal {
+    /// O usuario submeteu o formulario.
+    Configurado(Box<CredsRecebidas>),
+    /// A rede salva voltou e o STA reconectou sozinho: segue o boot SEM reiniciar
+    /// e sem intervencao (FR-002).
+    Reconectado,
 }
 
-pub fn iniciar(wifi: &mut BlockingWifi<EspWifi<'static>>) -> Result<CredsRecebidas> {
-    // 1. Scan de redes (STA temporario, sem conectar)
+/// Formulario aceito, ja validado e com a decisao de Wi-Fi resolvida.
+pub struct CredsRecebidas {
+    pub form: FormPortal,
+    /// O que fazer com a NVS de Wi-Fi (preservar / gravar / trocar so a senha).
+    pub wifi: ResolucaoWifi,
+}
+
+/// Contexto que o boot passa ao portal (o portal nao le NVS nem LittleFS sozinho).
+pub struct ContextoPortal {
+    pub ssid_salvo: Option<String>,
+    /// Causa da reabertura, ja consumida da NVS pelo chamador (uso unico).
+    pub motivo: Option<MotivoPortal>,
+    /// Valor pre-preenchido do campo "servidor" (NVS -> build).
+    pub servidor_default: String,
+    /// Se ja existe identidade de nuvem (exige confirmacao para virar standalone).
+    pub tem_identidade_nuvem: bool,
+    /// PIN DESTA tomada — exibido no portal para quem for parear a partir dela.
+    pub pin_proprio: String,
+}
+
+pub fn iniciar(
+    wifi: &mut BlockingWifi<EspWifi<'static>>,
+    ctx: ContextoPortal,
+) -> Result<SaidaPortal> {
     let redes = match fazer_scan(wifi) {
         Ok(r) => {
             log::info!("[PROV] {} redes encontradas no scan", r.len());
@@ -50,29 +84,10 @@ pub fn iniciar(wifi: &mut BlockingWifi<EspWifi<'static>>) -> Result<CredsRecebid
         }
     };
 
-    // 2. Configura como AP
     let ap_ssid_str = montar_ap_ssid(wifi);
-    let ap_ssid_cfg = ap_ssid_str
-        .as_str()
-        .try_into()
-        .map_err(|_| anyhow!("AP SSID muito longo"))?;
-    let ap_pwd_cfg = AP_PASSWORD
-        .try_into()
-        .map_err(|_| anyhow!("AP password invalida"))?;
-
-    wifi.set_configuration(&Configuration::AccessPoint(AccessPointConfiguration {
-        ssid: ap_ssid_cfg,
-        ssid_hidden: false,
-        channel: AP_CHANNEL,
-        secondary_channel: None,
-        auth_method: AuthMethod::WPA2Personal,
-        password: ap_pwd_cfg,
-        max_connections: AP_MAX_CLIENTS,
-        ..Default::default()
-    }))?;
+    configurar_ap_e_sta(wifi, &ap_ssid_str, ctx.ssid_salvo.as_deref())?;
     wifi.start()?;
 
-    // IP real do AP (varia conforme o sdkconfig; nao assumir 192.168.4.1).
     let ip_octets = wifi
         .wifi()
         .ap_netif()
@@ -84,10 +99,6 @@ pub fn iniciar(wifi: &mut BlockingWifi<EspWifi<'static>>) -> Result<CredsRecebid
         ip_octets[0], ip_octets[1], ip_octets[2], ip_octets[3]
     );
 
-    // Captive portal: DNS hijack -> todo dominio resolve no IP do AP. Assim a checagem
-    // de internet do celular (ex.: connectivitycheck.gstatic.com) cai no nosso servidor,
-    // que serve o form -> Android/iOS mostram "entrar na rede" e NAO fogem pro 4G/rede
-    // de casa (era o que impedia o POST /save de chegar).
     match iniciar_dns_captive(ip_octets) {
         Ok(()) => log::info!("[PROV] captive portal DNS ativo (-> {ip_ap})"),
         Err(e) => log::warn!("[PROV] DNS captive falhou ({e:?}); use http://{ip_ap} na mao"),
@@ -98,26 +109,97 @@ pub fn iniciar(wifi: &mut BlockingWifi<EspWifi<'static>>) -> Result<CredsRecebid
     log::warn!("[PROV]        SSID:  {ap_ssid_str}");
     log::warn!("[PROV]        Senha: {AP_PASSWORD}");
     log::warn!("[PROV]   2. Abra no browser: http://{ip_ap}");
-    log::warn!("[PROV]   3. Digite SSID e senha da rede de casa");
+    log::warn!("[PROV]   PIN de pareamento desta tomada: {}", ctx.pin_proprio);
+    if let Some(m) = ctx.motivo {
+        log::warn!("[PROV]   causa da reabertura: {}", m.banner());
+    }
     log::warn!("[PROV] ===========================================");
 
-    // 3. Sobe HTTP server e bloqueia ate receber form
     let (tx, rx) = mpsc::channel::<CredsRecebidas>();
-    let _server = subir_http_server(redes, tx, ip_ap.clone())?; // mantem vivo enquanto _server existir
+    let html = montar_html_form(&redes, &ctx);
+    let _server = subir_http_server(html, tx, ip_ap.clone(), &ctx)?;
 
-    log::info!("[PROV] aguardando credenciais via formulario HTTP...");
+    log::info!("[PROV] aguardando formulario (retry STA a cada 30 s se houver rede salva)...");
 
-    let creds = rx
-        .recv()
-        .map_err(|e| anyhow!("[PROV] canal fechado sem receber creds: {e:?}"))?;
+    // Laco unico: o formulario tem prioridade; no timeout, tenta a rede salva.
+    // Tudo na MESMA thread — nao ha concorrencia sobre o driver Wi-Fi.
+    loop {
+        match rx.recv_timeout(INTERVALO_RETRY_STA) {
+            Ok(creds) => {
+                log::info!("[PROV] formulario recebido (modo={:?})", creds.form.modo);
+                return Ok(SaidaPortal::Configurado(Box::new(creds)));
+            }
+            Err(mpsc::RecvTimeoutError::Timeout) => {
+                if ctx.ssid_salvo.is_none() {
+                    continue; // nada salvo para tentar
+                }
+                if tentar_reconectar(wifi) {
+                    log::warn!("[PROV] rede salva voltou -> encerrando portal e seguindo o boot");
+                    return Ok(SaidaPortal::Reconectado);
+                }
+            }
+            Err(mpsc::RecvTimeoutError::Disconnected) => {
+                return Err(anyhow!("[PROV] canal do formulario fechou"));
+            }
+        }
+    }
+}
 
-    log::info!("[PROV] credenciais recebidas (SSID={})", creds.ssid);
-    Ok(creds)
+/// Uma tentativa de conexao STA com o AP no ar. `true` = conectou (FR-002).
+fn tentar_reconectar(wifi: &mut BlockingWifi<EspWifi<'static>>) -> bool {
+    log::info!("[PROV] tentando a rede salva em segundo plano...");
+    if let Err(e) = wifi.connect() {
+        log::debug!("[PROV] retry STA: connect falhou ({e:?})");
+        return false;
+    }
+    match wifi.wait_netif_up() {
+        Ok(()) => true,
+        Err(e) => {
+            log::debug!("[PROV] retry STA: sem IP ({e:?})");
+            let _ = wifi.disconnect();
+            false
+        }
+    }
 }
 
 // =============================================
-// Helpers privados
+// Configuracao de radio
 // =============================================
+
+/// AP sozinho (sem rede salva) ou AP+STA (com rede salva, para o retry do FR-002).
+fn configurar_ap_e_sta(
+    wifi: &mut BlockingWifi<EspWifi<'static>>,
+    ap_ssid: &str,
+    ssid_salvo: Option<&str>,
+) -> Result<()> {
+    let ap = AccessPointConfiguration {
+        ssid: ap_ssid
+            .try_into()
+            .map_err(|_| anyhow!("AP SSID muito longo"))?,
+        ssid_hidden: false,
+        channel: AP_CHANNEL,
+        secondary_channel: None,
+        auth_method: AuthMethod::WPA2Personal,
+        password: AP_PASSWORD
+            .try_into()
+            .map_err(|_| anyhow!("AP password invalida"))?,
+        max_connections: AP_MAX_CLIENTS,
+        ..Default::default()
+    };
+
+    match ssid_salvo {
+        Some(ssid) if !ssid.is_empty() => {
+            // A senha vem da NVS via `EspWifi` (ja gravada); aqui basta o SSID e o
+            // auth_method correto — senha vazia => rede aberta (FR-016).
+            let cliente = super::wifi::client_config_salvo(ssid)?;
+            wifi.set_configuration(&Configuration::Mixed(cliente, ap))?;
+        }
+        _ => {
+            wifi.set_configuration(&Configuration::AccessPoint(ap))?;
+        }
+    }
+    Ok(())
+}
 
 fn montar_ap_ssid(wifi: &BlockingWifi<EspWifi<'static>>) -> String {
     let mac = wifi.wifi().ap_netif().get_mac().unwrap_or([0; 6]);
@@ -125,7 +207,6 @@ fn montar_ap_ssid(wifi: &BlockingWifi<EspWifi<'static>>) -> String {
 }
 
 fn fazer_scan(wifi: &mut BlockingWifi<EspWifi<'static>>) -> Result<Vec<String>> {
-    // Configura como STA pra fazer scan (precisa estar startado em alguma config)
     wifi.set_configuration(&Configuration::Client(ClientConfiguration::default()))?;
     wifi.start()?;
     let aps = wifi.scan()?;
@@ -141,26 +222,23 @@ fn fazer_scan(wifi: &mut BlockingWifi<EspWifi<'static>>) -> Result<Vec<String>> 
     Ok(ssids)
 }
 
+// =============================================
+// HTTP
+// =============================================
+
 fn subir_http_server(
-    redes: Vec<String>,
+    html: String,
     tx: mpsc::Sender<CredsRecebidas>,
     ip_ap: String,
+    ctx: &ContextoPortal,
 ) -> Result<EspHttpServer<'static>> {
-    // uri_match_wildcard: deixa um unico handler GET "/*" responder QUALQUER caminho.
-    // stack_size: o DEFAULT (6144) ESTOURA ao formatar/escrever HTML no handler Rust
-    // (era a causa do "A stack overflow in task httpd" ao submeter o /save). 10240 da folga.
+    // stack_size 10240: o default (6144) estoura ao formatar o HTML no handler.
     let mut server = EspHttpServer::new(&HttpServerConfig {
         uri_match_wildcard: true,
         stack_size: 10240,
         ..Default::default()
     })?;
-    let html = montar_html_form(&redes);
 
-    // GET /* (captive portal):
-    //   - "/" serve o formulario.
-    //   - qualquer outro caminho (os probes do SO: /generate_204, /hotspot-detect.html,
-    //     /ncsi.txt, /connecttest.txt...) responde 302 -> http://<ip>/ . Isso faz o
-    //     Android/iOS mostrarem "entrar na rede" e abrirem o navegador direto no form.
     server.fn_handler::<anyhow::Error, _>("/*", Method::Get, move |req| {
         if req.uri() != "/" {
             let location = format!("http://{ip_ap}/");
@@ -173,56 +251,106 @@ fn subir_http_server(
         Ok(())
     })?;
 
-    // POST /save -> recebe form, sinaliza thread principal
     let tx_arc: Arc<Mutex<Option<mpsc::Sender<CredsRecebidas>>>> = Arc::new(Mutex::new(Some(tx)));
     let tx_clone = tx_arc.clone();
+    let ssid_salvo = ctx.ssid_salvo.clone();
+    let tem_nuvem = ctx.tem_identidade_nuvem;
+
     server.fn_handler::<anyhow::Error, _>("/save", Method::Post, move |mut req| {
-        let mut buf = vec![0_u8; 512];
-        let len = req.read(&mut buf)?;
-        let body = std::str::from_utf8(&buf[..len])
-            .map_err(|e| anyhow!("body nao e UTF-8: {e:?}"))?;
+        // --- corpo COMPLETO por Content-Length (FR-015) ---
+        let content_length = req
+            .header("Content-Length")
+            .and_then(|v| v.trim().parse::<usize>().ok());
 
-        let (ssid, pwd, claim_code) = parse_form_body(body)?;
-        log::info!("[PROV] POST /save recebido (SSID={ssid}, claim={}chars)", claim_code.len());
+        let alvo = match portal::bytes_a_ler(content_length) {
+            Ok(n) => n,
+            Err(e) => return responder_erro(req, &e),
+        };
 
-        // Responde ANTES de sinalizar o reboot. Content-Length explicito +
-        // flush + drop garantem que o celular receba a resposta inteira: o
-        // mini-browser de captive portal so renderiza a pagina quando sabe que
-        // ela terminou (sem isso, o AP cai no restart antes de renderizar).
-        let resp_html = montar_html_resposta(&ssid);
-        let content_len = resp_html.len().to_string();
+        let mut corpo = Vec::with_capacity(alvo.min(1024));
+        let mut buf = [0u8; 512];
+        while corpo.len() < alvo {
+            match req.read(&mut buf) {
+                Ok(0) => break, // EOF
+                Ok(n) => corpo.extend_from_slice(&buf[..n]),
+                Err(e) => return Err(anyhow!("leitura do corpo falhou: {e:?}")),
+            }
+        }
+        if let Err(e) = portal::checar_corpo(content_length, corpo.len()) {
+            return responder_erro(req, &e);
+        }
+
+        let texto = String::from_utf8_lossy(&corpo).to_string();
+        let form = match portal::parse_form(&texto, tem_nuvem) {
+            Ok(f) => f,
+            Err(e) => {
+                log::warn!("[PROV] formulario rejeitado: {e}");
+                return responder_erro(req, &e);
+            }
+        };
+        let wifi = portal::resolver_wifi(&form, ssid_salvo.as_deref());
+        log::info!(
+            "[PROV] POST /save aceito (modo={:?}, wifi={:?})",
+            form.modo,
+            wifi
+        );
+
+        // Responde ANTES de sinalizar: o mini-browser do captive portal so
+        // renderiza quando sabe que a pagina terminou (Content-Length + close).
+        let corpo_resp = montar_html_resposta(&form);
+        let len = corpo_resp.len().to_string();
         let headers = [
             ("Content-Type", "text/html; charset=utf-8"),
-            ("Content-Length", content_len.as_str()),
+            ("Content-Length", len.as_str()),
             ("Connection", "close"),
         ];
         {
             let mut resp = req.into_response(200, Some("OK"), &headers)?;
-            resp.write_all(resp_html.as_bytes())?;
+            resp.write_all(corpo_resp.as_bytes())?;
             resp.flush()?;
-        } // resp dropado aqui -> resposta finalizada e empurrada pro celular
-
-        // Sinaliza thread principal (consume o sender pra so disparar 1 vez)
-        let mut guard = tx_clone.lock().unwrap();
-        if let Some(s) = guard.take() {
-            s.send(CredsRecebidas { ssid, pwd, claim_code }).ok();
         }
 
+        // Uma submissao so (o sender e consumido).
+        let mut guard = tx_clone.lock().unwrap();
+        if let Some(s) = guard.take() {
+            s.send(CredsRecebidas { form, wifi }).ok();
+        }
         Ok(())
     })?;
 
     Ok(server)
 }
 
+/// 400/413 com a causa — nunca gravacao parcial (contracts/portal-ap.md).
+fn responder_erro<C>(
+    req: esp_idf_svc::http::server::Request<C>,
+    e: &ErroForm,
+) -> Result<(), anyhow::Error>
+where
+    C: embedded_svc::http::server::Connection,
+{
+    let status = portal::status_http(e);
+    let corpo = montar_html_erro(&e.to_string());
+    let len = corpo.len().to_string();
+    let headers = [
+        ("Content-Type", "text/html; charset=utf-8"),
+        ("Content-Length", len.as_str()),
+        ("Connection", "close"),
+    ];
+    let mut resp = req
+        .into_response(status, None, &headers)
+        .map_err(|e| anyhow!("resposta de erro falhou: {e:?}"))?;
+    resp.write_all(corpo.as_bytes())
+        .map_err(|e| anyhow!("escrita da resposta de erro falhou: {e:?}"))?;
+    Ok(())
+}
+
 // =============================================
-// DNS captive portal (UDP:53 -> responde tudo com o IP do AP)
+// DNS captive portal (inalterado do v1)
 // =============================================
 
-/// Sobe um mini-servidor DNS na porta 53 que responde QUALQUER consulta A com o IP do AP.
-/// E o que faz o celular tratar a rede como portal e parar de fugir pro 4G/rede de casa.
 fn iniciar_dns_captive(ip: [u8; 4]) -> Result<()> {
-    let sock = UdpSocket::bind("0.0.0.0:53")
-        .map_err(|e| anyhow!("bind UDP:53 falhou: {e:?}"))?;
+    let sock = UdpSocket::bind("0.0.0.0:53").map_err(|e| anyhow!("bind UDP:53 falhou: {e:?}"))?;
     std::thread::Builder::new()
         .name("dns-captive".into())
         .stack_size(4096)
@@ -243,97 +371,47 @@ fn loop_dns(sock: UdpSocket, ip: [u8; 4]) {
     }
 }
 
-/// Monta uma resposta DNS apontando o nome consultado para `ip` (registro A, TTL 60s).
-/// Responde so a consultas A (qtype=1); outras voltam sem resposta (ANCOUNT=0).
 fn montar_resposta_dns(req: &[u8], ip: [u8; 4]) -> Option<Vec<u8>> {
     if req.len() < 12 {
-        return None; // header DNS tem 12 bytes
+        return None;
     }
-    // Fim do QNAME (sequencia de labels terminada em 0x00).
     let q_start = 12;
     let mut i = q_start;
     while i < req.len() && req[i] != 0 {
         i += 1 + req[i] as usize;
     }
-    let qname_end = i; // posicao do byte 0x00 terminador
+    let qname_end = i;
     let qtype_pos = qname_end + 1;
     if qtype_pos + 4 > req.len() {
-        return None; // sem QTYPE/QCLASS completos
+        return None;
     }
     let qtype = u16::from_be_bytes([req[qtype_pos], req[qtype_pos + 1]]);
-    let eh_a = qtype == 1; // 1 = registro A (IPv4)
-    let q_end = qtype_pos + 4; // inclui QTYPE(2) + QCLASS(2)
+    let eh_a = qtype == 1;
+    let q_end = qtype_pos + 4;
 
     let mut r = Vec::with_capacity(req.len() + 16);
-    r.extend_from_slice(&req[0..2]); // ID (ecoa)
-    r.extend_from_slice(&[0x81, 0x80]); // flags: resposta, RD+RA, sem erro
-    r.extend_from_slice(&[0x00, 0x01]); // QDCOUNT = 1
-    r.extend_from_slice(if eh_a { &[0x00, 0x01] } else { &[0x00, 0x00] }); // ANCOUNT
-    r.extend_from_slice(&[0x00, 0x00]); // NSCOUNT
-    r.extend_from_slice(&[0x00, 0x00]); // ARCOUNT
-    r.extend_from_slice(&req[q_start..q_end]); // ecoa a pergunta
+    r.extend_from_slice(&req[0..2]);
+    r.extend_from_slice(&[0x81, 0x80]);
+    r.extend_from_slice(&[0x00, 0x01]);
+    r.extend_from_slice(if eh_a { &[0x00, 0x01] } else { &[0x00, 0x00] });
+    r.extend_from_slice(&[0x00, 0x00]);
+    r.extend_from_slice(&[0x00, 0x00]);
+    r.extend_from_slice(&req[q_start..q_end]);
 
     if eh_a {
-        r.extend_from_slice(&[0xC0, 0x0C]); // ponteiro p/ o QNAME (offset 12)
-        r.extend_from_slice(&[0x00, 0x01]); // TYPE A
-        r.extend_from_slice(&[0x00, 0x01]); // CLASS IN
-        r.extend_from_slice(&[0x00, 0x00, 0x00, 0x3C]); // TTL = 60s
-        r.extend_from_slice(&[0x00, 0x04]); // RDLENGTH = 4
-        r.extend_from_slice(&ip); // RDATA = IP do AP
+        r.extend_from_slice(&[0xC0, 0x0C]);
+        r.extend_from_slice(&[0x00, 0x01]);
+        r.extend_from_slice(&[0x00, 0x01]);
+        r.extend_from_slice(&[0x00, 0x00, 0x00, 0x3C]);
+        r.extend_from_slice(&[0x00, 0x04]);
+        r.extend_from_slice(&ip);
     }
     Some(r)
 }
 
-fn parse_form_body(body: &str) -> Result<(String, String, String)> {
-    let mut ssid: Option<String> = None;
-    let mut pwd: Option<String> = None;
-    let mut claim: Option<String> = None;
-    for pair in body.split('&') {
-        let mut it = pair.splitn(2, '=');
-        let key = it.next().unwrap_or("");
-        let val = it.next().unwrap_or("");
-        let val_decoded = url_decode(val);
-        match key {
-            "ssid" => ssid = Some(val_decoded),
-            "pwd" => pwd = Some(val_decoded),
-            "claim" => claim = Some(val_decoded),
-            _ => {}
-        }
-    }
-    let ssid = ssid.ok_or_else(|| anyhow!("campo 'ssid' faltando no form"))?;
-    if ssid.is_empty() {
-        return Err(anyhow!("ssid vazio"));
-    }
-    let pwd = pwd.unwrap_or_default();
-    let claim = claim.unwrap_or_default().trim().to_string();
-    Ok((ssid, pwd, claim))
-}
-
-/// URL decoder simples: %XX e + -> espaco.
-fn url_decode(s: &str) -> String {
-    let bytes = s.as_bytes();
-    let mut out = Vec::with_capacity(bytes.len());
-    let mut i = 0;
-    while i < bytes.len() {
-        match bytes[i] {
-            b'+' => {
-                out.push(b' ');
-                i += 1;
-            }
-            b'%' if i + 2 < bytes.len() => {
-                let h = std::str::from_utf8(&bytes[i + 1..i + 3]).unwrap_or("00");
-                let c = u8::from_str_radix(h, 16).unwrap_or(b'?');
-                out.push(c);
-                i += 3;
-            }
-            c => {
-                out.push(c);
-                i += 1;
-            }
-        }
-    }
-    String::from_utf8(out).unwrap_or_default()
-}
+// =============================================
+// HTML
+// =============================================
 
 fn html_escape(s: &str) -> String {
     s.replace('&', "&amp;")
@@ -343,103 +421,174 @@ fn html_escape(s: &str) -> String {
         .replace('\'', "&#x27;")
 }
 
-fn montar_html_form(redes: &[String]) -> String {
-    let opcoes_redes: String = redes
+const ESTILO: &str = "*{box-sizing:border-box}\
+body{font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;background:#f5f5f7;color:#1d1d1f;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}\
+.card{background:#fff;padding:28px;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);max-width:440px;width:100%}\
+h1{margin:0 0 4px;font-size:22px}.sub{color:#6e6e73;margin:0 0 18px;font-size:14px}\
+label{display:block;margin:12px 0 6px;font-size:13px;font-weight:500}\
+select,input[type=text],input[type=password]{width:100%;padding:11px;border:1px solid #d2d2d7;border-radius:10px;font-size:15px;background:#fff;font-family:inherit}\
+input:focus,select:focus{outline:none;border-color:#5856d6;box-shadow:0 0 0 3px rgba(88,86,214,.15)}\
+button{width:100%;padding:14px;margin-top:20px;border:0;border-radius:12px;background:#5856d6;color:#fff;font-size:15px;font-weight:600;cursor:pointer}\
+button:hover{background:#4a48c2}\
+.aviso{background:#fff4e5;border:1px solid #ffd8a8;color:#8a5300;padding:12px;border-radius:10px;font-size:13px;margin-bottom:16px}\
+.erro{background:#ffe9e9;border:1px solid #ffc9c9;color:#a12626;padding:12px;border-radius:10px;font-size:14px}\
+.help{color:#86868b;font-size:12px;margin:6px 0 0}\
+.modos{display:flex;gap:8px;margin:8px 0 4px;flex-wrap:wrap}\
+.modos label{flex:1;min-width:120px;margin:0;border:1px solid #d2d2d7;border-radius:10px;padding:10px;font-size:13px;cursor:pointer;text-align:center}\
+.modos input{margin-right:6px}\
+fieldset{border:1px solid #e5e5ea;border-radius:10px;padding:12px;margin:14px 0 0}\
+legend{font-size:12px;color:#6e6e73;padding:0 6px}\
+.pin{font-family:ui-monospace,monospace;font-size:20px;letter-spacing:.15em;background:#f5f5f7;padding:8px 12px;border-radius:8px;display:inline-block}";
+
+fn montar_html_form(redes: &[String], ctx: &ContextoPortal) -> String {
+    let banner = match ctx.motivo {
+        Some(m) => format!("<div class=\"aviso\">{}</div>", html_escape(m.banner())),
+        None => String::new(),
+    };
+
+    let opcoes: String = redes
         .iter()
         .take(20)
-        .map(|s| {
-            format!(
-                "<option value=\"{0}\">{0}</option>",
-                html_escape(s)
-            )
-        })
+        .map(|s| format!("<option value=\"{0}\">{0}</option>", html_escape(s)))
         .collect();
-
     let secao_scan = if redes.is_empty() {
         String::new()
     } else {
         format!(
-            r#"<label for="ssid-list">Redes encontradas</label>
-<select id="ssid-list" onchange="document.getElementById('ssid').value=this.value">
-<option value="">-- escolha uma rede --</option>
-{opcoes_redes}
-</select>
-<div class="divider">ou digite manualmente</div>"#
+            "<label for=\"lista\">Redes encontradas</label>\
+<select id=\"lista\" onchange=\"document.getElementById('ssid').value=this.value\">\
+<option value=\"\">-- escolha --</option>{opcoes}</select>"
         )
     };
 
+    // Preserva o Wi-Fi salvo: SSID pre-preenchido + checkbox "manter" (FR-017).
+    let (ssid_val, bloco_manter) = match &ctx.ssid_salvo {
+        Some(s) => (
+            html_escape(s),
+            format!(
+                "<label><input type=\"checkbox\" name=\"manter\" value=\"1\" checked> \
+Manter a rede salva (<b>{}</b>)</label>\
+<p class=\"help\">Deixe a senha em branco para manter a atual; preencha para trocar a senha.</p>",
+                html_escape(s)
+            ),
+        ),
+        None => (String::new(), String::new()),
+    };
+
+    let confirmar = if ctx.tem_identidade_nuvem {
+        "<label><input type=\"checkbox\" name=\"confirmar_descartar_identidade\" value=\"1\"> \
+Confirmo descartar a identidade de nuvem desta tomada</label>"
+    } else {
+        ""
+    };
+
     format!(
-        r#"<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8">
+        r#"<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Configurar Wi-Fi -- Tomada Inteligente</title>
-<style>
-*{{box-sizing:border-box}}
-body{{font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;background:#f5f5f7;color:#1d1d1f;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}}
-.card{{background:white;padding:32px;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.08);max-width:420px;width:100%}}
-h1{{margin:0 0 4px;font-size:22px}}
-.sub{{color:#6e6e73;margin:0 0 24px;font-size:14px}}
-label{{display:block;margin:14px 0 6px;font-size:13px;font-weight:500;color:#1d1d1f}}
-select,input{{width:100%;padding:12px;border:1px solid #d2d2d7;border-radius:10px;font-size:15px;background:white;color:#1d1d1f;font-family:inherit}}
-input:focus,select:focus{{outline:none;border-color:#5856d6;box-shadow:0 0 0 3px rgba(88,86,214,0.15)}}
-button{{width:100%;padding:14px;margin-top:20px;border:0;border-radius:12px;background:#5856d6;color:white;font-size:15px;font-weight:600;cursor:pointer;transition:background .15s}}
-button:hover{{background:#4a48c2}}
-button:active{{transform:scale(0.98)}}
-.divider{{text-align:center;color:#6e6e73;font-size:12px;margin:14px 0 4px;text-transform:uppercase;letter-spacing:0.05em}}
-.help{{color:#86868b;font-size:12px;margin-top:6px}}
-</style>
-</head>
-<body>
+<title>Configurar Tomada Inteligente</title><style>{ESTILO}</style></head><body>
 <div class="card">
-<h1>Tomada Inteligente</h1>
-<p class="sub">Configure a conexao Wi-Fi da sua tomada</p>
-<form action="/save" method="POST">
+<h1>Tomada Inteligente</h1><p class="sub">Configure esta tomada</p>
+{banner}
+<form action="/save" method="POST" onsubmit="return validar()">
+
+<fieldset><legend>Rede Wi-Fi (opcional sem nuvem)</legend>
 {secao_scan}
-<label for="ssid">SSID</label>
-<input id="ssid" name="ssid" type="text" placeholder="Nome da rede" required maxlength="32" autocomplete="off">
+<label for="ssid">Nome da rede (SSID)</label>
+<input id="ssid" name="ssid" type="text" value="{ssid_val}" placeholder="Nome da rede" maxlength="32" autocomplete="off">
 <label for="pwd">Senha</label>
-<input id="pwd" name="pwd" type="password" placeholder="Senha do Wi-Fi" maxlength="63" autocomplete="off">
-<div class="divider">pareamento</div>
-<label for="claim">Codigo de pareamento</label>
-<input id="claim" name="claim" type="text" placeholder="Ex.: TOMADA-TESTE-001" maxlength="64" autocomplete="off" autocapitalize="characters">
-<p class="help">Pegue o codigo com o dono da residencia (gerado via scripts/criar-claim). Necessario so no 1o uso.</p>
-<p class="help">A tomada vai reiniciar automaticamente apos salvar.</p>
-<button type="submit">Conectar e salvar</button>
-</form>
+<input id="pwd" name="pwd" type="password" placeholder="Deixe vazio para rede aberta" maxlength="63" autocomplete="off">
+{bloco_manter}
+</fieldset>
+
+<fieldset><legend>Como esta tomada vai funcionar</legend>
+<div class="modos">
+<label><input type="radio" name="modo" value="nuvem" checked onchange="mostrar()">Com nuvem</label>
+<label><input type="radio" name="modo" value="standalone" onchange="mostrar()">Sem nuvem</label>
+<label><input type="radio" name="modo" value="parear" onchange="mostrar()">Parear</label>
 </div>
-</body>
-</html>"#
+
+<div id="sec-nuvem">
+<label for="servidor">Endereco do servidor</label>
+<input id="servidor" name="servidor" type="text" value="{servidor}" placeholder="http://192.168.0.10:8080" maxlength="128" autocomplete="off">
+<label for="claim">Codigo de pareamento</label>
+<input id="claim" name="claim" type="text" placeholder="Ex.: K7PQ2XMR" maxlength="64" autocomplete="off" autocapitalize="characters">
+<p class="help">Gere no dashboard (Residencia &rarr; Parear dispositivo). Vale ~10 min, uso unico.</p>
+</div>
+
+<div id="sec-standalone" style="display:none">
+<p class="help">A tomada funciona sozinha, sem servidor e sem internet, com os limites padrao. Voce pode conectar a nuvem depois.</p>
+{confirmar}
+</div>
+
+<div id="sec-parear" style="display:none">
+<label for="pin">PIN da tomada que ja funciona</label>
+<input id="pin" name="pin" type="text" placeholder="8 caracteres" maxlength="8" autocomplete="off" autocapitalize="characters">
+<p class="help">Aperte o botao da outra tomada (janela de 60 s) e digite o PIN dela aqui.</p>
+</div>
+</fieldset>
+
+<p class="help">PIN desta tomada (para parear outras a partir dela): <span class="pin">{pin}</span></p>
+<button type="submit">Salvar</button>
+</form></div>
+<script>
+function mostrar(){{
+  var m=document.querySelector('input[name=modo]:checked').value;
+  document.getElementById('sec-nuvem').style.display=(m=='nuvem')?'block':'none';
+  document.getElementById('sec-standalone').style.display=(m=='standalone')?'block':'none';
+  document.getElementById('sec-parear').style.display=(m=='parear')?'block':'none';
+}}
+function bytes(s){{return new TextEncoder().encode(s).length;}}
+function validar(){{
+  var s=document.getElementById('ssid').value;
+  if(bytes(s)>{MAX_SSID_BYTES}){{
+    alert('O nome da rede tem '+bytes(s)+' bytes (maximo {MAX_SSID_BYTES}). Acentos contam 2.');
+    return false;
+  }}
+  return true;
+}}
+mostrar();
+</script>
+</body></html>"#,
+        servidor = html_escape(&ctx.servidor_default),
+        pin = html_escape(&ctx.pin_proprio),
     )
 }
 
-fn montar_html_resposta(ssid: &str) -> String {
+fn montar_html_resposta(form: &FormPortal) -> String {
+    let msg = match form.modo {
+        Modo::Nuvem => format!(
+            "A tomada vai conectar em <b>{}</b> e se registrar no servidor apos reiniciar.",
+            html_escape(&form.ssid)
+        ),
+        Modo::Standalone => {
+            "A tomada vai operar sem nuvem. Ela ja comeca a medir e controlar apos reiniciar."
+                .to_string()
+        }
+        Modo::Parear => {
+            "Procurando a outra tomada... o resultado aparece no console e a tomada reinicia."
+                .to_string()
+        }
+    };
     format!(
-        r#"<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Salvo</title>
-<style>
-body{{font-family:-apple-system,system-ui,sans-serif;background:#f5f5f7;color:#1d1d1f;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:16px;text-align:center}}
-.card{{background:white;padding:40px 32px;border-radius:16px;max-width:380px;box-shadow:0 4px 24px rgba(0,0,0,0.08)}}
-.check{{font-size:48px;color:#22c55e;margin-bottom:8px}}
-h1{{margin:0 0 12px;font-size:22px;color:#22c55e}}
-p{{color:#6e6e73;font-size:14px;line-height:1.5}}
-b{{color:#1d1d1f}}
-</style>
-</head>
-<body>
-<div class="card">
-<div class="check">&#10003;</div>
-<h1>Configuracao salva</h1>
-<p>A tomada vai conectar em <b>{}</b> apos reiniciar.<br>
-Voce pode fechar esta pagina.</p>
-</div>
-</body>
-</html>"#,
-        html_escape(ssid)
+        r#"<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>Salvo</title>
+<style>{ESTILO}</style></head><body><div class="card" style="text-align:center">
+<div style="font-size:44px;color:#22c55e">&#10003;</div>
+<h1 style="color:#22c55e">Configuracao salva</h1><p class="sub">{msg}<br>Voce pode fechar esta pagina.</p>
+</div></body></html>"#
+    )
+}
+
+fn montar_html_erro(motivo: &str) -> String {
+    format!(
+        r#"<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>Erro</title>
+<style>{ESTILO}</style></head><body><div class="card">
+<h1>Nao deu para salvar</h1>
+<div class="erro">{}</div>
+<p class="help">Nada foi alterado na tomada. Volte e corrija o campo indicado.</p>
+<button onclick="history.back()">Voltar</button>
+</div></body></html>"#,
+        html_escape(motivo)
     )
 }

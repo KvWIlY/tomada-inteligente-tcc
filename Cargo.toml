@@ -1,3 +1,11 @@
+# Workspace do EMBARCADO (alvo Xtensa/esp-idf).
+#
+# `backend/` NAO e membro deste workspace: e um projeto cargo independente, com o
+# proprio `[workspace]` no `backend/Cargo.toml`, compilado para o HOST (x86_64) com a
+# toolchain estavel. Misturar os dois quebraria os dois lados — este workspace fixa
+# `rust-toolchain.toml` = esp e profiles com workarounds do bug LLVM Xtensa (abaixo),
+# nenhum dos quais faz sentido para um servidor Actix-Web. Para mexer no backend:
+# `cd backend && cargo test`. Ver specs/004-backend-actix-mysql/plan.md §Estrutura.
 [workspace]
 members = ["firmware", "tomada-solver"]
 resolver = "2"
@@ -22,11 +30,27 @@ opt-level = 0
 [profile.release.package.minilp]
 opt-level = 0
 
-# Dev: opt-level = 0 evita o bug LLVM Xtensa.
-# Binario fica maior (~2.4 MB com Wi-Fi) mas cabe na particao de 3.125 MB.
+# Dev: opt-level = "s" (NAO 0).
+# Com opt-level = 0 o binario passou a NAO CABER na particao factory de 3.31 MB depois
+# que a 005 trouxe spake2/curve25519-dalek/chacha20poly1305 (.flash.text = 3.03 MB,
+# imagem total 3.89 MB -> espflash: image_too_big). Aumentar a particao nao salva: com
+# 4 MB de flash o teto do factory e ~3.87 MB, ainda menor que a imagem.
+# O bug do LLVM Xtensa ([2 x float] constant pools) mora na desserializacao de float do
+# serde_json -- mas o override [profile.*.package.serde_json] NAO resolve: `deserialize`
+# e generico e a monomorfizacao e emitida na CGU de QUEM instancia. O simbolo que quebra
+# termina em `_10y_firmware`. Por isso o opt-level = 0 vai no proprio y-firmware; as
+# dependencias (esp-idf-svc, std, curve25519, minilp, solver) sao o grosso do .text e
+# ficam em "s".
+# debug = true nao custa flash (secoes .debug_* nao sao carregaveis), so tamanho do ELF.
 # codegen-units = 1: no Windows, o default (256) gera ~257 .o e estoura o limite de
 # ~32 KB da linha de comando do linker (os error 206). Com 1 unidade vira 1 .o.
 [profile.dev]
 debug         = true
-opt-level     = 0
+opt-level     = "s"
 codegen-units = 1
+
+[profile.dev.package.y-firmware]
+opt-level = 0
+
+[profile.dev.package.minilp]
+opt-level = 0

@@ -39,7 +39,7 @@ sdkconfig.old
 *.bin
 *.elf
 
-# Build — Node.js (dashboard)
+# Build — Node.js (frontend)
 node_modules/
 dist/
 dist-ssr/

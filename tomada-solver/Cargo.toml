@@ -6,8 +6,14 @@ rust-version = "1.82"
 description = "Modelo MILP de otimizacao de tomadas (review_modelo.pdf, topicos 1-4) — host-testavel"
 
 [dependencies]
+chacha20poly1305 = "0.10"
+hkdf = "0.12"
+hmac = { version = "0.12", default-features = false }
 minilp = "0.2"
+rand_core = "0.6"
 serde  = { version = "1", features = ["derive"] }
+sha2 = "0.10"
+spake2 = "0.4"
 
 # Apenas para testes/exemplos no host (NAO entra no firmware): ingestao do dataset CSV.
 [dev-dependencies]

@@ -9,6 +9,10 @@
 
 pub mod coordenacao;
 pub mod modelo;
+pub mod pareamento;
+pub mod portal;
+pub mod relogio;
+pub mod replay;
 pub mod solver;
 pub mod sync;
 pub mod tipos;

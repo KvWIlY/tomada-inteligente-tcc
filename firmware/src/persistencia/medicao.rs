@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 use std::io::Write;
 use std::sync::{Mutex, OnceLock};
 
+use tomada_solver::relogio::{self, Carimbavel};
 use tomada_solver::sync::SyncRecord;
 use tomada_solver::Estado;
 
@@ -26,17 +27,31 @@ pub const DIA_S: i64 = 86_400;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Medicao {
     pub tomada_id: String,
+    /// Epoch real, ou `relogio::SEM_HORA` (0) enquanto nao houve sincronizacao —
+    /// corrigido por deslocamento quando a hora chega (FR-001a).
     pub timestamp: i64,
     pub p_medida: f32,
     pub estado: Estado,
     pub rele_aberto: bool,
     #[serde(default)]
     pub confirmado: bool,
+    /// Segundos desde o boot no momento do registro. E o que torna a correcao possivel:
+    /// sem ele, uma medicao feita antes da hora certa seria indatavel (005/D3).
+    #[serde(default)]
+    pub uptime_s: i64,
 }
 
 impl Medicao {
     pub fn novo(tomada_id: &str, timestamp: i64, p_medida: f32, estado: Estado, rele_aberto: bool) -> Self {
-        Medicao { tomada_id: tomada_id.to_string(), timestamp, p_medida, estado, rele_aberto, confirmado: false }
+        Medicao {
+            tomada_id: tomada_id.to_string(),
+            timestamp,
+            p_medida,
+            estado,
+            rele_aberto,
+            confirmado: false,
+            uptime_s: crate::comunicacao::sntp::uptime_s(),
+        }
     }
 
     pub fn para_sync_record(&self) -> SyncRecord {
@@ -48,6 +63,19 @@ impl Medicao {
             rele_aberto: self.rele_aberto,
             confirmado: self.confirmado,
         }
+    }
+}
+
+/// Permite ao `tomada_solver::relogio` corrigir os carimbos sem conhecer `Medicao`.
+impl Carimbavel for Medicao {
+    fn ts(&self) -> i64 {
+        self.timestamp
+    }
+    fn uptime_s(&self) -> i64 {
+        self.uptime_s
+    }
+    fn set_ts(&mut self, ts: i64) {
+        self.timestamp = ts;
     }
 }
 
@@ -153,18 +181,90 @@ pub(crate) fn ler_balde(dia: i64) -> Result<Vec<Medicao>> {
 /// Carrega TODOS os registros pendentes (`confirmado=false`) de todos os baldes.
 /// Faz flush antes para incluir os de RAM. A selecao/ordenacao/limite finais ficam com
 /// `tomada_solver::sync::selecionar_pendentes` (host-testada) sobre os `SyncRecord`.
+///
+/// Registros SEM HORA (`timestamp == SEM_HORA`) nunca sobem: ou sao corrigidos por
+/// `corrigir_carimbos` quando a hora chega, ou — se sobraram de um boot anterior que
+/// nunca teve hora — sao incorrigiveis e ficam de fora (FR-001a, excecao unica).
 pub fn carregar_pendentes() -> Result<Vec<Medicao>> {
     flush_para_disco()?;
     let mut pend = Vec::new();
+    let mut sem_hora = 0usize;
     for dia in dias_em_disco()? {
         for m in ler_balde(dia)? {
-            if !m.confirmado {
-                pend.push(m);
+            if m.confirmado {
+                continue;
             }
+            if m.timestamp == relogio::SEM_HORA {
+                sem_hora += 1;
+                continue;
+            }
+            pend.push(m);
         }
+    }
+    if sem_hora > 0 {
+        log::warn!("[MED] {sem_hora} medicoes sem hora certa ficaram de fora do sync");
     }
     Ok(pend)
 }
+
+/// Aplica o deslocamento do 1o sync SNTP a tudo que foi medido sem hora (FR-001a).
+///
+/// Corrige o buffer de RAM e reescreve os baldes afetados UMA vez (Principio III). Os
+/// registros do buffer sao os do boot atual — corrigiveis por definicao; em disco,
+/// corrige os que tem `uptime_s` e descarta os incorrigiveis de boots anteriores.
+/// Devolve `(corrigidos, descartados)` para o evento de observabilidade.
+pub fn corrigir_carimbos(offset: i64) -> Result<(usize, usize)> {
+    let mut corrigidos = 0usize;
+    let mut descartados = 0usize;
+
+    {
+        let mut buf = buffer().lock().unwrap();
+        let c = relogio::corrigir(&mut buf[..], offset);
+        corrigidos += c.corrigidos;
+    }
+
+    for dia in dias_em_disco()? {
+        let mut regs = ler_balde(dia)?;
+        if !regs.iter().any(|m| m.timestamp == relogio::SEM_HORA) {
+            continue; // balde intacto: nao reescreve
+        }
+        // Sem `uptime_s` gravado (registro de boot anterior a este campo, ou de um
+        // boot que nunca teve hora) nao ha como datar: descarta.
+        let antes = regs.len();
+        regs.retain(|m| m.timestamp != relogio::SEM_HORA || m.uptime_s > 0);
+        descartados += antes - regs.len();
+
+        let c = relogio::corrigir(&mut regs[..], offset);
+        corrigidos += c.corrigidos;
+        reescrever_balde(dia, &regs)?;
+    }
+
+    if corrigidos > 0 || descartados > 0 {
+        log::info!("[MED] carimbos: {corrigidos} corrigidos, {descartados} descartados");
+    }
+    Ok((corrigidos, descartados))
+}
+
+/// Descarta, na carga do boot, medicoes sem hora vindas de boots anteriores — elas
+/// nunca poderao ser datadas (FR-001a). Devolve quantas foram removidas.
+pub fn descartar_sem_hora_de_boot_anterior() -> Result<usize> {
+    let mut total = 0usize;
+    for dia in dias_em_disco()? {
+        let mut regs = ler_balde(dia)?;
+        let antes = regs.len();
+        regs.retain(|m| m.timestamp != relogio::SEM_HORA);
+        let n = antes - regs.len();
+        if n > 0 {
+            total += n;
+            reescrever_balde(dia, &regs)?;
+        }
+    }
+    if total > 0 {
+        log::warn!("[MED] {total} medicoes de boot anterior sem hora certa descartadas");
+    }
+    Ok(total)
+}
+
 
 /// Marca como `confirmado=true` os registros cujos `timestamp` constam em `ts_ok`,
 /// reescrevendo cada balde afetado UMA unica vez (consolidacao em lote, Principio III).
@@ -191,8 +291,13 @@ pub fn marcar_confirmados(ts_ok: &[i64]) -> Result<()> {
     Ok(())
 }
 
+/// Reescreve um balde inteiro (ou o remove, se ficou vazio).
 fn reescrever_balde(dia: i64, regs: &[Medicao]) -> Result<()> {
     let path = caminho_balde(dia);
+    if regs.is_empty() {
+        let _ = std::fs::remove_file(&path);
+        return Ok(());
+    }
     let mut linhas = String::new();
     for m in regs {
         linhas.push_str(&serde_json::to_string(m).context("serializando medicao")?);
