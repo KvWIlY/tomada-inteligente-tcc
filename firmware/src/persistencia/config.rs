@@ -1,6 +1,6 @@
 //! Configuracao da tomada (`Tomada`) — parametros do modelo MILP, versionada.
 //!
-//! Espelha o jsonb `tomadas.config` do schema (001 `supabase-schema.sql`) + a coluna
+//! Espelha o JSON `tomadas.config` do schema (004 `db-schema-mysql.sql`) + a coluna
 //! `config_version`. Persistida localmente em LittleFS (`/lfs/config.json`) para operar
 //! offline-first (Principio VI); o pull da nuvem so adota uma versao remota MAIOR
 //! (`sync::deve_adotar_config`, FR-015).

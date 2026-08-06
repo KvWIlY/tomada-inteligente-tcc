@@ -5,7 +5,7 @@
 //!
 //! Mantem estado entre ciclos (calibracao `cstd`/`con`, `ultimo_uso_ativo_ts`,
 //! `p_limiar` autodetectado, estado vigente do rele). O I/O (atuar, persistir, sincronizar)
-//! fica em `main`/`atuador`/`supabase` — aqui so a logica de decisao.
+//! fica em `main`/`atuador`/`backend` — aqui so a logica de decisao.
 
 use tomada_solver::{resolver, Estado, Pesos, SolverInput, TomadaInput};
 
@@ -19,7 +19,7 @@ const EMA: f32 = 0.1;
 /// Consumo minimo (W) p/ considerar a tomada "energizada e consumindo" (calibra cstd).
 const P_MIN_STANDBY: f32 = 0.5;
 
-/// Evento gerado pelo ciclo (encaminhado por `main` a `supabase::registrar_evento`).
+/// Evento gerado pelo ciclo (encaminhado por `main` a `backend::registrar_evento`).
 pub struct EventoCiclo {
     pub tipo: &'static str,
     pub severidade: &'static str,

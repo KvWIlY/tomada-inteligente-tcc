@@ -1,5 +1,6 @@
-//! Testes da logica pura de sincronizacao (host) — feature 002-refinamento-supabase.
-//! Contrato: specs/002-refinamento-supabase/contracts/supabase-client.md.
+//! Testes da logica pura de sincronizacao (host).
+//! Contrato vigente: specs/004-backend-actix-mysql/contracts/backend-api.md
+//! (POST /telemetria). A logica nasceu na feature 002 e foi preservada intacta pela 004.
 
 use tomada_solver::sync::{
     deve_adotar_config, deve_renovar, montar_corpo_lote, selecionar_pendentes, SyncRecord,

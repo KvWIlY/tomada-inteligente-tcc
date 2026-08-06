@@ -26,6 +26,9 @@ sha2          = { version = "0.10", default-features = false }
 hmac          = { version = "0.12", default-features = false }
 # Modelo MILP + tipos + logica pura de sync (host-testavel; linkado tambem sob esp-idf std).
 tomada-solver = { path = "../tomada-solver" }
+spake2 = "0.4"
+hkdf = "0.12"
+chacha20poly1305 = "0.10"
 
 [build-dependencies]
 embuild = "0.33"

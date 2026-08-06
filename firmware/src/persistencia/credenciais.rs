@@ -11,6 +11,24 @@ use std::io::Write;
 
 use crate::persistencia::littlefs;
 
+/// Modo de operacao da tomada (feature 005, FR-004).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Modo {
+    /// Provisionada contra o backend: identidade e chave vem do servidor.
+    Nuvem,
+    /// Sem nuvem: identidade e chave da casa geradas localmente. Opera o ciclo
+    /// completo sem servidor, claim-code ou internet.
+    Standalone,
+}
+
+impl Default for Modo {
+    /// Credenciais gravadas pela 004 (sem o campo) sao de nuvem.
+    fn default() -> Self {
+        Modo::Nuvem
+    }
+}
+
 /// Credenciais do dispositivo. `jwt`/`jwt_exp` sao cache de regime (renovaveis).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CredenciaisLocais {
@@ -34,6 +52,77 @@ pub struct CredenciaisLocais {
     /// Epoch de expiracao do JWT (`exp`). 0 = sem token valido em cache.
     #[serde(default)]
     pub jwt_exp: i64,
+    /// Modo de operacao (005). Ausente em credenciais da 004 => `Nuvem`.
+    #[serde(default)]
+    pub modo: Modo,
+    /// PIN de pareamento por-dispositivo (8 alfanumericos). Gerado no 1o boot e
+    /// exibido no serial; autoriza a ENTREGA da chave da casa a uma tomada nova
+    /// (contracts/pareamento-espnow.md). Vazio em credenciais antigas => gerado e
+    /// regravado no boot.
+    #[serde(default)]
+    pub pin: String,
+}
+
+impl CredenciaisLocais {
+    /// Identidade local para o modo standalone (FR-004/007): esta tomada E a
+    /// residencia, entao ela mesma cunha o id e a chave de coordenacao da casa.
+    pub fn nova_standalone(
+        mac: &str,
+        tomada_id: String,
+        residencia_key: String,
+        pin: String,
+    ) -> Self {
+        CredenciaisLocais {
+            mac: mac.to_string(),
+            tomada_id,
+            residencia_id: "local".to_string(),
+            device_secret: String::new(),
+            residencia_key,
+            jwt: String::new(),
+            jwt_exp: 0,
+            modo: Modo::Standalone,
+            pin,
+        }
+    }
+
+    pub fn eh_standalone(&self) -> bool {
+        self.modo == Modo::Standalone
+    }
+}
+
+/// Alfabeto do PIN: sem 0/O/1/I/L para nao gerar codigo ambiguo na etiqueta/serial.
+const ALFABETO_PIN: &[u8] = b"23456789ABCDEFGHJKMNPQRSTUVWXYZ";
+
+/// Gera um PIN de 8 caracteres a partir do gerador de hardware do ESP32.
+pub fn gerar_pin() -> String {
+    (0..tomada_solver::pareamento::TAM_PIN_ESPERADO)
+        .map(|_| {
+            let r = unsafe { esp_idf_svc::sys::esp_random() } as usize;
+            ALFABETO_PIN[r % ALFABETO_PIN.len()] as char
+        })
+        .collect()
+}
+
+/// 32 bytes aleatorios em hex (chave da residencia / id local).
+pub fn gerar_hex_32() -> String {
+    let mut s = String::with_capacity(64);
+    for _ in 0..8 {
+        let r = unsafe { esp_idf_svc::sys::esp_random() };
+        s.push_str(&format!("{r:08x}"));
+    }
+    s
+}
+
+/// Garante que a credencial tem PIN (credenciais da 004 nao tinham). Regrava so
+/// quando precisa criar — escrita pontual, nao desgasta a flash (Principio III).
+pub fn garantir_pin(c: &mut CredenciaisLocais) -> Result<()> {
+    if !c.pin.is_empty() {
+        return Ok(());
+    }
+    c.pin = gerar_pin();
+    save(c)?;
+    log::warn!("[CRED] PIN de pareamento desta tomada: {}", c.pin);
+    Ok(())
 }
 
 fn caminho() -> String {
@@ -115,9 +204,52 @@ pub fn limpar_claim_pendente() {
     let _ = std::fs::remove_file(caminho_claim());
 }
 
+/// Atualiza SO a chave da residencia (rotacao apos revogacao — FR-012).
+pub fn salvar_residencia_key(hex: &str) -> Result<()> {
+    let mut c = load()?.context("salvar_residencia_key sem credencial")?;
+    c.residencia_key = hex.trim().to_string();
+    save(&c)
+}
+
+// ============================================================
+// PIN alvo: o PIN da tomada EXISTENTE, digitado no portal desta tomada. Sobrevive ao
+// restart porque o pareamento so acontece com o radio ja inicializado, no proximo boot.
+// ============================================================
+
+fn caminho_pin_alvo() -> String {
+    format!("{}/pin_alvo.txt", littlefs::base())
+}
+
+pub fn salvar_pin_alvo(pin: &str) -> Result<()> {
+    let pin = pin.trim();
+    if pin.is_empty() {
+        return Ok(());
+    }
+    let path = caminho_pin_alvo();
+    let mut f = std::fs::File::create(&path).with_context(|| format!("criando {path}"))?;
+    f.write_all(pin.as_bytes())?;
+    f.flush()?;
+    Ok(())
+}
+
+pub fn ler_pin_alvo() -> Option<String> {
+    let s = std::fs::read_to_string(caminho_pin_alvo()).ok()?;
+    let s = s.trim().to_string();
+    if s.is_empty() {
+        None
+    } else {
+        Some(s)
+    }
+}
+
+pub fn limpar_pin_alvo() {
+    let _ = std::fs::remove_file(caminho_pin_alvo());
+}
+
 /// Apaga TODA a identidade provisionada (cred.json + claim pendente). Usado no reset de
 /// build novo (dev) para forcar um reprovisionamento limpo. Best-effort (ignora ausencia).
 pub fn limpar_tudo() {
     let _ = std::fs::remove_file(caminho());
     let _ = std::fs::remove_file(caminho_claim());
+    let _ = std::fs::remove_file(caminho_pin_alvo());
 }
