@@ -15,6 +15,7 @@ use std::io::Write;
 use std::sync::{Mutex, OnceLock};
 
 use tomada_solver::relogio::{self, Carimbavel};
+use tomada_solver::retencao::Balde;
 use tomada_solver::sync::SyncRecord;
 use tomada_solver::Estado;
 
@@ -134,8 +135,11 @@ pub fn flush_para_disco() -> Result<usize> {
             linhas.push('\n');
             total += 1;
         }
-        f.write_all(linhas.as_bytes())?;
-        f.flush()?;
+        // Falha aqui e quase sempre disco cheio; nomear a causa evita que o erro
+        // apareca la longe, no caminho de sync (era o sintoma da divida D-01).
+        f.write_all(linhas.as_bytes())
+            .with_context(|| format!("gravando balde {path} (disco cheio?)"))?;
+        f.flush().with_context(|| format!("flush do balde {path} (disco cheio?)"))?;
     }
     buf.clear();
     log::info!("[MED] flush: {total} registros gravados em disco");
@@ -159,6 +163,25 @@ pub(crate) fn dias_em_disco() -> Result<Vec<i64>> {
     }
     dias.sort_unstable();
     Ok(dias)
+}
+
+/// Inventario dos baldes em disco para a purga por espaco: tamanho em bytes e se o
+/// balde inteiro ja foi confirmado pelo servidor. Le cada balde UMA vez.
+/// Balde vazio/ilegivel conta como confirmado — nao ha dado a perder nele.
+pub(crate) fn inventario() -> Result<Vec<Balde>> {
+    let mut out = Vec::new();
+    for dia in dias_em_disco()? {
+        let bytes = std::fs::metadata(caminho_balde(dia)).map(|m| m.len()).unwrap_or(0);
+        let todos_confirmados = ler_balde(dia)?.iter().all(|m| m.confirmado);
+        out.push(Balde { dia, bytes, todos_confirmados });
+    }
+    Ok(out)
+}
+
+/// Remove um balde inteiro. O(1): um `remove`, sem reescrever nada (Principio III).
+pub(crate) fn remover_balde(dia: i64) -> Result<()> {
+    let path = caminho_balde(dia);
+    std::fs::remove_file(&path).with_context(|| format!("removendo {path}"))
 }
 
 pub(crate) fn ler_balde(dia: i64) -> Result<Vec<Medicao>> {

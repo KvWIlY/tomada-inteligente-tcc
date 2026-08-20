@@ -13,6 +13,7 @@ pub mod pareamento;
 pub mod portal;
 pub mod relogio;
 pub mod replay;
+pub mod retencao;
 pub mod solver;
 pub mod sync;
 pub mod tipos;

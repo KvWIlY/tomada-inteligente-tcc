@@ -21,14 +21,24 @@ pub fn mount() -> Result<()> {
         return Err(anyhow!("esp_vfs_littlefs_register falhou (cod {err})"));
     }
 
-    let (mut total, mut used) = (0usize, 0usize);
-    unsafe {
-        sys::esp_littlefs_info(label.as_ptr(), &mut total, &mut used);
-    }
+    let (total, used) = espaco()?;
     log::info!("LittleFS montado em {BASE_PATH} -- {used}/{total} bytes em uso");
     Ok(())
 }
 
 pub fn base() -> &'static str {
     BASE_PATH
+}
+
+/// `(total, usado)` em bytes da particao LittleFS. E a UNICA fonte de espaco livre do
+/// dispositivo — a purga por espaco (`persistencia::retencao`) depende dela, entao
+/// precisa ser consultavel a qualquer momento, nao so no `mount()`.
+pub fn espaco() -> Result<(usize, usize)> {
+    let label = CString::new(PARTITION_LABEL)?;
+    let (mut total, mut used) = (0usize, 0usize);
+    let err = unsafe { sys::esp_littlefs_info(label.as_ptr(), &mut total, &mut used) };
+    if err != sys::ESP_OK as i32 {
+        return Err(anyhow!("esp_littlefs_info falhou (cod {err})"));
+    }
+    Ok((total, used))
 }

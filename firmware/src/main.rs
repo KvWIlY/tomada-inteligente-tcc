@@ -215,24 +215,35 @@ fn main() -> Result<()> {
 
     let mut n: u64 = 0;
     loop {
-        let agora = provisionamento::agora_epoch();
-        let uptime = sntp::uptime_s();
-        let hora = Local::now().hour() as u8;
-        let h = (hora % 24) as usize;
-        let cloud_tick = n % CICLOS_POR_NUVEM == 0;
-
         // --- RELOGIO: na transicao para hora certa, corrige os carimbos pendentes ---
+        // PRECISA vir antes de ler `agora`/`hora`: na iteracao em que a hora chega,
+        // `relogio_ok()` passa a valer true mas `agora_epoch()` lido ANTES daqui ainda
+        // devolve o uptime (~38 s) — e a medicao do tick era carimbada em 1970-01-01,
+        // ia para o balde do dia 0 e, por nao ser a sentinela SEM_HORA, ainda subia
+        // para o backend como um ponto valido.
         if let Some(off) = sntp::checar_sync(&sntp_handle) {
+            // Eventos primeiro: os que ja estao na fila foram registrados sem hora e
+            // precisam ser datados ANTES do proximo POST, senao subiriam em 1970.
+            let ev = backend::corrigir_carimbos_eventos(off);
             match medicao::corrigir_carimbos(off) {
                 Ok((corrigidos, descartados)) => backend::registrar_evento(
                     "relogio_corrigido",
                     "info",
                     "Hora certa obtida; carimbos ajustados",
-                    &format!("offset={off} corrigidos={corrigidos} descartados={descartados}"),
+                    &format!(
+                        "offset={off} corrigidos={corrigidos} descartados={descartados} eventos={ev}"
+                    ),
                 ),
-                Err(e) => log::warn!("[RELOGIO] correcao falhou: {e:?}"),
+                Err(e) => log::warn!("[RELOGIO] correcao falhou: {e:?} (eventos={ev} datados)"),
             }
         }
+
+        // Leituras de tempo do ciclo — todas DEPOIS do `checar_sync` acima.
+        let agora = provisionamento::agora_epoch();
+        let uptime = sntp::uptime_s();
+        let hora = Local::now().hour() as u8;
+        let h = (hora % 24) as usize;
+        let cloud_tick = n % CICLOS_POR_NUVEM == 0;
 
         // --- BOTAO: janela de pareamento (borda de descida, com pull-up) ---
         if botao.is_low() {
@@ -368,18 +379,69 @@ fn main() -> Result<()> {
                 decisao.rele_aberto,
             ));
 
+            // Retencao ANTES de gravar: e o gatilho de espaco que garante disco para
+            // o flush logo abaixo. Na ordem inversa, o flush e quem falhava.
+            aplicar_retencao(agora);
+
+            // Persiste o buffer de RAM. No modo nuvem o sync tambem faria isso, mas no
+            // standalone ninguem faria — a medicao morreria no reboot.
+            if let Err(e) = medicao::flush_para_disco() {
+                log::error!("[MED] flush falhou: {e:?}");
+            }
+
             if !creds.eh_standalone() {
                 sincronizar_nuvem(&mut config, &mut rele_manual, &decisao, chave_casa);
             }
 
-            if let Err(e) = retencao::talvez_purgar(agora) {
-                log::warn!("[NUVEM] retencao falhou: {e:?}");
-            }
             espnow::esquecer_antigos(uptime, TTL_PEER_S * 10);
         }
 
         n = n.wrapping_add(1);
         thread::sleep(Duration::from_secs(CICLO_S));
+    }
+}
+
+/// Roda a retencao e transforma o resultado em observabilidade.
+///
+/// Purga por espaco em balde ja confirmado e rotina (o dado esta no banco) e nao vira
+/// evento. Os dois casos que o dono precisa ver sao: apagamos medicao que NUNCA subiu,
+/// e a purga nao conseguiu liberar o que precisava.
+fn aplicar_retencao(agora: i64) {
+    let r = match retencao::talvez_purgar(agora) {
+        Ok(r) => r,
+        Err(e) => {
+            log::warn!("[NUVEM] retencao falhou: {e:?}");
+            return;
+        }
+    };
+
+    if r.baldes_com_perda > 0 {
+        backend::registrar_evento(
+            "retencao_perda",
+            "warn",
+            "Medicoes nao sincronizadas apagadas por falta de espaco",
+            &format!(
+                "baldes={} bytes_liberados={}",
+                r.baldes_com_perda, r.bytes_liberados
+            ),
+        );
+    }
+    if r.sem_espaco {
+        backend::registrar_evento(
+            "retencao_sem_espaco",
+            "erro",
+            "Purga nao liberou espaco suficiente",
+            &format!(
+                "removidos={} bytes_liberados={}",
+                r.por_espaco, r.bytes_liberados
+            ),
+        );
+    }
+    if r.por_idade > 0 || r.por_espaco > 0 {
+        log::info!(
+            "[RETENCAO] passada: {} balde(s) por idade, {} por espaco ({} B)",
+            r.por_idade, r.por_espaco, r.bytes_liberados
+        );
     }
 }
 
@@ -465,6 +527,20 @@ fn aplicar_formulario(creds: CredsRecebidas, pin: &str) -> Result<()> {
     match creds.form.modo {
         Modo::Nuvem => {
             config_nuvem::salvar_servidor(&creds.form.servidor)?;
+            // PROMOCAO standalone -> nuvem. Sem descartar a identidade local, o boot
+            // seguinte acha `cred.json`, devolve as credenciais standalone e NUNCA
+            // chama `obter_identidade()` (main.rs: `Some(c) => c`): o claim ficaria
+            // parado na NVS para sempre e a tomada jamais apareceria no dashboard.
+            // As medicoes vao junto — foram gravadas com o `tomada_id` local e nunca
+            // confirmariam sob a identidade nova, travando o sync (mesmo motivo
+            // documentado em `medicao::limpar_tudo`).
+            if credenciais::load()?.map(|c| c.eh_standalone()).unwrap_or(false) {
+                log::warn!(
+                    "[PROV] promovendo standalone -> nuvem: identidade local e medicoes descartadas"
+                );
+                credenciais::limpar_tudo();
+                medicao::limpar_tudo();
+            }
             credenciais::salvar_claim_pendente(&creds.form.claim)?;
             log::info!("[PROV] modo nuvem: claim salvo, provisionando apos o restart");
         }

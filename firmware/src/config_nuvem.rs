@@ -53,10 +53,26 @@ pub fn backend_url() -> String {
     BACKEND_URL_BUILD.to_string()
 }
 
+/// A particao NVS, SEM `take()` proprio.
+///
+/// `EspDefaultNvsPartition::take()` e singleton: o boot ja tomou a particao e ela segue
+/// viva em `comunicacao::wifi`, entao um segundo `take()` aqui devolvia
+/// `ESP_ERR_INVALID_STATE`. Isso fazia duas coisas ruins e silenciosas:
+///   - `ler_servidor_nvs` engolia o erro com `.ok()?`, entao `backend_url()` NUNCA lia a
+///     NVS e o campo "servidor" do portal era decorativo;
+///   - `salvar_servidor` propagava o erro e derrubava o `app_main` inteiro ao aplicar o
+///     formulario no modo nuvem.
+/// O `take()` continua como fallback para o caso de alguem chamar antes do boot do Wi-Fi.
+fn particao() -> anyhow::Result<esp_idf_svc::nvs::EspDefaultNvsPartition> {
+    if let Some(p) = crate::comunicacao::wifi::nvs_particao() {
+        return Ok(p);
+    }
+    Ok(esp_idf_svc::nvs::EspDefaultNvsPartition::take()?)
+}
+
 fn ler_servidor_nvs() -> Option<String> {
-    use esp_idf_svc::nvs::{EspDefaultNvsPartition, EspNvs};
-    let part = EspDefaultNvsPartition::take().ok()?;
-    let nvs = EspNvs::new(part, NVS_NAMESPACE, true).ok()?;
+    use esp_idf_svc::nvs::EspNvs;
+    let nvs = EspNvs::new(particao().ok()?, NVS_NAMESPACE, true).ok()?;
     let mut buf = [0u8; 160];
     nvs.get_str(NVS_KEY_SERVIDOR, &mut buf)
         .ok()
@@ -66,9 +82,8 @@ fn ler_servidor_nvs() -> Option<String> {
 
 /// Persiste o endereco escolhido no portal (FR-014).
 pub fn salvar_servidor(url: &str) -> anyhow::Result<()> {
-    use esp_idf_svc::nvs::{EspDefaultNvsPartition, EspNvs};
-    let part = EspDefaultNvsPartition::take()?;
-    let nvs = EspNvs::new(part, NVS_NAMESPACE, true)?;
+    use esp_idf_svc::nvs::EspNvs;
+    let nvs = EspNvs::new(particao()?, NVS_NAMESPACE, true)?;
     nvs.set_str(NVS_KEY_SERVIDOR, url.trim().trim_end_matches('/'))?;
     log::info!("[CFG] endereco do backend salvo: {url}");
     Ok(())
