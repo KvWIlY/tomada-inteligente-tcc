@@ -222,20 +222,7 @@ fn main() -> Result<()> {
         // ia para o balde do dia 0 e, por nao ser a sentinela SEM_HORA, ainda subia
         // para o backend como um ponto valido.
         if let Some(off) = sntp::checar_sync(&sntp_handle) {
-            // Eventos primeiro: os que ja estao na fila foram registrados sem hora e
-            // precisam ser datados ANTES do proximo POST, senao subiriam em 1970.
-            let ev = backend::corrigir_carimbos_eventos(off);
-            match medicao::corrigir_carimbos(off) {
-                Ok((corrigidos, descartados)) => backend::registrar_evento(
-                    "relogio_corrigido",
-                    "info",
-                    "Hora certa obtida; carimbos ajustados",
-                    &format!(
-                        "offset={off} corrigidos={corrigidos} descartados={descartados} eventos={ev}"
-                    ),
-                ),
-                Err(e) => log::warn!("[RELOGIO] correcao falhou: {e:?} (eventos={ev} datados)"),
-            }
+            aplicar_hora_certa(off, "sntp");
         }
 
         // Leituras de tempo do ciclo — todas DEPOIS do `checar_sync` acima.
@@ -445,6 +432,29 @@ fn aplicar_retencao(agora: i64) {
     }
 }
 
+/// Correcao dos carimbos pendentes na transicao para hora certa (FR-001a).
+///
+/// Extraida porque agora ha DUAS fontes de relogio — o SNTP publico e, para a casa
+/// sem internet, a hora do backend da LAN. Ambas entregam o mesmo `offset` e devem
+/// disparar exatamente a mesma correcao; duplicar isso seria a forma obvia de as duas
+/// divergirem com o tempo.
+fn aplicar_hora_certa(off: i64, fonte: &str) {
+    // Eventos primeiro: os que ja estao na fila foram registrados sem hora e
+    // precisam ser datados ANTES do proximo POST, senao subiriam em 1970.
+    let ev = backend::corrigir_carimbos_eventos(off);
+    match medicao::corrigir_carimbos(off) {
+        Ok((corrigidos, descartados)) => backend::registrar_evento(
+            "relogio_corrigido",
+            "info",
+            "Hora certa obtida; carimbos ajustados",
+            &format!(
+                "fonte={fonte} offset={off} corrigidos={corrigidos} descartados={descartados} eventos={ev}"
+            ),
+        ),
+        Err(e) => log::warn!("[RELOGIO] correcao falhou: {e:?} (eventos={ev} datados)"),
+    }
+}
+
 /// Pull do desired state + push do lote (modo nuvem).
 fn sincronizar_nuvem(
     config: &mut persistencia::config::Tomada,
@@ -454,6 +464,14 @@ fn sincronizar_nuvem(
 ) {
     match backend::buscar_desired_state() {
         Ok(ds) => {
+            // Fonte de relogio da LAN — so age se o SNTP ainda nao sincronizou
+            // (`adotar_hora_do_servidor` e no-op depois disso). E o que mantem as
+            // regras horarias do MILP vivas numa casa sem internet.
+            if let Some(ts) = ds.agora_servidor {
+                if let Some(off) = sntp::adotar_hora_do_servidor(ts) {
+                    aplicar_hora_certa(off, "backend");
+                }
+            }
             *rele_manual = ds.rele_aberto;
             if let Some(mut remota) = ds.config {
                 if deve_adotar_config(remota.config_version, config.config_version) {
