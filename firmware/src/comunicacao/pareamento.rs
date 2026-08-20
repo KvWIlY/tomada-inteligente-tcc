@@ -280,11 +280,50 @@ pub fn parear_como_nova(
     Ok(chave)
 }
 
-/// Varre os canais a procura do `PAIR_BEACON`. Multiplos anunciantes: tenta o
-/// primeiro; se o handshake falhar, o dono repete (o PIN so fecha com a tomada certa).
+/// Canal Wi-Fi primario em uso agora (0 se o driver nao souber informar).
+fn canal_atual() -> u8 {
+    let mut primario: u8 = 0;
+    let mut secundario: sys::wifi_second_chan_t = sys::wifi_second_chan_t_WIFI_SECOND_CHAN_NONE;
+    unsafe { sys::esp_wifi_get_channel(&mut primario, &mut secundario) };
+    primario
+}
+
+/// Procura o `PAIR_BEACON`. Multiplos anunciantes: tenta o primeiro; se o handshake
+/// falhar, o dono repete (o PIN so fecha com a tomada certa).
+///
+/// **Com o STA associado, NAO ha varredura.** O ESP-IDF recusa `esp_wifi_set_channel`
+/// enquanto a interface esta conectada a um AP ("STA is scanning or connecting, or AP
+/// has connected with external STAs, cannot set channel"): o laco 1-13 virava um no-op
+/// ruidoso que so gastava o timeout inteiro no canal do AP e falhava com `SemBeacon`.
+/// Ficar no canal do AP e, alias, o comportamento CERTO nesse caso — a outra tomada da
+/// casa esta na mesma rede, logo no mesmo canal.
+///
+/// A varredura 1-13 continua valendo para o caso sem rede (standalone), que e o cenario
+/// para o qual ela foi escrita: ai o radio esta livre e o canal do anunciante e
+/// desconhecido.
 fn descobrir(_espnow: &EspNow<'static>) -> Result<[u8; 6], FalhaPareamento> {
     drenar();
     let inicio = uptime_s();
+
+    if crate::comunicacao::wifi::esta_conectado() {
+        let canal = canal_atual();
+        log::info!("[PAIR] STA conectado -- escutando o canal {canal} do AP (sem varredura)");
+        while uptime_s() - inicio <= TIMEOUT_DESCOBERTA_S {
+            if let Some(e) = receber(Duration::from_millis(300)) {
+                if e.dados.first() == Some(&PAIR_BEACON) {
+                    log::info!("[PAIR] beacon no canal {canal}");
+                    return Ok(e.origem);
+                }
+            }
+        }
+        log::warn!(
+            "[PAIR] nenhum beacon no canal {canal}. Se a outra tomada esta em OUTRA rede \
+             Wi-Fi, ela esta em outro canal e o ESP-NOW nao alcanca."
+        );
+        return Err(FalhaPareamento::SemBeacon);
+    }
+
+    log::info!("[PAIR] sem rede -- varrendo os canais 1-13");
     loop {
         for canal in CANAIS {
             unsafe {

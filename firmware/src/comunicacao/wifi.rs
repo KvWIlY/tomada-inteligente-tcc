@@ -238,6 +238,15 @@ pub(super) fn salvar_credenciais_nvs(
     Ok(())
 }
 
+/// A particao NVS default que JA foi tomada no boot.
+///
+/// `EspDefaultNvsPartition::take()` e singleton: chamar de novo enquanto a primeira
+/// instancia esta viva devolve `ESP_ERR_INVALID_STATE`. Quem precisar da NVS fora deste
+/// modulo tem que pegar por aqui — nao por um `take()` proprio.
+pub(crate) fn nvs_particao() -> Option<EspDefaultNvsPartition> {
+    NVS_PART.get().cloned()
+}
+
 /// Grava so a senha, preservando o SSID salvo (FR-017: trocar a senha do mesmo AP).
 pub fn salvar_senha_nvs(pwd: &str) -> Result<()> {
     let part = NVS_PART.get().ok_or_else(|| anyhow!("NVS nao inicializada"))?;

@@ -19,6 +19,8 @@ use esp_idf_svc::{
         server::{Configuration as HttpServerConfig, EspHttpServer},
         Method,
     },
+    ipv4::{Configuration as IpConfiguration, Ipv4Addr, Mask, RouterConfiguration, Subnet},
+    netif::{EspNetif, NetifConfiguration},
     wifi::{
         AccessPointConfiguration, AuthMethod, BlockingWifi, ClientConfiguration, Configuration,
         EspWifi,
@@ -36,6 +38,9 @@ use tomada_solver::portal::{
 const AP_PASSWORD: &str = "tomadatcc";
 const AP_CHANNEL: u8 = 1;
 const AP_MAX_CLIENTS: u16 = 4;
+/// IP do AP do portal. E o mesmo default do esp-idf-svc (`RouterConfiguration`), so
+/// explicito aqui porque o DNS do captive portal precisa apontar para ele.
+const AP_IP: Ipv4Addr = Ipv4Addr::new(192, 168, 71, 1);
 /// Intervalo entre tentativas de reconexao STA com o portal aberto (FR-002).
 /// 30 s + associacao/DHCP (~20 s no pior caso) cabe folgado nos 2 min do SC-001.
 const INTERVALO_RETRY_STA: Duration = Duration::from_secs(30);
@@ -93,7 +98,7 @@ pub fn iniciar(
         .ap_netif()
         .get_ip_info()
         .map(|i| i.ip.octets())
-        .unwrap_or([192, 168, 4, 1]);
+        .unwrap_or(AP_IP.octets());
     let ip_ap = format!(
         "{}.{}.{}.{}",
         ip_octets[0], ip_octets[1], ip_octets[2], ip_octets[3]
@@ -167,11 +172,55 @@ fn tentar_reconectar(wifi: &mut BlockingWifi<EspWifi<'static>>) -> bool {
 // =============================================
 
 /// AP sozinho (sem rede salva) ou AP+STA (com rede salva, para o retry do FR-002).
+/// Netif do AP que faz o captive portal REALMENTE disparar.
+///
+/// O default do esp-idf-svc (`RouterConfiguration::default`) manda o servidor DHCP do AP
+/// anunciar **8.8.8.8** como DNS. Com isso o celular manda toda consulta de nome para
+/// 8.8.8.8 — que nao e nosso endereco, entao os pacotes NUNCA chegam ao listener de
+/// `iniciar_dns_captive` em UDP:53, nenhum nome resolve para a tomada, e nenhum sistema
+/// operacional detecta o portal. O DNS sequestrador existia e nunca recebia nada.
+///
+/// Anunciando o proprio IP do AP como DNS, as sondas de conectividade (Android
+/// `connectivitycheck.gstatic.com`, iOS `captive.apple.com`, Windows `msftconnecttest.com`)
+/// resolvem para a tomada, batem no handler HTTP, levam 302 e o aparelho abre a tela.
+fn netif_ap_captive() -> Result<EspNetif> {
+    let mut conf = NetifConfiguration::wifi_default_router();
+    // Chave DIFERENTE da default: o netif original ainda existe quando criamos este, e
+    // `esp_netif_new` recusa chave duplicada com ESP_ERR_INVALID_ARG.
+    conf.key = "WIFI_AP_CAPT"
+        .try_into()
+        .map_err(|_| anyhow!("chave do netif AP invalida"))?;
+    conf.ip_configuration = Some(IpConfiguration::Router(RouterConfiguration {
+        subnet: Subnet {
+            gateway: AP_IP,
+            mask: Mask(24),
+        },
+        dhcp_enabled: true,
+        dns: Some(AP_IP),
+        // Sem secundario: um DNS alcancavel de verdade daria ao aparelho uma saida para
+        // resolver os nomes das sondas e o portal deixaria de ser detectado.
+        secondary_dns: None,
+    }));
+    EspNetif::new_with_conf(&conf).map_err(|e| anyhow!("netif AP do captive portal: {e:?}"))
+}
+
 fn configurar_ap_e_sta(
     wifi: &mut BlockingWifi<EspWifi<'static>>,
     ap_ssid: &str,
     ssid_salvo: Option<&str>,
 ) -> Result<()> {
+    // Antes de qualquer configuracao: troca o netif do AP pelo que anuncia a propria
+    // tomada como DNS (o driver ainda esta parado aqui).
+    match netif_ap_captive().and_then(|n| {
+        wifi.wifi_mut()
+            .swap_netif_ap(n)
+            .map_err(|e| anyhow!("swap_netif_ap falhou: {e:?}"))
+    }) {
+        Ok(_) => log::info!("[PROV] netif do AP: DNS anunciado por DHCP = {AP_IP}"),
+        // Sem isso o portal ainda funciona digitando o IP na mao — nao vale abortar o boot.
+        Err(e) => log::warn!("[PROV] captive portal degradado ({e:?}); use http://{AP_IP}"),
+    }
+
     let ap = AccessPointConfiguration {
         ssid: ap_ssid
             .try_into()
@@ -475,13 +524,6 @@ Manter a rede salva (<b>{}</b>)</label>\
         None => (String::new(), String::new()),
     };
 
-    let confirmar = if ctx.tem_identidade_nuvem {
-        "<label><input type=\"checkbox\" name=\"confirmar_descartar_identidade\" value=\"1\"> \
-Confirmo descartar a identidade de nuvem desta tomada</label>"
-    } else {
-        ""
-    };
-
     format!(
         r#"<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -491,7 +533,7 @@ Confirmo descartar a identidade de nuvem desta tomada</label>"
 {banner}
 <form action="/save" method="POST" onsubmit="return validar()">
 
-<fieldset><legend>Rede Wi-Fi (opcional sem nuvem)</legend>
+<fieldset><legend>Rede Wi-Fi</legend>
 {secao_scan}
 <label for="ssid">Nome da rede (SSID)</label>
 <input id="ssid" name="ssid" type="text" value="{ssid_val}" placeholder="Nome da rede" maxlength="32" autocomplete="off">
@@ -500,43 +542,22 @@ Confirmo descartar a identidade de nuvem desta tomada</label>"
 {bloco_manter}
 </fieldset>
 
-<fieldset><legend>Como esta tomada vai funcionar</legend>
-<div class="modos">
-<label><input type="radio" name="modo" value="nuvem" checked onchange="mostrar()">Com nuvem</label>
-<label><input type="radio" name="modo" value="standalone" onchange="mostrar()">Sem nuvem</label>
-<label><input type="radio" name="modo" value="parear" onchange="mostrar()">Parear</label>
-</div>
-
-<div id="sec-nuvem">
-<label for="servidor">Endereco do servidor</label>
-<input id="servidor" name="servidor" type="text" value="{servidor}" placeholder="http://192.168.0.10:8080" maxlength="128" autocomplete="off">
-<label for="claim">Codigo de pareamento</label>
+<fieldset><legend>Ativacao</legend>
+<label for="claim">Codigo de ativacao</label>
 <input id="claim" name="claim" type="text" placeholder="Ex.: K7PQ2XMR" maxlength="64" autocomplete="off" autocapitalize="characters">
 <p class="help">Gere no dashboard (Residencia &rarr; Parear dispositivo). Vale ~10 min, uso unico.</p>
-</div>
 
-<div id="sec-standalone" style="display:none">
-<p class="help">A tomada funciona sozinha, sem servidor e sem internet, com os limites padrao. Voce pode conectar a nuvem depois.</p>
-{confirmar}
-</div>
-
-<div id="sec-parear" style="display:none">
-<label for="pin">PIN da tomada que ja funciona</label>
-<input id="pin" name="pin" type="text" placeholder="8 caracteres" maxlength="8" autocomplete="off" autocapitalize="characters">
-<p class="help">Aperte o botao da outra tomada (janela de 60 s) e digite o PIN dela aqui.</p>
-</div>
+<details>
+<summary>Avancado</summary>
+<label for="servidor">Endereco do servidor</label>
+<input id="servidor" name="servidor" type="text" value="{servidor}" placeholder="http://192.168.0.10:8080" maxlength="128" autocomplete="off">
+<p class="help">Ja preenchido com o servidor deste firmware. So mude se o endereco do servidor for outro.</p>
+</details>
 </fieldset>
 
-<p class="help">PIN desta tomada (para parear outras a partir dela): <span class="pin">{pin}</span></p>
 <button type="submit">Salvar</button>
 </form></div>
 <script>
-function mostrar(){{
-  var m=document.querySelector('input[name=modo]:checked').value;
-  document.getElementById('sec-nuvem').style.display=(m=='nuvem')?'block':'none';
-  document.getElementById('sec-standalone').style.display=(m=='standalone')?'block':'none';
-  document.getElementById('sec-parear').style.display=(m=='parear')?'block':'none';
-}}
 function bytes(s){{return new TextEncoder().encode(s).length;}}
 function validar(){{
   var s=document.getElementById('ssid').value;
@@ -546,11 +567,9 @@ function validar(){{
   }}
   return true;
 }}
-mostrar();
 </script>
 </body></html>"#,
         servidor = html_escape(&ctx.servidor_default),
-        pin = html_escape(&ctx.pin_proprio),
     )
 }
 

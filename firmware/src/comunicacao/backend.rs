@@ -27,10 +27,12 @@ use serde::Deserialize;
 use std::sync::{Mutex, OnceLock};
 
 use crate::comunicacao::provisionamento::{self, agora_epoch};
+use crate::comunicacao::sntp;
 use crate::config_nuvem::backend_url;
 use crate::persistencia::config::Tomada;
 use crate::persistencia::credenciais;
 use crate::persistencia::medicao;
+use tomada_solver::relogio::{self, Carimbavel};
 use tomada_solver::sync::{montar_corpo_lote, selecionar_pendentes};
 
 /// Tamanho maximo do lote de medicoes por requisicao (cabe na RAM/resposta HTTP).
@@ -160,11 +162,30 @@ pub fn registrar_snapshot(
 // ============================================================
 
 struct EventoPendente {
+    /// Epoch real, ou `relogio::SEM_HORA` (0) enquanto nao houve sincronizacao —
+    /// corrigido por deslocamento quando a hora chega, igual as medicoes (FR-001a).
     timestamp: i64,
+    /// Segundos desde o boot no momento do registro: e o que permite datar o evento
+    /// retroativamente. A fila e so RAM, entao todo evento aqui e DESTE boot e sempre
+    /// corrigivel — nao existe o caso "incorrigivel de boot anterior" das medicoes.
+    uptime_s: i64,
     tipo: String,
     severidade: String,
     titulo: String,
     detalhes: String,
+}
+
+/// Permite ao `tomada_solver::relogio` corrigir os carimbos sem conhecer o tipo.
+impl Carimbavel for EventoPendente {
+    fn ts(&self) -> i64 {
+        self.timestamp
+    }
+    fn uptime_s(&self) -> i64 {
+        self.uptime_s
+    }
+    fn set_ts(&mut self, ts: i64) {
+        self.timestamp = ts;
+    }
 }
 
 fn fila_eventos() -> &'static Mutex<Vec<EventoPendente>> {
@@ -182,13 +203,27 @@ pub fn registrar_evento(tipo: &str, severidade: &str, titulo: &str, detalhes: &s
     if fila.len() >= MAX_FILA_EVENTOS {
         fila.remove(0);
     }
+    // Sem hora certa, carimba com a sentinela: `agora_epoch()` devolveria o UPTIME, que
+    // o backend guardaria como uma data em 1970 (visto em producao em 2026-08-19).
     fila.push(EventoPendente {
-        timestamp: agora_epoch(),
+        timestamp: if sntp::relogio_ok() {
+            agora_epoch()
+        } else {
+            relogio::SEM_HORA
+        },
+        uptime_s: sntp::uptime_s(),
         tipo: tipo.to_string(),
         severidade: severidade.to_string(),
         titulo: titulo.to_string(),
         detalhes: detalhes.to_string(),
     });
+}
+
+/// Aplica o deslocamento do 1o sync SNTP aos eventos ainda na fila (FR-001a).
+/// Devolve quantos foram datados.
+pub fn corrigir_carimbos_eventos(offset: i64) -> usize {
+    let mut fila = fila_eventos().lock().unwrap();
+    relogio::corrigir(&mut fila[..], offset).corrigidos
 }
 
 // ============================================================
@@ -212,6 +247,15 @@ pub fn sincronizar() -> Result<usize> {
     let medicoes_json = montar_corpo_lote(&registros, &idx);
     let eventos_json = {
         let fila = fila_eventos().lock().unwrap();
+        // Sobrou evento sem hora certa? Nao manda NENHUM nesta rodada. Eles estao no
+        // inicio da fila (a hora so passa a existir uma vez), e o `drain` la embaixo
+        // assume que os N enviados sao exatamente os N primeiros — filtrar no meio
+        // drenaria os errados. Sobem no proximo tick, ja datados. E a mesma regra das
+        // medicoes, que tambem nunca sobem com a sentinela (FR-001a).
+        if fila.iter().any(|e| e.timestamp == relogio::SEM_HORA) {
+            log::info!("[BACKEND] {} evento(s) aguardando hora certa", fila.len());
+            (String::from("[]"), 0usize)
+        } else {
         let itens: Vec<String> = fila
             .iter()
             .map(|e| {
@@ -226,6 +270,7 @@ pub fn sincronizar() -> Result<usize> {
             })
             .collect();
         (format!("[{}]", itens.join(",")), itens.len())
+        }
     };
     let (eventos_json, n_eventos) = eventos_json;
 
