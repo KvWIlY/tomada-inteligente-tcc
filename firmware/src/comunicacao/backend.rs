@@ -337,6 +337,10 @@ pub struct DesiredState {
     /// reingressa na malha depois de uma rotacao por revogacao, sem re-provisionar
     /// (005/FR-012). `None` contra um backend 004 (campo ausente) => nada muda.
     pub residencia_key: Option<String>,
+    /// Hora do servidor (epoch s) no instante da resposta. Fonte de relogio da LAN
+    /// para casa SEM internet, onde o SNTP publico nunca sincroniza. `None` contra
+    /// um backend anterior (campo ausente) => segue so com SNTP, como antes.
+    pub agora_servidor: Option<i64>,
 }
 
 #[derive(Deserialize)]
@@ -348,6 +352,9 @@ struct RespConfig {
     /// Ausente em backend anterior a 005 -> `None` (fail-safe: mantem a chave atual).
     #[serde(default)]
     residencia_key: Option<String>,
+    /// Ausente em backend que nao serve hora -> `None` (fail-safe: so SNTP).
+    #[serde(default)]
+    now: Option<i64>,
 }
 
 /// GET `/config` da propria tomada (escopo pelo claim; FR-015/016/UC17).
@@ -377,6 +384,8 @@ pub fn buscar_desired_state() -> Result<DesiredState> {
         rele_aberto: Some(r.rele_aberto),
         p_max: Some(r.p_max as f32),
         residencia_key: r.residencia_key.filter(|k| k.len() == 64),
+        // Descarta valor implausivel (relogio do servidor errado/zerado): 2020-01-01.
+        agora_servidor: r.now.filter(|t| *t > 1_577_836_800),
     })
 }
 

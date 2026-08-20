@@ -78,6 +78,38 @@ pub fn iniciar() -> SntpHandle {
     }
 }
 
+/// Adota a hora do backend da LAN como fonte de relogio (fallback do SNTP).
+///
+/// Por que existe: `EspSntp::new_default()` aponta para a rede publica e exige WAN.
+/// Numa casa com roteador e servidor local mas SEM internet, o sync nunca completava
+/// — e sem hora certa o firmware neutraliza as regras horarias do MILP (`a_it=true`,
+/// `pi=0.5`, ver `relogio::regras_horarias`) e `descartar_incorrigiveis` joga fora o
+/// buffer pendente a cada reboot. Metade do modelo ficava inerte nesse cenario.
+///
+/// Precedencia: o SNTP GANHA. O `main` chama `checar_sync` no topo de cada iteracao,
+/// antes do tick de nuvem; se ele ja sincronizou, isto aqui e um no-op. Onde ha
+/// internet, nada muda.
+///
+/// Confianca: o mesmo canal autenticado por JWT ja entrega config, `P_max`, comando
+/// de rele e a chave da casa. Aceitar a hora nao amplia a fronteira de confianca.
+///
+/// Contrato identico ao do `checar_sync` — devolve `Some(offset)` UMA vez, na
+/// transicao — para o `main` cair na MESMA correcao de carimbos, sem duplicar nada.
+pub fn adotar_hora_do_servidor(epoch_servidor: i64) -> Option<i64> {
+    if relogio_ok() || epoch_servidor <= 0 {
+        return None;
+    }
+    // A latencia da LAN (ms) e irrelevante para uma cadencia de 60 s e para regras de
+    // granularidade horaria; o offset e tomado contra o uptime lido aqui.
+    let off = tomada_solver::relogio::offset_do_sync(epoch_servidor, uptime_s());
+    *OFFSET_BOOT.lock().unwrap() = off;
+    RELOGIO_OK.store(true, Ordering::Relaxed);
+    log::warn!(
+        "[RELOGIO] hora adotada do backend da LAN (sem SNTP) -- epoch={epoch_servidor} offset={off}"
+    );
+    Some(off)
+}
+
 /// Chamada periodicamente (cloud tick). Devolve `Some(offset)` UMA vez: no instante em
 /// que a hora certa chega — e o gatilho para corrigir os carimbos pendentes.
 pub fn checar_sync(h: &SntpHandle) -> Option<i64> {

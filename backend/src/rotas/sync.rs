@@ -10,6 +10,7 @@ use crate::db;
 use crate::db::telemetria::{EventoIn, MedicaoIn};
 use crate::erros::ApiErro;
 use actix_web::{web, HttpResponse};
+use chrono::Utc;
 use serde::Deserialize;
 use serde_json::json;
 use sqlx::MySqlPool;
@@ -122,6 +123,13 @@ pub async fn config(
         "p_max": residencia.p_max,
         "rele_aberto": tomada.rele_aberto != 0,
         "residencia_key": residencia_key,
+        // Fonte de hora da LAN. O SNTP publico exige internet; numa casa sem WAN o
+        // dispositivo nunca sincronizava, e sem hora certa o firmware neutraliza as
+        // regras horarias do MILP (A_it/Pi_it) e descarta o buffer a cada reboot.
+        // O backend ja e a fonte da verdade de config, P_max, rele e chave da casa
+        // pelo mesmo canal autenticado — servir a hora nao amplia a confianca.
+        // O firmware usa isto so como FALLBACK: onde ha SNTP, o SNTP ganha.
+        "now": Utc::now().timestamp(),
     })))
 }
 
