@@ -46,6 +46,7 @@ use tomada_solver::coordenacao::{carga_fixa_nuvem, contar_frescas, RemoteTomada}
 use tomada_solver::portal::{Modo, MotivoPortal, ResolucaoWifi};
 use tomada_solver::relogio;
 use tomada_solver::sync::deve_adotar_config;
+use tomada_solver::uso_agora;
 
 /// Cadencia do ciclo de decisao (s) — SC-008 (decisao em <=10 s).
 const CICLO_S: u64 = 10;
@@ -148,6 +149,12 @@ fn main() -> Result<()> {
     //    Pull-up interno => nivel baixo quando pressionado.
     let botao = PinDriver::input(peripherals.pins.gpio0, Pull::Up)?;
 
+    // 8b. Botao "USAR AGORA" (GPIO27, dedicado): religa a tomada que o MILP cortou.
+    //     Botao SEPARADO do BOOT de proposito — nada de toque curto/longo para o dono
+    //     decorar. E a UNICA porta de religar no modo standalone, onde nao ha dashboard.
+    //     Mesmo esquema eletrico do BOOT: pull-up interno, botao para o GND.
+    let botao_usar = PinDriver::input(peripherals.pins.gpio27, Pull::Up)?;
+
     // 9. ESP-NOW (best-effort; exige a chave da casa — Principio VIII, fail-closed).
     let espnow = match parse_chave_hex(&creds.residencia_key) {
         Some(key) => match espnow::iniciar(key) {
@@ -210,6 +217,14 @@ fn main() -> Result<()> {
     let short_id = short_id(&creds.tomada_id);
     let mut rele_manual: Option<bool> = None;
     let mut carga_nuvem: Option<f32> = None;
+    // Janela de "usar agora" vigente (botao fisico ou dashboard). Vive so em RAM: um
+    // reboot devolve a decisao ao MILP, que e o padrao seguro.
+    let mut janela_uso: Option<uso_agora::Janela> = None;
+    // O `GET /config` repete `Some(false)` ate o servidor ser liberado; sem esta marca
+    // cada tick de nuvem reabriria a janela para sempre.
+    let mut usar_agora_consumido = false;
+    // Pedido pendente de devolver `rele_aberto` a NULL (automatico) no servidor.
+    let mut liberar_manual = false;
 
     log::info!("[BOOT] entrando no loop principal (ciclo={CICLO_S}s)");
 
@@ -237,6 +252,41 @@ fn main() -> Result<()> {
             pair::abrir_janela();
             thread::sleep(Duration::from_millis(400)); // debounce
         }
+
+        // --- BOTAO "USAR AGORA": religa o que o MILP cortou ---
+        if botao_usar.is_low() {
+            abrir_janela_uso(
+                &mut janela_uso,
+                &mut ciclo,
+                uso_agora::Origem::Botao,
+                uptime,
+                agora,
+            );
+            thread::sleep(Duration::from_millis(400)); // debounce
+        }
+
+        // --- FIM DA JANELA: a decisao volta pro MILP (transicao, uma vez so) ---
+        if uso_agora::expirou(janela_uso, uptime) {
+            let origem = janela_uso.map(|j| j.origem.as_str()).unwrap_or("?");
+            janela_uso = None;
+            // No modo nuvem o comando precisa ser desfeito no servidor, senao o
+            // proximo GET reabriria a janela e a tomada nunca voltaria ao automatico.
+            liberar_manual = !creds.eh_standalone();
+            // `usar_agora_consumido` NAO e limpo aqui de proposito: o servidor ainda
+            // devolve `Some(false)` ate o POST de liberacao passar, e limpar agora
+            // faria o proximo GET reabrir a janela que acabou de fechar — de novo, e
+            // de novo, se o POST estiver falhando. Quem limpa e o proprio GET, quando
+            // enfim trouxer outro valor.
+            backend::registrar_evento(
+                "usar_agora_fim",
+                "info",
+                "Janela de uso manual encerrada",
+                &format!("origem={origem} duracao_s={}", uso_agora::DURACAO_S),
+            );
+        }
+
+        // Corte manual do dashboard vence a janela; fora isso, a janela manda.
+        let efeito = uso_agora::efeito(janela_uso, rele_manual == Some(true), uptime);
 
         // --- MEDIR (RMS de V e I) ---
         let (leitura, diag) = sensores::medir(
@@ -318,6 +368,7 @@ fn main() -> Result<()> {
             carga_fixa,
             proprio_mac,
             rele_manual,
+            efeito,
             hora,
             agora,
         );
@@ -327,9 +378,10 @@ fn main() -> Result<()> {
             log::error!("[CICLO] falha ao atuar rele: {e:?}");
         }
         log::info!(
-            "[CICLO] V={:.1} I={:.2} P={:.1}W estado={} rele_aberto={} peers={} carga_fixa={:.0} hora_ok={}",
+            "[CICLO] V={:.1} I={:.2} P={:.1}W estado={} rele_aberto={} peers={} carga_fixa={:.0} hora_ok={} usar_agora={}s",
             leitura.vrms, leitura.irms, leitura.p, decisao.estado.as_str(),
             decisao.rele_aberto, peers_vivos.len(), carga_fixa, sntp::relogio_ok(),
+            janela_uso.map(|j| j.restante_s(uptime)).unwrap_or(0),
         );
 
         // --- DIFUNDIR HEARTBEAT (v5: boot_id + contador) ---
@@ -377,7 +429,29 @@ fn main() -> Result<()> {
             }
 
             if !creds.eh_standalone() {
-                sincronizar_nuvem(&mut config, &mut rele_manual, &decisao, chave_casa);
+                sincronizar_nuvem(
+                    &mut config,
+                    &mut rele_manual,
+                    &decisao,
+                    chave_casa,
+                    &mut liberar_manual,
+                );
+                // "Usar agora" pedido pelo dashboard: o servidor manda `Some(false)` e
+                // o firmware o transforma numa janela igual a do botao fisico — as duas
+                // portas, um comportamento so.
+                if uso_agora::deve_abrir_do_dashboard(rele_manual, usar_agora_consumido) {
+                    usar_agora_consumido = true;
+                    abrir_janela_uso(
+                        &mut janela_uso,
+                        &mut ciclo,
+                        uso_agora::Origem::Dashboard,
+                        uptime,
+                        agora,
+                    );
+                }
+                if rele_manual != Some(false) {
+                    usar_agora_consumido = false; // comando novo podera abrir outra
+                }
             }
 
             espnow::esquecer_antigos(uptime, TTL_PEER_S * 10);
@@ -386,6 +460,33 @@ fn main() -> Result<()> {
         n = n.wrapping_add(1);
         thread::sleep(Duration::from_secs(CICLO_S));
     }
+}
+
+/// Abre (ou renova) a janela de "usar agora" e registra o evento.
+///
+/// Re-ancora tambem o `ultimo_uso_ativo_ts` do ciclo: apertar o botao E uso, e sem
+/// isso o `F_i` voltaria a valer no instante em que a janela fechasse, cortando a
+/// tomada no mesmo ciclo em que ela deveria voltar ao automatico.
+fn abrir_janela_uso(
+    janela: &mut Option<uso_agora::Janela>,
+    ciclo: &mut Ciclo,
+    origem: uso_agora::Origem,
+    uptime: i64,
+    agora: i64,
+) {
+    *janela = Some(uso_agora::abrir(uptime, origem));
+    ciclo.marcar_uso_agora(agora);
+    log::warn!(
+        "[USAR] janela aberta por {} ({} s) -- rele fecha se couber no P_max",
+        origem.as_str(),
+        uso_agora::DURACAO_S
+    );
+    backend::registrar_evento(
+        "usar_agora",
+        "info",
+        "Religada a pedido do dono",
+        &format!("origem={} duracao_s={}", origem.as_str(), uso_agora::DURACAO_S),
+    );
 }
 
 /// Roda a retencao e transforma o resultado em observabilidade.
@@ -461,6 +562,7 @@ fn sincronizar_nuvem(
     rele_manual: &mut Option<bool>,
     decisao: &decisao::ciclo::Decisao,
     chave_atual: Option<[u8; 32]>,
+    liberar_manual: &mut bool,
 ) {
     match backend::buscar_desired_state() {
         Ok(ds) => {
@@ -524,11 +626,22 @@ fn sincronizar_nuvem(
         decisao.estado.as_str(),
         decisao.cstd,
         decisao.con,
+        *liberar_manual,
     );
 
     match backend::sincronizar() {
-        Ok(k) if k > 0 => log::info!("[NUVEM] {k} medicoes sincronizadas"),
-        Ok(_) => {}
+        // So limpa a marca depois do 2xx: se o POST falhou, o servidor ainda tem o
+        // comando velho e o pedido de liberacao precisa sobreviver ate a proxima volta.
+        Ok(k) => {
+            if *liberar_manual {
+                *liberar_manual = false;
+                *rele_manual = None; // ja e automatico localmente; o GET confirma depois
+                log::info!("[NUVEM] comando manual liberado -- de volta ao automatico");
+            }
+            if k > 0 {
+                log::info!("[NUVEM] {k} medicoes sincronizadas");
+            }
+        }
         Err(e) => log::warn!("[NUVEM] sync falhou: {e:?}"),
     }
 }

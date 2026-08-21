@@ -27,7 +27,12 @@ export interface Tomada {
   updated_at: string;     // ISO
   cstd: number;           // W (consumo standby calibrado)
   con: number;            // W (consumo on calibrado / nominal)
-  rele_aberto: boolean;
+  /** Comando manual, TRI-ESTADO (migration 0002 do backend):
+   *  `null`  = automatico — o MILP decide (padrao de uma tomada nova);
+   *  `true`  = cortar — trava do dono ate ele desfazer;
+   *  `false` = "usar agora" — o ESP32 religa por 30 min e volta sozinho ao automatico.
+   *  "Sempre ligada" (geladeira) NAO e isto: e `config.is_critical`. */
+  rele_aberto: boolean | null;
   estado: Estado;
   p_medida_atual: number; // W (leitura atual publicada pelo ESP32)
   mac?: string;           // identidade do ESP32 (se disponivel no schema)

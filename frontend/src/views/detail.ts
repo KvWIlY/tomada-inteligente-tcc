@@ -18,7 +18,8 @@ export interface DetailProps {
   draftCritical: boolean;
   dirty: boolean;
   saving: boolean;
-  onToggleRele: () => void;
+  /** As tres intencoes do dono sobre o rele (ver `ComandoRele` em services/api). */
+  onComandoRele: (cmd: 'auto' | 'usar_agora' | 'cortar') => void;
   onChangeSeg: (s: '24h' | '7d') => void;
   onScheduleToggle: (h: number) => void;
   onToggleCritical: () => void;
@@ -26,6 +27,18 @@ export interface DetailProps {
   onSavePMax: (w: number) => void;
   /** UC26: desassocia o hardware e rotaciona a chave da casa (feature 005). */
   onRevogar: () => void;
+}
+
+/** Rótulo do modo vigente. "Usar agora" é temporário: o ESP32 devolve o controle
+ *  ao otimizador ao fim da janela e o campo volta a `null` sozinho. */
+function modoRotulo(rele: boolean | null): string {
+  if (rele === null) return 'Automático · o otimizador decide';
+  return rele ? 'Cortada manualmente' : 'Ligada por você · volta ao automático em até 30 min';
+}
+
+function modoCor(rele: boolean | null): string {
+  if (rele === null) return 'var(--ink-faint)';
+  return rele ? 'var(--ink-faint)' : 'var(--green-deep)';
 }
 
 /** Série de 7 dias estimada a partir da média por hora das 24h reais. */
@@ -87,8 +100,12 @@ export function renderDetail(el: HTMLElement, p: DetailProps): void {
             </div>
             <div class="manual">
               <span class="manual__label">Controle Manual</span>
-              ${toggle(!t.rele_aberto, 'data-role="rele"')}
-              <span class="manual__state" style="color:${t.rele_aberto ? 'var(--ink-faint)' : 'var(--green-deep)'}">${t.rele_aberto ? 'Desligada' : 'Ligada'}</span>
+              <div class="seg" role="group" aria-label="Controle manual do rele">
+                <button class="${t.rele_aberto === null ? 'is-active' : ''}" data-cmd="auto" title="O otimizador decide">Automático</button>
+                <button class="${t.rele_aberto === false ? 'is-active' : ''}" data-cmd="usar_agora" title="Religa por 30 min e volta sozinha ao automático">Usar agora</button>
+                <button class="${t.rele_aberto === true ? 'is-active' : ''}" data-cmd="cortar" title="Mantém desligada até você desfazer">Cortar</button>
+              </div>
+              <span class="manual__state" style="color:${modoCor(t.rele_aberto)}">${modoRotulo(t.rele_aberto)}</span>
             </div>
           </div>
         </div>
@@ -176,7 +193,11 @@ export function renderDetail(el: HTMLElement, p: DetailProps): void {
     </div>`;
 
   // --- listeners ---
-  el.querySelector('[data-role="rele"]')?.addEventListener('click', () => p.onToggleRele());
+  el.querySelectorAll<HTMLButtonElement>('[data-cmd]').forEach((btn) =>
+    btn.addEventListener('click', () =>
+      p.onComandoRele(btn.dataset.cmd as 'auto' | 'usar_agora' | 'cortar'),
+    ),
+  );
   el.querySelector('[data-role="critical"]')?.addEventListener('click', () => p.onToggleCritical());
   el.querySelector('[data-role="save"]')?.addEventListener('click', () => p.onSaveConfig());
 

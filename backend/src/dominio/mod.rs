@@ -31,7 +31,9 @@ pub struct Tomada {
     pub mac: String,
     pub nome: String,
     pub estado: String,
-    pub rele_aberto: i8,
+    /// Tri-estado (migration 0002): `None` = automático (o MILP decide),
+    /// `Some(1)` = cortar, `Some(0)` = "usar agora" (janela temporária no firmware).
+    pub rele_aberto: Option<i8>,
     pub cstd: f32,
     pub con: f32,
     pub p_medida_atual: f32,

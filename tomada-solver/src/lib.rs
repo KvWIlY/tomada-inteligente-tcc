@@ -17,6 +17,7 @@ pub mod retencao;
 pub mod solver;
 pub mod sync;
 pub mod tipos;
+pub mod uso_agora;
 
 pub use solver::resolver;
 pub use tipos::{

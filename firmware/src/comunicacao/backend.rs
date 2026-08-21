@@ -126,6 +126,10 @@ struct Snapshot {
     estado: String,
     cstd: f32,
     con: f32,
+    /// Pede ao servidor para devolver `rele_aberto` a NULL (automatico). E o fim de
+    /// uma janela de "usar agora": sem isso o `GET /config` seguinte repetiria o
+    /// comando e a tomada nunca sairia do modo manual.
+    liberar_manual: bool,
 }
 
 fn snapshot_atual() -> &'static Mutex<Option<Snapshot>> {
@@ -147,6 +151,7 @@ pub fn registrar_snapshot(
     estado: &str,
     cstd: f32,
     con: f32,
+    liberar_manual: bool,
 ) {
     *snapshot_atual().lock().unwrap() = Some(Snapshot {
         p_medida_atual,
@@ -154,6 +159,7 @@ pub fn registrar_snapshot(
         estado: estado.to_string(),
         cstd,
         con,
+        liberar_manual,
     });
 }
 
@@ -277,8 +283,8 @@ pub fn sincronizar() -> Result<usize> {
     let snapshot_json = snapshot_atual().lock().unwrap().as_ref().map(|s| {
         // f32 formatado a mao (bug LLVM Xtensa).
         format!(
-            r#","snapshot":{{"p_medida_atual":{:.2},"ultimo_uso_ativo_ts":{},"estado":"{}","cstd":{:.2},"con":{:.2}}}"#,
-            s.p_medida_atual, s.ultimo_uso_ativo_ts, s.estado, s.cstd, s.con
+            r#","snapshot":{{"p_medida_atual":{:.2},"ultimo_uso_ativo_ts":{},"estado":"{}","cstd":{:.2},"con":{:.2},"liberar_manual":{}}}"#,
+            s.p_medida_atual, s.ultimo_uso_ativo_ts, s.estado, s.cstd, s.con, s.liberar_manual
         )
     });
 
@@ -328,7 +334,13 @@ pub struct DesiredState {
     /// Config remota (com `config_version` preenchido). Adocao decidida no ciclo via
     /// `tomada_solver::sync::deve_adotar_config` (so se versao remota > local).
     pub config: Option<Tomada>,
-    /// Comando manual do dashboard. Entregue ao ciclo SUBORDINADO ao P_max (FR-016).
+    /// Comando manual do dashboard, TRI-ESTADO (migration 0002):
+    ///   `None`        = automatico — o MILP manda (default de uma tomada nova);
+    ///   `Some(true)`  = cortar, trava explicita do dono ate ele desfazer;
+    ///   `Some(false)` = "usar agora" — a `main` converte numa janela temporaria.
+    /// Antes da 0002 a coluna era NOT NULL DEFAULT 1: toda tomada recem-provisionada
+    /// nascia com `Some(true)` e ficava travada em OFF, descartando o MILP em todo
+    /// ciclo. Entregue ao ciclo SUBORDINADO ao P_max (FR-016).
     pub rele_aberto: Option<bool>,
     /// `P_max` canonico da residencia — fonte de verdade do teto eletrico, editavel no
     /// dashboard. Vem junto no mesmo GET (antes exigia uma 2a requisicao).
@@ -348,7 +360,9 @@ struct RespConfig {
     config_version: i64,
     config: serde_json::Value,
     p_max: i64,
-    rele_aberto: bool,
+    /// `null` = automatico. Backend anterior a 0002 nunca manda null (era NOT NULL).
+    #[serde(default)]
+    rele_aberto: Option<bool>,
     /// Ausente em backend anterior a 005 -> `None` (fail-safe: mantem a chave atual).
     #[serde(default)]
     residencia_key: Option<String>,
@@ -381,7 +395,7 @@ pub fn buscar_desired_state() -> Result<DesiredState> {
 
     Ok(DesiredState {
         config,
-        rele_aberto: Some(r.rele_aberto),
+        rele_aberto: r.rele_aberto,
         p_max: Some(r.p_max as f32),
         residencia_key: r.residencia_key.filter(|k| k.len() == 64),
         // Descarta valor implausivel (relogio do servidor errado/zerado): 2020-01-01.
