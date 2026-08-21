@@ -7,6 +7,7 @@
 //! `p_limiar` autodetectado, estado vigente do rele). O I/O (atuar, persistir, sincronizar)
 //! fica em `main`/`atuador`/`backend` — aqui so a logica de decisao.
 
+use tomada_solver::uso_agora::Efeito;
 use tomada_solver::{resolver, Estado, Pesos, SolverInput, TomadaInput};
 
 use crate::persistencia::config::Tomada;
@@ -63,15 +64,27 @@ impl Ciclo {
         }
     }
 
+    /// O dono pediu o aparelho de volta (botao fisico ou dashboard): conta como uso
+    /// ativo AGORA. Isso re-ancora `ultimo_uso_ativo_ts` para que, quando a janela
+    /// expirar, o `F_i` volte a ser medido a partir deste instante — e nao a partir da
+    /// ociosidade antiga, que reabriria o corte no mesmo ciclo.
+    pub fn marcar_uso_agora(&mut self, agora: i64) {
+        self.ultimo_uso_ativo_ts = agora;
+    }
+
     /// Executa um ciclo de decisao.
     ///
     /// - `leitura`: potencia/tensao/corrente medidas agora.
     /// - `peers_vivos`: `(MAC, TomadaInput)` de cada peer com heartbeat valido (ESP-NOW).
     /// - `carga_fixa`: consumo (W) dos peers AUSENTES (degradacao segura) — subtraido do `P_max`.
     /// - `proprio_mac`: MAC deste no — chave de ordenacao canonica e de auto-localizacao.
-    /// - `rele_manual`: comando do dashboard (`rele_aberto`): Some(true)=cortar, Some(false)=manter ligado.
+    /// - `rele_manual`: comando do dashboard (`rele_aberto`): None=automatico (o MILP
+    ///   manda), Some(true)=cortar. `Some(false)` NAO chega aqui como trava: a `main`
+    ///   o converte numa janela de "usar agora" e o entrega via `efeito`.
+    /// - `efeito`: janela de "usar agora" vigente (botao fisico ou dashboard).
     /// - `hora`: hora do dia (0..23) p/ indexar `Pi`/`schedule`.
     /// - `agora`: epoch atual.
+    #[allow(clippy::too_many_arguments)]
     pub fn decidir(
         &mut self,
         config: &Tomada,
@@ -80,6 +93,7 @@ impl Ciclo {
         carga_fixa: f32,
         proprio_mac: [u8; 6],
         rele_manual: Option<bool>,
+        efeito: Efeito,
         hora: u8,
         agora: i64,
     ) -> Decisao {
@@ -100,8 +114,14 @@ impl Ciclo {
         let ociosa_ha_s = agora - self.ultimo_uso_ativo_ts;
 
         // F_i: energizado + ocioso por > t_limite.
+        //
+        // Durante uma janela de "usar agora" o fantasma fica SUPRIMIDO. Sem isso o
+        // religar duraria um ciclo: quando o dono aperta o botao a tomada esta ociosa
+        // ha muito mais que `t_limite`, a R4 proibiria STD e o solver cortaria de novo
+        // na iteracao seguinte.
         let rele_fechado = self.estado_atual != Estado::Off;
-        let f_i = deriva_f_i(rele_fechado, p_atual, self.p_limiar, ociosa_ha_s, config.t_limite);
+        let f_i = !efeito.suprimir_fantasma
+            && deriva_f_i(rele_fechado, p_atual, self.p_limiar, ociosa_ha_s, config.t_limite);
 
         // Calibracao EMA de cstd/con a partir da medicao real.
         self.calibrar(p_atual, u_i, rele_fechado);
@@ -156,8 +176,23 @@ impl Ciclo {
             });
         }
 
+        // Precedencia das intencoes humanas, da mais forte para a mais fraca:
+        //   1. cortar (dashboard)  — explicito e sempre seguro;
+        //   2. usar agora (janela) — botao fisico ou dashboard, temporario;
+        //   3. o que o MILP decidiu.
+        // "Sempre ligada" (geladeira) NAO entra aqui: e `is_critical` -> W_i = M, ja
+        // resolvido dentro do modelo.
+        let comando = match rele_manual {
+            Some(true) => Some(true),
+            _ if efeito.forcar_ligada => Some(false),
+            // `Some(false)` SEM janela ativa nao e trava: e um "usar agora" que a
+            // `main` ja consumiu (ou cuja janela expirou) e ainda nao conseguiu
+            // liberar no servidor. Tratar como automatico evita a tomada ficar ligada
+            // ate o proximo tick de nuvem — ate 60 s depois do fim da janela.
+            _ => None,
+        };
         // Comando manual do dashboard SUBORDINADO ao P_max (FR-016).
-        estado = self.aplicar_comando_manual(estado, rele_manual, &entrada, &saida, &mut eventos);
+        estado = self.aplicar_comando_manual(estado, comando, &entrada, &saida, &mut eventos);
 
         // Fantasma eliminado (R4): estava fechado, F_i ativo, decidimos OFF.
         if f_i && estado == Estado::Off && rele_fechado {
@@ -206,9 +241,10 @@ impl Ciclo {
         }
     }
 
-    /// Aplica o `rele_aberto` do dashboard respeitando o teto eletrico:
+    /// Aplica o comando manual ja resolvido (corte do dashboard ou janela de "usar
+    /// agora") respeitando o teto eletrico:
     ///   - Some(true) (cortar): sempre honrado (desligar nunca viola P_max).
-    ///   - Some(false) (manter ligado): so honrado se couber no P_max disponivel; senao o
+    ///   - Some(false) (ligar): so honrado se couber no P_max disponivel; senao o
     ///     P_max vence (estado permanece OFF) e registra penalidade.
     fn aplicar_comando_manual(
         &self,

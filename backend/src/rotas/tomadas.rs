@@ -18,7 +18,24 @@ const LIMITE_EVENTOS: i64 = 200;
 pub struct PatchReq {
     pub nome: Option<String>,
     pub config: Option<serde_json::Value>,
-    pub rele_aberto: Option<bool>,
+    /// Tri-estado com AUSÊNCIA distinta de `null` (migration 0002). `Option` de
+    /// `Option` porque as três intenções do dono são três valores diferentes e um
+    /// `Option<bool>` cru confundiria "não mexi nisso" com "volta ao automático":
+    ///   campo ausente → não altera;
+    ///   `null`        → automático (o MILP decide);
+    ///   `true`        → cortar;
+    ///   `false`       → "usar agora" (o firmware abre a janela de 30 min).
+    #[serde(default, deserialize_with = "campo_presente")]
+    pub rele_aberto: Option<Option<bool>>,
+}
+
+/// Distingue "campo ausente" de `"campo": null` — `#[serde(default)]` sozinho
+/// colapsa os dois em `None`.
+fn campo_presente<'de, D>(d: D) -> Result<Option<Option<bool>>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    Option::<bool>::deserialize(d).map(Some)
 }
 
 #[derive(Deserialize)]

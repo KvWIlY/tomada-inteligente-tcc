@@ -35,6 +35,14 @@ pub struct SnapshotReq {
     pub estado: String,
     pub cstd: Option<f32>,
     pub con: Option<f32>,
+    /// O nó terminou a janela de "usar agora" e está devolvendo o controle ao
+    /// otimizador: zera `rele_aberto` (→ automático). Sem isso o `GET /config`
+    /// seguinte repetiria o comando e a tomada nunca sairia do modo manual.
+    /// É a ÚNICA escrita de `rele_aberto` feita por um device — e só na direção
+    /// de liberar; um dispositivo nunca consegue cortar ou ligar a si mesmo por
+    /// aqui (Princípio VIII: default-deny, superfície mínima).
+    #[serde(default)]
+    pub liberar_manual: bool,
 }
 
 pub async fn telemetria(
@@ -77,6 +85,7 @@ pub async fn telemetria(
                 estado: s.estado.clone(),
                 cstd: s.cstd,
                 con: s.con,
+                liberar_manual: s.liberar_manual,
             },
         )
         .await?;
@@ -121,7 +130,8 @@ pub async fn config(
         "config_version": tomada.config_version,
         "config": tomada.config,
         "p_max": residencia.p_max,
-        "rele_aberto": tomada.rele_aberto != 0,
+        // Tri-estado (0002): `null` = automático, `true` = cortar, `false` = usar agora.
+        "rele_aberto": tomada.rele_aberto.map(|v| v != 0),
         "residencia_key": residencia_key,
         // Fonte de hora da LAN. O SNTP publico exige internet; numa casa sem WAN o
         // dispositivo nunca sincronizava, e sem hora certa o firmware neutraliza as

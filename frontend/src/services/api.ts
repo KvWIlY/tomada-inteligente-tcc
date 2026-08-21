@@ -256,9 +256,16 @@ export async function savePMax(residenciaId: string, pMax: number): Promise<void
   await req('PATCH', `/residencias/${residenciaId}`, { p_max: pMax });
 }
 
-/** Liga/desliga manual (UC09): `rele_aberto=true` corta. O no puxa em GET /config. */
-export async function setReleAberto(tomadaId: string, aberto: boolean): Promise<void> {
-  await req('PATCH', `/tomadas/${tomadaId}`, { rele_aberto: aberto });
+/** As tres intencoes do dono sobre o rele. Sao coisas diferentes, e nao graus da
+ *  mesma coisa — por isso um tipo fechado em vez de um boolean. */
+export type ComandoRele = 'auto' | 'usar_agora' | 'cortar';
+
+/** Comando manual (UC09). O no puxa em `GET /config` no proximo tick de nuvem.
+ *  `auto` manda `null` EXPLICITO no corpo: o backend distingue campo ausente
+ *  ("nao mexi") de `null` ("volta ao automatico"). */
+export async function setComandoRele(tomadaId: string, cmd: ComandoRele): Promise<void> {
+  const rele_aberto = cmd === 'auto' ? null : cmd === 'cortar';
+  await req('PATCH', `/tomadas/${tomadaId}`, { rele_aberto });
 }
 
 export async function renameTomada(tomadaId: string, nome: string): Promise<void> {
@@ -322,6 +329,12 @@ function comoBool(v: unknown): boolean {
   return v === true || v === 1 || v === '1';
 }
 
+/** Idem, mas preservando `null` — em `tomadas.rele_aberto` o nulo NAO e "false":
+ *  e o modo AUTOMATICO, em que quem manda no rele e o MILP (migration 0002). */
+function comoBoolOuNulo(v: unknown): boolean | null {
+  return v === null || v === undefined ? null : comoBool(v);
+}
+
 /**
  * Linha de `tomadas` -> tipo Tomada. Os parametros do modelo vivem no JSON `config`;
  * `localizacao`/`icone` NAO existem no banco — sao defaults locais da UI.
@@ -361,7 +374,7 @@ function normalizeTomada(raw: Record<string, unknown>): Tomada {
     updated_at: (raw.criado_em as string) ?? new Date().toISOString(),
     cstd: Number(raw.cstd ?? 0),
     con: Number(raw.con ?? 0),
-    rele_aberto: comoBool(raw.rele_aberto),
+    rele_aberto: comoBoolOuNulo(raw.rele_aberto),
     estado: ((raw.estado as string) || 'OFF') as Tomada['estado'],
     p_medida_atual: Number(raw.p_medida_atual ?? 0),
     mac: (raw.mac as string | undefined) ?? undefined,

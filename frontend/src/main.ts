@@ -195,35 +195,46 @@ async function iniciar(): Promise<void> {
 }
 
 // === Ações de tomada ===
-async function persistRele(t: Tomada, aberto: boolean): Promise<void> {
+const RELE_TOAST: Record<api.ComandoRele, string> = {
+  auto: 'Devolvendo ao otimizador · aguardando ESP32',
+  usar_agora: 'Religando por 30 min · aguardando ESP32',
+  cortar: 'Desligando · aguardando ESP32',
+};
+
+async function persistRele(t: Tomada, cmd: api.ComandoRele): Promise<void> {
   const cur = store.get();
-  store.set({ tomadas: cur.tomadas.map((tt) => (tt.id === t.id ? { ...tt, rele_aberto: aberto } : tt)) });
-  showToast(aberto ? 'Desligando · aguardando ESP32' : 'Ligando · aguardando ESP32');
+  const valor = cmd === 'auto' ? null : cmd === 'cortar';
+  store.set({ tomadas: cur.tomadas.map((tt) => (tt.id === t.id ? { ...tt, rele_aberto: valor } : tt)) });
+  showToast(RELE_TOAST[cmd]);
   if (api.hasBackend) {
     try {
-      await api.setReleAberto(t.id, aberto);
+      await api.setComandoRele(t.id, cmd);
     } catch (err) {
-      console.error('[main] setReleAberto:', err);
+      console.error('[main] setComandoRele:', err);
       store.set({ tomadas: cur.tomadas });
       showToast('Falha ao enviar comando', 'alert');
     }
   }
 }
 
-function onToggleRele(t: Tomada): void {
+function onComandoRele(t: Tomada, cmd: api.ComandoRele): void {
   const s = store.get();
-  const ligando = t.rele_aberto;
-  if (ligando) {
+
+  // Pré-checagem do teto só para dar resposta imediata: quem realmente decide é o
+  // ESP32, que reavalia o P_max com os dados das irmãs e pode negar mesmo assim
+  // (registrando o evento `penalidade_uso`).
+  if (cmd === 'usar_agora') {
     const pMax = s.residencia?.p_max ?? 2540;
     const projecao = consumoTotalAtual(s.tomadas) + 0.95 * t.con;
     if (projecao > pMax) {
       showToast(`Recusado: ligar excederia o teto (${Math.round(projecao)} W > ${pMax} W)`, 'alert');
       return;
     }
-    void persistRele(t, false);
+    void persistRele(t, 'usar_agora');
     return;
   }
-  if (t.config.is_critical) {
+
+  if (cmd === 'cortar' && t.config.is_critical) {
     store.set({
       modal: {
         title: 'Desligar tomada crítica?',
@@ -232,14 +243,15 @@ function onToggleRele(t: Tomada): void {
         danger: true,
         onConfirm: () => {
           store.set({ modal: null });
-          void persistRele(t, true);
+          void persistRele(t, 'cortar');
         },
         onCancel: () => store.set({ modal: null }),
       },
     });
     return;
   }
-  void persistRele(t, true);
+
+  void persistRele(t, cmd);
 }
 
 async function saveConfig(t: Tomada): Promise<void> {
@@ -599,7 +611,7 @@ store.subscribe((s) => {
     draftCritical,
     dirty: draftDirty(tomada),
     saving: savingConfig,
-    onToggleRele: () => onToggleRele(tomada),
+    onComandoRele: (cmd) => onComandoRele(tomada, cmd),
     onChangeSeg: (sg) => { detailSeg = sg; store.set({}); },
     onScheduleToggle: (h) => { draftSchedule = draftSchedule.map((v, i) => (i === h ? !v : v)); store.set({}); },
     onToggleCritical: () => { draftCritical = !draftCritical; store.set({}); },

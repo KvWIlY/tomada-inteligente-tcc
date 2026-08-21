@@ -72,6 +72,8 @@ pub struct Snapshot {
     pub estado: String,
     pub cstd: Option<f32>,
     pub con: Option<f32>,
+    /// Fim da janela de "usar agora": devolve `rele_aberto` a NULL (automático).
+    pub liberar_manual: bool,
 }
 
 pub async fn atualizar_snapshot(
@@ -79,15 +81,21 @@ pub async fn atualizar_snapshot(
     tomada_id: &str,
     s: &Snapshot,
 ) -> Result<(), sqlx::Error> {
+    // `liberar_manual` só sabe LIMPAR: com a flag em 0 a coluna fica intocada, e o
+    // device nunca consegue escrever `true`/`false` nela. Uma ordem do dono emitida
+    // enquanto o POST estava em voo sobrevive — a única perda possível é o próprio
+    // comando que a janela já estava consumindo.
     sqlx::query(
         "UPDATE tomadas SET p_medida_atual = ?, ultimo_uso_ativo_ts = ?, estado = ?, \
-         cstd = COALESCE(?, cstd), con = COALESCE(?, con) WHERE id = ?",
+         cstd = COALESCE(?, cstd), con = COALESCE(?, con), \
+         rele_aberto = CASE WHEN ? THEN NULL ELSE rele_aberto END WHERE id = ?",
     )
     .bind(s.p_medida_atual)
     .bind(s.ultimo_uso_ativo_ts)
     .bind(&s.estado)
     .bind(s.cstd)
     .bind(s.con)
+    .bind(s.liberar_manual as i8)
     .bind(tomada_id)
     .execute(conn)
     .await?;
@@ -123,25 +131,29 @@ pub async fn consumo_irmas(
 /// PATCH do dashboard. `config` é o único campo que bumpa `config_version` — é
 /// esse número que o nó compara para decidir se re-aplica o desired-state
 /// (UC28); renomear ou mexer no relé não deve forçar re-leitura de config.
+/// `rele_aberto`: `None` = não mexe; `Some(None)` = volta ao automático (NULL);
+/// `Some(Some(b))` = grava o comando. `COALESCE` não serve aqui — ele não consegue
+/// expressar "grave NULL de propósito", que é exatamente o valor de "automático".
 pub async fn atualizar(
     pool: &MySqlPool,
     id: &str,
     nome: Option<&str>,
     config: Option<&str>,
-    rele_aberto: Option<bool>,
+    rele_aberto: Option<Option<bool>>,
 ) -> Result<(), sqlx::Error> {
     sqlx::query(
         "UPDATE tomadas SET \
            nome = COALESCE(?, nome), \
            config = COALESCE(CAST(? AS JSON), config), \
            config_version = config_version + (? IS NOT NULL), \
-           rele_aberto = COALESCE(?, rele_aberto) \
+           rele_aberto = CASE WHEN ? THEN ? ELSE rele_aberto END \
          WHERE id = ?",
     )
     .bind(nome)
     .bind(config)
     .bind(config)
-    .bind(rele_aberto.map(|b| b as i8))
+    .bind(rele_aberto.is_some() as i8)
+    .bind(rele_aberto.flatten().map(|b| b as i8))
     .bind(id)
     .execute(pool)
     .await?;
