@@ -3,7 +3,7 @@
 // =============================================
 
 import { icon } from '../icons';
-import { seriesFromMedicoes } from '../derive';
+import { energiaKWh, fatorPotenciaAgregado, fmt2, seriesFromMedicoes } from '../derive';
 import type { Medicao, Residencia, Tomada } from '../types';
 import { badge, critBadge, escapeHtml, stateDot, toggle } from './components';
 import { consumptionChart, powerSlider, probabilityChart, scheduleBar } from './charts';
@@ -34,6 +34,15 @@ export interface DetailProps {
 function modoRotulo(rele: boolean | null): string {
   if (rele === null) return 'Automático · o otimizador decide';
   return rele ? 'Cortada manualmente' : 'Ligada por você · volta ao automático em até 30 min';
+}
+
+/** Cor do fator de potência. Abaixo de 0,6 é o território das fontes chaveadas
+ *  em standby — a carga que o trabalho existe para cortar. `null` = medição
+ *  antiga, sem fase gravada: cinza, nunca vermelho (ausência não é problema). */
+function fpCor(fp: number | null): string {
+  if (fp === null) return 'var(--ink-faint)';
+  if (fp < 0.6) return 'var(--amber, #b45309)';
+  return 'var(--green-deep)';
 }
 
 function modoCor(rele: boolean | null): string {
@@ -79,6 +88,11 @@ export function renderDetail(el: HTMLElement, p: DetailProps): void {
   const serie = p.seg === '24h' ? seriesFromMedicoes(p.medicoes, 60) : build7d(p.medicoes);
   const media = Math.round(serie.reduce((s, v) => s + v, 0) / serie.length);
   const pico = Math.round(Math.max(...serie));
+  // Energia e FP saem SEMPRE das medições de 24 h reais, mesmo com o seletor em
+  // "7 dias": a série de 7d é estimada (`build7d`), e integrar uma estimativa
+  // daria um kWh inventado.
+  const kwh = energiaKWh(p.medicoes);
+  const fp = fatorPotenciaAgregado(p.medicoes);
   const syncLabel = p.online ? 'Sincronização ESP32 ao vivo' : 'Offline — decidindo localmente';
   const pNum = t.estado === 'OFF' ? '0' : Math.round(t.p_medida_atual).toLocaleString('pt-BR');
   const identity = t.mac ?? t.id;
@@ -117,6 +131,10 @@ export function renderDetail(el: HTMLElement, p: DetailProps): void {
               <div>
                 <h3 class="card__title">Histórico de Consumo</h3>
                 <div class="card__sub">${p.seg === '24h' ? 'Últimas 24 horas' : 'Últimos 7 dias (est.)'} · média ${media} W · pico ${pico} W</div>
+                <div class="card__sub" style="margin-top:6px;display:flex;gap:16px;flex-wrap:wrap">
+                  <span title="Energia integrada sobre os timestamps reais das últimas 24 h"><strong class="tnum" style="color:var(--ink)">${fmt2(kwh)}</strong> kWh em 24 h</span>
+                  <span title="${fp === null ? 'Medições anteriores a 2026-08-24 não gravaram fase' : 'Razão entre potência ativa e aparente (ΣP/ΣS)'}">fator de potência <strong class="tnum" style="color:${fpCor(fp)}">${fp === null ? '—' : fmt2(fp)}</strong></span>
+                </div>
               </div>
               <div class="seg">
                 <button class="${p.seg === '24h' ? 'is-active' : ''}" data-seg="24h">24h</button>
