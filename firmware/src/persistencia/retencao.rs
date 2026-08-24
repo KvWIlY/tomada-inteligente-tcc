@@ -5,7 +5,7 @@
 //! 1. **Espaco** (a cada chamada, barato): quando o livre cai abaixo de
 //!    `GATILHO_LIVRE_PCT`, remove baldes — mais antigo primeiro, preferindo os ja
 //!    confirmados — ate o livre voltar a `ALVO_LIVRE_PCT`. A decisao de QUAIS baldes
-//!    e pura e host-testada em `tomada_solver::retencao`.
+//!    e pura e host-testada em `crate::solver::retencao`.
 //! 2. **Idade** (a cada 5 dias, marcador `/lfs/last_purge.txt`): remove balde
 //!    totalmente confirmado com idade >= 5 dias, e qualquer balde com idade > 7 dias
 //!    (cap rigido, mesmo sem confirmacao).
@@ -19,7 +19,7 @@
 use anyhow::{Context, Result};
 use std::io::Write;
 
-use tomada_solver::retencao::planejar_por_espaco;
+use crate::solver::retencao::planejar_por_espaco;
 
 use crate::persistencia::{littlefs, medicao};
 

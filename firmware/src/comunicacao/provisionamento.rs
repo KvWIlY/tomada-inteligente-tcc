@@ -6,7 +6,7 @@
 //!   - `renovar(tomada_id, device_secret)` -> troca o segredo por um JWT novo.
 //! E o provedor de JWT de regime para o cliente do backend:
 //!   - `obter_jwt_valido()` renova proativamente por margem antes de `jwt_exp`
-//!     (logica pura `tomada_solver::sync::deve_renovar`); `renovar_agora()` forca (em 401).
+//!     (logica pura `crate::solver::sync::deve_renovar`); `renovar_agora()` forca (em 401).
 //!
 //! O segredo de assinatura do JWT vive SO no servidor; aqui so consumimos. Estes dois
 //! endpoints sao os unicos chamados SEM `Authorization` — o device ainda nao tem JWT, e
@@ -22,7 +22,7 @@ use std::sync::atomic::{AtomicU32, Ordering};
 
 use crate::config_nuvem::backend_url;
 use crate::persistencia::credenciais::{self, CredenciaisLocais};
-use tomada_solver::sync::deve_renovar;
+use crate::solver::sync::deve_renovar;
 
 /// Margem de renovacao proativa: renova quando faltam <= 5 min para `exp`.
 const MARGEM_RENOVACAO_S: i64 = 300;

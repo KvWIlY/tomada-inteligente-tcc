@@ -1,5 +1,5 @@
 //! Ciclo de decisao: monta o `SolverInput` (proprio no + peers ESP-NOW vivos), resolve o
-//! MILP (`tomada_solver::resolver`) e decide o estado **da propria tomada**, aplicando o
+//! MILP (`crate::solver::resolver`) e decide o estado **da propria tomada**, aplicando o
 //! comando manual do dashboard SUBORDINADO ao `P_max` (FR-016). Gera eventos (Principio
 //! VII): chaveamento, penalidades (R3/R5) e fantasma eliminado (R4).
 //!
@@ -7,8 +7,8 @@
 //! `p_limiar` autodetectado, estado vigente do rele). O I/O (atuar, persistir, sincronizar)
 //! fica em `main`/`atuador`/`backend` — aqui so a logica de decisao.
 
-use tomada_solver::uso_agora::Efeito;
-use tomada_solver::{resolver, Estado, Pesos, SolverInput, TomadaInput};
+use crate::solver::uso_agora::Efeito;
+use crate::solver::{resolver, Estado, Pesos, SolverInput, TomadaInput};
 
 use crate::persistencia::config::Tomada;
 use crate::sensores::potencia::{deriva_f_i, deriva_u_i, Leitura};
@@ -165,8 +165,8 @@ impl Ciclo {
         // Penalidades do PROPRIO no -> eventos observaveis (R3/R5).
         for p in saida.penalidades.iter().filter(|p| p.tomada_idx == idx_proprio) {
             let (tipo, titulo) = match p.tipo {
-                tomada_solver::TipoPenalidade::Uso => ("penalidade_uso", "OFF durante uso ativo (R3)"),
-                tomada_solver::TipoPenalidade::Agendamento => ("penalidade_age", "ON fora do horario (R5)"),
+                crate::solver::TipoPenalidade::Uso => ("penalidade_uso", "OFF durante uso ativo (R3)"),
+                crate::solver::TipoPenalidade::Agendamento => ("penalidade_age", "ON fora do horario (R5)"),
             };
             eventos.push(EventoCiclo {
                 tipo,
@@ -251,7 +251,7 @@ impl Ciclo {
         estado_solver: Estado,
         rele_manual: Option<bool>,
         entrada: &SolverInput,
-        saida: &tomada_solver::SolverOutput,
+        saida: &crate::solver::SolverOutput,
         eventos: &mut Vec<EventoCiclo>,
     ) -> Estado {
         match rele_manual {

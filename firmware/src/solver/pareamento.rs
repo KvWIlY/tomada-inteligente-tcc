@@ -220,6 +220,8 @@ impl Janela {
         self.fechada = true;
     }
 
+    // Sem chamador no firmware: era API do crate `tomada-solver`, usada pelos testes de host.
+    #[allow(dead_code)]
     pub fn tentativas_restantes(&self) -> u8 {
         self.tentativas_restantes
     }

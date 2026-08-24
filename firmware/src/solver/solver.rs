@@ -8,8 +8,8 @@
 
 use minilp::{ComparisonOp, OptimizationDirection, Problem, Variable};
 
-use crate::modelo::{a_it_num, coef_conforto_off, f_i_num, u_i_num};
-use crate::tipos::{
+use crate::solver::modelo::{a_it_num, coef_conforto_off, f_i_num, u_i_num};
+use crate::solver::tipos::{
     modelo_consumo, Estado, Penalidade, SolverInput, SolverOutput, TipoPenalidade,
 };
 

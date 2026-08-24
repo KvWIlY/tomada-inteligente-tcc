@@ -1,9 +1,11 @@
 //! Testes de integração da feature 005 (US4): revogação rotaciona a chave da casa e
 //! deixa de aceitar o dispositivo revogado.
 //!
-//! Rodam contra `TEST_DATABASE_URL` (banco `tcc_test`). Se a variável não estiver
-//! definida, os testes são pulados com aviso — não quebram o `cargo test` de quem não
-//! tem MySQL local.
+//! Rodam contra `TEST_DATABASE_URL`, que desde 2026-08-23 aponta para o MESMO banco
+//! `tcc` do dev (não existe mais `tcc_test`). Se a variável não estiver definida, os
+//! testes são pulados com aviso — não quebram o `cargo test` de quem não tem MySQL
+//! local. Estes testes ESCREVEM de verdade e não limpam o que criam: para zerar,
+//! `mysql -u tcc_app -p tcc < scripts/limpar-dados.sql`.
 
 use sqlx::mysql::MySqlPoolOptions;
 use sqlx::MySqlPool;

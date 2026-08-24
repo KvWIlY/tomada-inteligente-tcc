@@ -32,8 +32,8 @@ use crate::config_nuvem::backend_url;
 use crate::persistencia::config::Tomada;
 use crate::persistencia::credenciais;
 use crate::persistencia::medicao;
-use tomada_solver::relogio::{self, Carimbavel};
-use tomada_solver::sync::{montar_corpo_lote, selecionar_pendentes};
+use crate::solver::relogio::{self, Carimbavel};
+use crate::solver::sync::{montar_corpo_lote, selecionar_pendentes};
 
 /// Tamanho maximo do lote de medicoes por requisicao (cabe na RAM/resposta HTTP).
 pub const MAX_LOTE: usize = 120;
@@ -181,7 +181,7 @@ struct EventoPendente {
     detalhes: String,
 }
 
-/// Permite ao `tomada_solver::relogio` corrigir os carimbos sem conhecer o tipo.
+/// Permite ao `crate::solver::relogio` corrigir os carimbos sem conhecer o tipo.
 impl Carimbavel for EventoPendente {
     fn ts(&self) -> i64 {
         self.timestamp
@@ -332,7 +332,7 @@ pub fn sincronizar() -> Result<usize> {
 /// Estado desejado lido do backend.
 pub struct DesiredState {
     /// Config remota (com `config_version` preenchido). Adocao decidida no ciclo via
-    /// `tomada_solver::sync::deve_adotar_config` (so se versao remota > local).
+    /// `crate::solver::sync::deve_adotar_config` (so se versao remota > local).
     pub config: Option<Tomada>,
     /// Comando manual do dashboard, TRI-ESTADO (migration 0002):
     ///   `None`        = automatico — o MILP manda (default de uma tomada nova);

@@ -101,6 +101,8 @@ pub enum ErroForm {
     CorpoGrande { tamanho: usize },
     /// `Content-Length` prometeu mais bytes do que chegaram (conexao cortada).
     CorpoIncompleto { esperado: usize, recebido: usize },
+    // Sem chamador no firmware: era API do crate `tomada-solver`, usada pelos testes de host.
+    #[allow(dead_code)]
     CampoFaltando(&'static str),
     SsidVazio,
     /// Contagem em BYTES (FR-018) — SSID com acento estoura antes de 32 chars.

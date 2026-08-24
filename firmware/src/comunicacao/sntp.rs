@@ -25,7 +25,7 @@ pub struct SntpHandle {
 
 /// Ja houve pelo menos uma sincronizacao com a rede.
 static RELOGIO_OK: AtomicBool = AtomicBool::new(false);
-/// `epoch_real - uptime` fixado no 1o sync (tomada_solver::relogio::offset_do_sync).
+/// `epoch_real - uptime` fixado no 1o sync (crate::solver::relogio::offset_do_sync).
 static OFFSET_BOOT: Mutex<i64> = Mutex::new(0);
 
 /// Segundos desde o boot (monotonico; independe de rede e de hora certa).
@@ -49,11 +49,11 @@ pub fn offset() -> i64 {
 ///
 /// Antes do sync os valores sao pequenos (segundos desde o boot) — nunca uma data
 /// plausivel de 1970 mascarada de agora. Quem persiste medicao usa
-/// `tomada_solver::relogio::SEM_HORA` como sentinela, nao este valor.
+/// `crate::solver::relogio::SEM_HORA` como sentinela, nao este valor.
 pub fn agora_epoch() -> i64 {
     let up = uptime_s();
     if relogio_ok() {
-        tomada_solver::relogio::epoch_de(up, offset())
+        crate::solver::relogio::epoch_de(up, offset())
     } else {
         up
     }
@@ -101,7 +101,7 @@ pub fn adotar_hora_do_servidor(epoch_servidor: i64) -> Option<i64> {
     }
     // A latencia da LAN (ms) e irrelevante para uma cadencia de 60 s e para regras de
     // granularidade horaria; o offset e tomado contra o uptime lido aqui.
-    let off = tomada_solver::relogio::offset_do_sync(epoch_servidor, uptime_s());
+    let off = crate::solver::relogio::offset_do_sync(epoch_servidor, uptime_s());
     *OFFSET_BOOT.lock().unwrap() = off;
     RELOGIO_OK.store(true, Ordering::Relaxed);
     log::warn!(
@@ -127,7 +127,7 @@ pub fn checar_sync(h: &SntpHandle) -> Option<i64> {
     if epoch_real <= 0 {
         return None;
     }
-    let off = tomada_solver::relogio::offset_do_sync(epoch_real, uptime_s());
+    let off = crate::solver::relogio::offset_do_sync(epoch_real, uptime_s());
     *OFFSET_BOOT.lock().unwrap() = off;
     RELOGIO_OK.store(true, Ordering::Relaxed);
     log::info!(

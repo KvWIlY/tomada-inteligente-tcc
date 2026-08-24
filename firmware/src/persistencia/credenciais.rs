@@ -95,7 +95,7 @@ const ALFABETO_PIN: &[u8] = b"23456789ABCDEFGHJKMNPQRSTUVWXYZ";
 
 /// Gera um PIN de 8 caracteres a partir do gerador de hardware do ESP32.
 pub fn gerar_pin() -> String {
-    (0..tomada_solver::pareamento::TAM_PIN_ESPERADO)
+    (0..crate::solver::pareamento::TAM_PIN_ESPERADO)
         .map(|_| {
             let r = unsafe { esp_idf_svc::sys::esp_random() } as usize;
             ALFABETO_PIN[r % ALFABETO_PIN.len()] as char

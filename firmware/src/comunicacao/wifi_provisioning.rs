@@ -10,7 +10,7 @@
 //!     claim-code para funcionar (FR-004/008).
 //!   - **Banner de causa** e **preservacao do Wi-Fi salvo** (FR-017/019).
 //!
-//! A validacao vive em `tomada_solver::portal` (pura, testada no host); aqui so ha I/O.
+//! A validacao vive em `crate::solver::portal` (pura, testada no host); aqui so ha I/O.
 
 use anyhow::{anyhow, Result};
 use embedded_svc::io::Write;
@@ -31,7 +31,7 @@ use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use tomada_solver::portal::{
+use crate::solver::portal::{
     self, ErroForm, FormPortal, Modo, MotivoPortal, ResolucaoWifi, MAX_SSID_BYTES,
 };
 

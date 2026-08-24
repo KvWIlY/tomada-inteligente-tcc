@@ -7,7 +7,7 @@
 # nenhum dos quais faz sentido para um servidor Actix-Web. Para mexer no backend:
 # `cd backend && cargo test`. Ver specs/004-backend-actix-mysql/plan.md §Estrutura.
 [workspace]
-members = ["firmware", "tomada-solver"]
+members = ["firmware"]
 resolver = "2"
 
 # Profiles ficam aqui (raiz) para serem aplicados a todos os membros do workspace.
@@ -25,8 +25,8 @@ codegen-units = 1
 [profile.release.package.serde_json]
 opt-level = 0
 
-# Mitigacao do mesmo bug LLVM Xtensa em codigo float-pesado do solver (minilp).
-# Se o spike (T006) confirmar que opt-level >= 1 funciona, esta linha pode sair.
+# Mitigacao do mesmo bug LLVM Xtensa em codigo float-pesado do solver (minilp, usado
+# por src/solver/solver.rs). Se opt-level >= 1 for confirmado OK, esta linha pode sair.
 [profile.release.package.minilp]
 opt-level = 0
 
@@ -39,7 +39,7 @@ opt-level = 0
 # serde_json -- mas o override [profile.*.package.serde_json] NAO resolve: `deserialize`
 # e generico e a monomorfizacao e emitida na CGU de QUEM instancia. O simbolo que quebra
 # termina em `_10y_firmware`. Por isso o opt-level = 0 vai no proprio y-firmware; as
-# dependencias (esp-idf-svc, std, curve25519, minilp, solver) sao o grosso do .text e
+# dependencias (esp-idf-svc, std, curve25519, minilp) sao o grosso do .text e
 # ficam em "s".
 # debug = true nao custa flash (secoes .debug_* nao sao carregaveis), so tamanho do ELF.
 # codegen-units = 1: no Windows, o default (256) gera ~257 .o e estoura o limite de
