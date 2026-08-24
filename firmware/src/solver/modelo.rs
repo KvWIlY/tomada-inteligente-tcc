@@ -2,14 +2,7 @@
 //!
 //! Mantem a notacao do PDF acessivel para o solver e os testes.
 
-use crate::solver::tipos::{Estado, TomadaInput};
-
-/// `C_{i,s}` — consumo de potencia da tomada no estado `s`.
-// Sem chamador no firmware: era API do crate `tomada-solver`, usada pelos testes de host.
-#[allow(dead_code)]
-pub fn consumo(t: &TomadaInput, estado: Estado) -> f64 {
-    crate::solver::tipos::modelo_consumo(estado, t)
-}
+use crate::solver::tipos::TomadaInput;
 
 /// Coeficiente do termo de conforto preditivo da objetivo para `x_{i,OFF}`:
 /// `alpha * Pi_{i,t} * W_i`.

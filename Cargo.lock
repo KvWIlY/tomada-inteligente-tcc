@@ -2191,7 +2191,6 @@ dependencies = [
  "hmac",
  "log",
  "minilp",
- "rand_core",
  "serde",
  "serde_json",
  "sha2",

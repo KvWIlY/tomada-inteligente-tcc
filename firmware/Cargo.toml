@@ -26,8 +26,6 @@ sha2          = "0.10"
 hmac          = { version = "0.12", default-features = false }
 # Solver LP do MILP (era dep transitiva via crate tomada-solver, absorvido em src/solver/).
 minilp = "0.2"
-# RNG do SPAKE2 (era dep transitiva via crate tomada-solver).
-rand_core = "0.6"
 spake2 = "0.4"
 hkdf = "0.12"
 chacha20poly1305 = "0.10"
