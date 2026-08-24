@@ -96,8 +96,13 @@ export function consumptionChart(data: number[], estado: Estado): string {
   const serie = data.length ? data : [0, 0];
   const color = STATE_LINE[estado];
   const w = 760, h = 230, padL = 30, padR = 8, padT = 18, padB = 26;
-  const max = Math.max(...serie, 200);
-  const niceMax = Math.ceil(max / 500) * 500;
+  // Escala ADAPTATIVA. O piso fixo de 500 W que existia aqui achatava toda carga
+  // de standby contra o eixo: uma tomada de 3 W virava linha reta no zero —
+  // exatamente o consumo que este trabalho existe para tornar visível.
+  const max = Math.max(...serie, 1);
+  const passo = max <= 20 ? 5 : max <= 50 ? 10 : max <= 100 ? 25 : max <= 500 ? 100 : 500;
+  const niceMax = Math.max(passo, Math.ceil(max / passo) * passo);
+  const emKW = niceMax >= 1000;
   const innerW = w - padL - padR, innerH = h - padT - padB;
   const pts: Array<[number, number]> = serie.map((v, i) => [
     padL + (serie.length === 1 ? 0 : (i / (serie.length - 1)) * innerW),
@@ -111,7 +116,9 @@ export function consumptionChart(data: number[], estado: Estado): string {
   const grid = ticks
     .map((f) => {
       const y = padT + innerH - f * innerH;
-      const lab = `${((niceMax * f) / 1000).toFixed(f === 0 ? 0 : 1)}${f === 0 ? 'kW' : ''}`;
+      const lab = emKW
+        ? `${((niceMax * f) / 1000).toFixed(f === 0 ? 0 : 1)}${f === 0 ? 'kW' : ''}`
+        : `${Math.round(niceMax * f)}${f === 0 ? 'W' : ''}`;
       return `<line x1="${padL}" y1="${y}" x2="${w - padR}" y2="${y}" stroke="var(--line)" stroke-width="1" stroke-dasharray="${f === 0 ? '0' : '3 5'}"/><text class="chart-axis" x="4" y="${y + 3.5}">${lab}</text>`;
     })
     .join('');
