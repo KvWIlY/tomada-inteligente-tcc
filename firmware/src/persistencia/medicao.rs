@@ -6,7 +6,7 @@
 //! remocao de um arquivo inteiro — barato e sem reescrever grandes arquivos (research §6).
 //!
 //! Idempotencia/sync: a logica pura (selecao de pendentes, montagem do corpo) vive em
-//! `tomada_solver::sync` (host-testada). Aqui convertendo `Medicao` <-> `SyncRecord` e
+//! `crate::solver::sync` (host-testada). Aqui convertendo `Medicao` <-> `SyncRecord` e
 //! cuidando do I/O. `confirmado=true` so apos 2xx, consolidado em UMA reescrita por balde.
 
 use anyhow::{Context, Result};
@@ -14,10 +14,10 @@ use serde::{Deserialize, Serialize};
 use std::io::Write;
 use std::sync::{Mutex, OnceLock};
 
-use tomada_solver::relogio::{self, Carimbavel};
-use tomada_solver::retencao::Balde;
-use tomada_solver::sync::SyncRecord;
-use tomada_solver::Estado;
+use crate::solver::relogio::{self, Carimbavel};
+use crate::solver::retencao::Balde;
+use crate::solver::sync::SyncRecord;
+use crate::solver::Estado;
 
 use crate::persistencia::littlefs;
 
@@ -31,7 +31,14 @@ pub struct Medicao {
     /// Epoch real, ou `relogio::SEM_HORA` (0) enquanto nao houve sincronizacao —
     /// corrigido por deslocamento quando a hora chega (FR-001a).
     pub timestamp: i64,
+    /// Potencia **ATIVA** (W) — media do produto instantaneo v*i, nao `Vrms*Irms`.
     pub p_medida: f32,
+    /// Fator de potencia `P/S` em [0, 1] da mesma janela. `#[serde(default)]` => 0.0
+    /// nos baldes gravados por firmware anterior a 2026-08-24, que nao tinham o campo:
+    /// sem o default, `carregar_pendentes` rejeitaria linha a linha e o buffer antigo
+    /// nunca sincronizaria.
+    #[serde(default)]
+    pub fator_potencia: f32,
     pub estado: Estado,
     pub rele_aberto: bool,
     #[serde(default)]
@@ -43,11 +50,19 @@ pub struct Medicao {
 }
 
 impl Medicao {
-    pub fn novo(tomada_id: &str, timestamp: i64, p_medida: f32, estado: Estado, rele_aberto: bool) -> Self {
+    pub fn novo(
+        tomada_id: &str,
+        timestamp: i64,
+        p_medida: f32,
+        fator_potencia: f32,
+        estado: Estado,
+        rele_aberto: bool,
+    ) -> Self {
         Medicao {
             tomada_id: tomada_id.to_string(),
             timestamp,
             p_medida,
+            fator_potencia,
             estado,
             rele_aberto,
             confirmado: false,
@@ -60,6 +75,7 @@ impl Medicao {
             tomada_id: self.tomada_id.clone(),
             timestamp: self.timestamp,
             p_medida: self.p_medida as f64,
+            fator_potencia: self.fator_potencia as f64,
             estado: self.estado,
             rele_aberto: self.rele_aberto,
             confirmado: self.confirmado,
@@ -67,7 +83,7 @@ impl Medicao {
     }
 }
 
-/// Permite ao `tomada_solver::relogio` corrigir os carimbos sem conhecer `Medicao`.
+/// Permite ao `crate::solver::relogio` corrigir os carimbos sem conhecer `Medicao`.
 impl Carimbavel for Medicao {
     fn ts(&self) -> i64 {
         self.timestamp
@@ -203,7 +219,7 @@ pub(crate) fn ler_balde(dia: i64) -> Result<Vec<Medicao>> {
 
 /// Carrega TODOS os registros pendentes (`confirmado=false`) de todos os baldes.
 /// Faz flush antes para incluir os de RAM. A selecao/ordenacao/limite finais ficam com
-/// `tomada_solver::sync::selecionar_pendentes` (host-testada) sobre os `SyncRecord`.
+/// `crate::solver::sync::selecionar_pendentes` (host-testada) sobre os `SyncRecord`.
 ///
 /// Registros SEM HORA (`timestamp == SEM_HORA`) nunca sobem: ou sao corrigidos por
 /// `corrigir_carimbos` quando a hora chega, ou — se sobraram de um boot anterior que

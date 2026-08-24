@@ -1,5 +1,5 @@
-//! Sensores: amostragem RMS de tensao (ZMPT101B) e corrente (SCT-013) e derivacao de
-//! potencia (research §3).
+//! Sensores: amostragem de tensao (ZMPT101B) e corrente (SCT-013) e derivacao de
+//! potencia ATIVA + fator de potencia (research §3).
 //!
 //! A leitura do ADC fica DESACOPLADA do hardware: `medir` recebe closures que devolvem
 //! uma amostra em mV. `main` cria o `AdcDriver`/`AdcChannelDriver` (esp-idf-hal oneshot)
@@ -30,6 +30,12 @@ pub struct Diag {
 
 /// Coleta `N_AMOSTRAS` de tensao e corrente (interleaved) e devolve a `Leitura` + o
 /// `Diag` bruto (mV) da mesma janela. `ler_v_mv`/`ler_i_mv` retornam uma amostra do canal em mV.
+///
+/// O **interleaving** (um `v` e um `i` por iteracao, colados) e o que torna a potencia
+/// ATIVA calculavel: `potencia::potencia_ativa` multiplica `v_k * i_k` amostra a amostra
+/// e precisa dos dois praticamente no mesmo instante. Trocar isto por dois lacos
+/// separados destruiria a relacao de fase e o watt viraria ruido — o RMS de cada canal
+/// sobreviveria (nao depende de fase), entao a quebra passaria SILENCIOSA.
 pub fn medir<FV, FI>(mut ler_v_mv: FV, mut ler_i_mv: FI) -> (Leitura, Diag)
 where
     FV: FnMut() -> f32,
@@ -51,5 +57,6 @@ where
     };
     let vrms = zmpt101b::vrms_volts(&v);
     let irms = sct013::irms_amps(&i);
-    (potencia::leitura(vrms, irms), diag)
+    let p_ativa = potencia::potencia_ativa(&v, &i, zmpt101b::FATOR_TENSAO, sct013::FATOR_CORRENTE);
+    (potencia::leitura(vrms, irms, p_ativa), diag)
 }

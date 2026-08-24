@@ -22,10 +22,12 @@ dotenvy_macro = "0.15"
 chrono        = { version = "0.4", default-features = false, features = ["clock"] }
 # HMAC-SHA256 para autenticar os heartbeats ESP-NOW (protocolo v3, chave por-residencia).
 # RustCrypto puro (sem asm) -> compila sob xtensa-esp32-espidf.
-sha2          = { version = "0.10", default-features = false }
+sha2          = "0.10"
 hmac          = { version = "0.12", default-features = false }
-# Modelo MILP + tipos + logica pura de sync (host-testavel; linkado tambem sob esp-idf std).
-tomada-solver = { path = "../tomada-solver" }
+# Solver LP do MILP (era dep transitiva via crate tomada-solver, absorvido em src/solver/).
+minilp = "0.2"
+# RNG do SPAKE2 (era dep transitiva via crate tomada-solver).
+rand_core = "0.6"
 spake2 = "0.4"
 hkdf = "0.12"
 chacha20poly1305 = "0.10"

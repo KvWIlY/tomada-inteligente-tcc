@@ -387,6 +387,9 @@ function normalizeMedicao(raw: Record<string, unknown>): Medicao {
     tomada_id: raw.tomada_id as string,
     timestamp: Number(raw.timestamp),
     p_medida: Number(raw.p_medida ?? 0),
+    // `?? null` e nao `?? 0`: ausente significa desconhecido (medicao antiga), e um
+    // zero aqui viraria "fator de potencia pessimo" num grafico.
+    fator_potencia: raw.fator_potencia == null ? null : Number(raw.fator_potencia),
     estado: ((raw.estado as string) || 'OFF') as Medicao['estado'],
     rele_aberto: comoBool(raw.rele_aberto),
     created_at: (raw.criado_em as string) ?? '',

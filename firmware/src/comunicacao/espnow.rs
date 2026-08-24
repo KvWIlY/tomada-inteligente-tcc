@@ -25,8 +25,8 @@ use std::sync::{Mutex, OnceLock};
 use esp_idf_svc::espnow::{EspNow, ReceiveInfo};
 use esp_idf_svc::sys;
 
-use tomada_solver::replay::{self, EstadoPeer};
-use tomada_solver::TomadaInput;
+use crate::solver::replay::{self, EstadoPeer};
+use crate::solver::TomadaInput;
 
 type HmacSha256 = Hmac<Sha256>;
 
@@ -118,7 +118,7 @@ impl Heartbeat {
         let flags = (u_i as u8) | ((f_i as u8) << 1) | ((rele_manual as u8) << 2) | ((a_it as u8) << 3);
         let contador = {
             let atual = CONTADOR.load(Ordering::Relaxed);
-            let prox = tomada_solver::replay::proximo_contador(atual);
+            let prox = crate::solver::replay::proximo_contador(atual);
             CONTADOR.store(prox, Ordering::Relaxed);
             prox
         };
@@ -170,7 +170,7 @@ impl Heartbeat {
     /// Desserializa e AUTENTICA: tamanho, versao e HMAC (tempo ~constante, cobrindo o
     /// `src_mac` do frame). `None` se qualquer checagem falhar (forjado/MAC spoofado/de
     /// outra casa). O anti-replay NAO acontece aqui: e decidido por remetente em
-    /// `tomada_solver::replay::aceitar`, no callback de recepcao — e por isso nao
+    /// `crate::solver::replay::aceitar`, no callback de recepcao — e por isso nao
     /// depende mais de relogio (FR-010).
     pub fn desserializar_verificado(
         b: &[u8],

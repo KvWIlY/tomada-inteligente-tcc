@@ -26,7 +26,7 @@ use std::time::Duration;
 
 use super::wifi_provisioning::{self, ContextoPortal, CredsRecebidas, SaidaPortal};
 use crate::config_nuvem::{WIFI_PASSWORD, WIFI_SSID};
-use tomada_solver::portal::MotivoPortal;
+use crate::solver::portal::MotivoPortal;
 
 const NVS_NAMESPACE: &str = "wifi_creds";
 const NVS_KEY_SSID: &str = "ssid";

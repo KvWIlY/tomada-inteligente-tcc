@@ -42,7 +42,11 @@ export interface Medicao {
   id: number;
   tomada_id: string;      // UUID
   timestamp: number;      // unix epoch (segundos), bigint no Postgres
-  p_medida: number;       // W
+  p_medida: number;       // W — potencia ATIVA (media de v*i), nao Vrms*Irms
+  /** Fator de potencia P/S em [0,1] da mesma janela. `null` nas medicoes anteriores
+   *  a 2026-08-24, gravadas quando `p_medida` ainda era potencia aparente (VA) —
+   *  tratar como "sem informacao", nunca como zero. */
+  fator_potencia: number | null;
   estado: Estado;
   rele_aberto: boolean;
   created_at: string;     // ISO

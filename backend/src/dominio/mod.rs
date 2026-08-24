@@ -48,7 +48,12 @@ pub struct Medicao {
     pub id: i64,
     pub tomada_id: String,
     pub timestamp: i64,
+    /// Potência **ATIVA** (W). Medições anteriores a 2026-08-24 gravaram aqui a
+    /// potência aparente (VA) — são justamente as que têm `fator_potencia` nulo.
     pub p_medida: f32,
+    /// `P/S` em [0, 1] da mesma janela, ou `None` para as medições antigas
+    /// (migration 0002): a fase não foi gravada, então não há backfill possível.
+    pub fator_potencia: Option<f32>,
     pub estado: String,
     pub rele_aberto: i8,
     pub criado_em: NaiveDateTime,

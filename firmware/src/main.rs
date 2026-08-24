@@ -6,7 +6,7 @@
 //! jeito (FR-001/004, Principio VI).
 //!
 //! Loop (cadencia 10 s, SC-008):
-//!   medir (RMS V/I) -> heartbeats ESP-NOW v5 -> decidir (MILP) -> atuar rele.
+//!   medir (P ativa + FP) -> heartbeats ESP-NOW v5 -> decidir (MILP) -> atuar rele.
 //! Sem NENHUM peer vivo e online (003): irmas lidas do backend viram carga fixa.
 //! A cada ~60 s (cloud tick, so no modo nuvem): bufferiza medicao, `GET /config`
 //! (config + rele manual + P_max + chave da casa) e `POST /telemetria` em lote.
@@ -29,6 +29,7 @@ mod config_nuvem;
 mod decisao;
 mod persistencia;
 mod sensores;
+mod solver;
 
 use comunicacao::espnow::{self, Heartbeat};
 use comunicacao::pareamento as pair;
@@ -42,11 +43,11 @@ use persistencia::config;
 use persistencia::credenciais::{self, CredenciaisLocais};
 use persistencia::medicao::{self, Medicao};
 use persistencia::retencao;
-use tomada_solver::coordenacao::{carga_fixa_nuvem, contar_frescas, RemoteTomada};
-use tomada_solver::portal::{Modo, MotivoPortal, ResolucaoWifi};
-use tomada_solver::relogio;
-use tomada_solver::sync::deve_adotar_config;
-use tomada_solver::uso_agora;
+use crate::solver::coordenacao::{carga_fixa_nuvem, contar_frescas, RemoteTomada};
+use crate::solver::portal::{Modo, MotivoPortal, ResolucaoWifi};
+use crate::solver::relogio;
+use crate::solver::sync::deve_adotar_config;
+use crate::solver::uso_agora;
 
 /// Cadencia do ciclo de decisao (s) — SC-008 (decisao em <=10 s).
 const CICLO_S: u64 = 10;
@@ -378,8 +379,8 @@ fn main() -> Result<()> {
             log::error!("[CICLO] falha ao atuar rele: {e:?}");
         }
         log::info!(
-            "[CICLO] V={:.1} I={:.2} P={:.1}W estado={} rele_aberto={} peers={} carga_fixa={:.0} hora_ok={} usar_agora={}s",
-            leitura.vrms, leitura.irms, leitura.p, decisao.estado.as_str(),
+            "[CICLO] V={:.1} I={:.2} P={:.1}W S={:.1}VA FP={:.2} estado={} rele_aberto={} peers={} carga_fixa={:.0} hora_ok={} usar_agora={}s",
+            leitura.vrms, leitura.irms, leitura.p, leitura.s, leitura.fp, decisao.estado.as_str(),
             decisao.rele_aberto, peers_vivos.len(), carga_fixa, sntp::relogio_ok(),
             janela_uso.map(|j| j.restante_s(uptime)).unwrap_or(0),
         );
@@ -410,10 +411,13 @@ fn main() -> Result<()> {
         if cloud_tick {
             // Sem hora certa, o carimbo fica com a sentinela e e corrigido depois.
             let ts = if sntp::relogio_ok() { agora } else { relogio::SEM_HORA };
+            // `leitura.fp` e da MESMA janela que `decisao.p_medida` (o ciclo so repassa
+            // `leitura.p`), entao o par (W, FP) gravado e coerente.
             medicao::registrar(Medicao::novo(
                 &creds.tomada_id,
                 ts,
                 decisao.p_medida,
+                leitura.fp,
                 decisao.estado,
                 decisao.rele_aberto,
             ));

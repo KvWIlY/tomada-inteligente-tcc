@@ -14,7 +14,7 @@
 //! Floats são formatados **manualmente** (`{:.2}`) para casar com o caminho do
 //! firmware, que evita `serde_json` em `f32`/`[2 x float]` por causa do bug LLVM Xtensa.
 
-use crate::tipos::Estado;
+use crate::solver::tipos::Estado;
 
 /// Registro sincronizável (espelha `firmware::persistencia::medicao::Medicao`).
 ///
@@ -26,6 +26,8 @@ pub struct SyncRecord {
     pub tomada_id: String,
     pub timestamp: i64,
     pub p_medida: f64,
+    /// Fator de potencia da mesma janela, em [0, 1]. Vai no corpo do POST.
+    pub fator_potencia: f64,
     pub estado: Estado,
     pub rele_aberto: bool,
     pub confirmado: bool,
@@ -68,6 +70,8 @@ pub fn selecionar_pendentes(registros: &[SyncRecord], max: usize) -> Vec<usize> 
 /// `medicoes`; **não** inclui `confirmado` (estado local).
 ///
 /// `p_medida` é formatado com 2 casas (`{:.2}`) — mesmo formato do firmware (bug Xtensa).
+/// `fator_potencia` usa 3 casas: o valor vive em [0, 1] e 2 casas jogariam fora a
+/// diferença entre uma fonte chaveada ruim (0,45) e uma decente (0,55).
 /// Um `indices` vazio produz `"[]"`.
 pub fn montar_corpo_lote(registros: &[SyncRecord], indices: &[usize]) -> String {
     let mut s = String::from("[");
@@ -77,10 +81,11 @@ pub fn montar_corpo_lote(registros: &[SyncRecord], indices: &[usize]) -> String 
             s.push(',');
         }
         s.push_str(&format!(
-            r#"{{"tomada_id":"{}","timestamp":{},"p_medida":{:.2},"estado":"{}","rele_aberto":{}}}"#,
+            r#"{{"tomada_id":"{}","timestamp":{},"p_medida":{:.2},"fator_potencia":{:.3},"estado":"{}","rele_aberto":{}}}"#,
             escape_json(&r.tomada_id),
             r.timestamp,
             r.p_medida,
+            r.fator_potencia,
             r.estado.as_str(),
             r.rele_aberto,
         ));

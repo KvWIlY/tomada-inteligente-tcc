@@ -1,18 +1,22 @@
 # Tomada inteligente — otimizador de consumo fantasma (TCC)
 
 Rede de tomadas ESP32 que corta o consumo em *standby* sem estourar o teto elétrico da casa.
-Cada nó mede tensão/corrente, decide o próprio estado resolvendo um **MILP** local, coordena-se
-com as irmãs por **ESP-NOW** e sincroniza com um **backend próprio** na LAN.
+Cada nó mede tensão e corrente, calcula a **potência ativa** (média do produto instantâneo, não
+`Vrms·Irms`), decide o próprio estado resolvendo um **MILP** local, coordena-se com as irmãs por
+**ESP-NOW** e sincroniza com um **backend próprio** na LAN.
 
 ## Componentes
 
 | Diretório | O quê | Alvo |
 |-----------|-------|------|
-| `firmware/` | Rust + esp-idf no ESP32: sensores, solver, relé, ESP-NOW, cliente do backend | Xtensa |
-| `tomada-solver/` | Lógica pura host-testável: modelo MILP (minilp + branch-and-bound), coordenação, sync | host |
+| `firmware/` | Rust + esp-idf no ESP32: sensores, relé, ESP-NOW, cliente do backend — e `src/solver/`, a lógica pura do MILP | Xtensa |
 | `backend/` | Rust + Actix-Web sobre MySQL: **fonte única de verdade**, auth própria (JWT), autorização default-deny | host |
 | `frontend/` | Vite + TypeScript: dashboard do dono | browser |
-| `specs/` | Especificações speckit (001–004) — leia o plano da feature ativa antes de codar | — |
+| `specs/` | Especificações speckit (001–005) — leia o plano da feature ativa antes de codar | — |
+
+O `tomada-solver` era um crate separado, host-testável; em 2026-08-24 foi absorvido em
+`firmware/src/solver/`. A lógica continua pura (sem I/O, sem `esp-idf`), mas passou a compilar
+só para Xtensa — **hoje não há `cargo test` que a execute**. Ver `ok/08-dividas-tecnicas.md`.
 
 `backend/` é um **projeto cargo independente** — não é membro do workspace da raiz, que é do
 embarcado (toolchain esp + workarounds do bug LLVM Xtensa). Ver comentário no `Cargo.toml` raiz.
@@ -53,10 +57,10 @@ A tomada **não depende de internet, servidor ou hora certa** para funcionar:
 ### Backend
 ```powershell
 cd C:\y\backend
-mysql -u root -p < scripts\bootstrap-mysql.sql   # cria tcc/tcc_test + usuario tcc_app
+mysql -u root -p < scripts\bootstrap-mysql.sql   # cria o banco tcc + usuario tcc_app
 copy .env.example .env                            # preencha DATABASE_URL e JWT_SECRET
 cargo run                                         # aplica migrations e escuta em BIND_ADDR
-cargo test                                        # gate do Principio IX (18 testes)
+cargo test                                        # 5 testes de integracao contra o MySQL real
 ```
 
 ### Frontend
@@ -78,11 +82,10 @@ cargo build                  # toolchain esp ja fixada em rust-toolchain.toml
 cargo run                    # flash + monitor
 ```
 
-### Solver (host)
-```powershell
-cd C:\y\tomada-solver
-cargo test
-```
+### Solver
+Nao ha mais alvo de host: o solver vive em `firmware/src/solver/` e sai junto no
+`cd C:\y\firmware && cargo build`. Restaurar a testabilidade e divida aberta —
+ver `ok/08-dividas-tecnicas.md`.
 
 ## Notas de build do embarcado
 
@@ -90,7 +93,9 @@ cargo test
   deste crate (caminho absoluto Windows).
 - `Cargo.toml` raiz força `serde_json` e `minilp` em `opt-level = 0` — bug do backend LLVM
   Xtensa em constant pools `[2 x float]`, que só dispara com opt-level ≥ 1.
-- `[profile.dev] opt-level = 0` pelo mesmo motivo; o binário cabe na partição factory de 3.125 MB.
+- `[profile.dev] opt-level = "s"`, com `opt-level = 0` só no crate `y-firmware`: a monomorfização
+  do `serde_json` é emitida na CGU de quem instancia. Com `0` global o binário não cabe na
+  partição factory de 3.31 MB (`0x350000`, ver `firmware/partitions.csv`).
 - `codegen-units = 1`: no Windows o default (256) gera ~257 `.o` e estoura o limite de linha de
   comando do linker (`os error 206`).
 - Stack da main task em 40 KB — necessário para Wi-Fi/lwIP + alocações Rust.
@@ -98,9 +103,13 @@ cargo test
 
 ## Estado
 
-Features **004** (backend próprio) e **005** (offline-first + pareamento local) implementadas e
-verdes no host: solver 63/63, backend 4/4 (integração contra MySQL), firmware compila para Xtensa
-sem warnings, frontend typecheck limpo.
+Features **004** (backend próprio) e **005** (offline-first + pareamento local) implementadas:
+firmware compila para Xtensa sem warnings, backend com 5 testes de integração verdes contra o
+MySQL real, frontend com typecheck limpo e bundle de 45,79 kB.
+
+**Nenhum teste de host roda hoje** — o harness do MILP foi apagado em `f2a59bf` e a absorção do
+`tomada-solver` levou junto o alvo de host dos demais módulos puros. É violação vigente do
+Princípio IX da Constituição, registrada em `ok/08-dividas-tecnicas.md`.
 
 O gate de **hardware** continua **aberto** — flash em placa real, smoke de runtime e
 hardware-in-the-loop, incluindo os cenários novos da 005 (boot 100% offline, retomada após queda

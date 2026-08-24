@@ -1,18 +1,35 @@
--- Schema MySQL 8 — Backend Próprio (feature 004-backend-actix-mysql)
--- Porte do schema autoritativo de 001 (Postgres) para MySQL.
--- Fonte única de verdade = este banco, acessado APENAS pelo backend (Constituição v2.0.0):
---   * Princípio VI: sem BaaS; clientes não acessam o banco direto (só via API do backend).
---   * Princípio VIII: identidade = MAC (coluna `mac` única); autenticação = JWT por-device
---     emitido pelo backend; segredo de assinatura só no backend; autorização DEFAULT-DENY
---     implementada no BACKEND (não há RLS/role por cliente no MySQL). A conta admin do MySQL
---     nunca é exposta ao firmware nem ao frontend.
--- Idempotente onde possível (CREATE TABLE IF NOT EXISTS). Aplicar via migrations do backend.
+-- Schema MySQL 8 — banco unico `tcc` (backend proprio, features 004/005).
+--
+-- Reconstruido do zero em 2026-08-23: os bancos `tcc` e `tcc_test` foram descartados
+-- e fundidos num so. O par antigo (0001_init + 0002_rele_aberto_automatico) virou este
+-- arquivo unico, ja com `rele_aberto` TRI-ESTADO desde o nascimento — o bug em que toda
+-- tomada nova nascia com `rele_aberto = 1` e o firmware lia isso como "o dono mandou
+-- cortar" (jogando fora a decisao do MILP em todo ciclo) nao existe mais no schema.
+-- Backup do banco antigo: ok/backup-db/tcc_2026-08-23.sql
+--
+-- Fonte unica de verdade = este banco, acessado APENAS pelo backend (Constituicao v2.0.0):
+--   * Principio VI: sem BaaS; clientes nao acessam o banco direto (so via API do backend).
+--   * Principio VIII: identidade = MAC (coluna `mac` unica); autenticacao = JWT por-device
+--     emitido pelo backend; segredo de assinatura so no backend; autorizacao DEFAULT-DENY
+--     implementada no BACKEND (nao ha RLS/role por cliente no MySQL). A conta admin do
+--     MySQL nunca e exposta ao firmware nem ao frontend.
+--
+-- Modelo de dominio (a forma do sistema hoje):
+--   1 usuario -> 1..N residencias — na pratica UMA casa; o schema nao trava isso
+--                (sem UNIQUE em owner_id), para nao fechar a porta de varias casas.
+--   1 casa    -> 1..N tomadas — no minimo 1 para a casa fazer sentido. Isso NAO vira
+--                constraint: a casa e criada ANTES da primeira tomada existir (a tomada
+--                so nasce quando o claim-code e usado no portal AP). A regra vive na
+--                aplicacao, nao no banco.
+--   1 tomada  -> suas medicoes (consumo), seus eventos e sua credencial de dispositivo.
+--
+-- Idempotente onde possivel (CREATE TABLE IF NOT EXISTS). Aplicado via sqlx::migrate!.
 
 SET NAMES utf8mb4;
 SET time_zone = '+00:00';  -- backend normaliza tudo para UTC
 
 -- ============================================================
--- 1. usuarios  (NOVO — substitui auth.users do Supabase)
+-- 1. usuarios  (dono da casa; login do dashboard)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS usuarios (
   id          CHAR(36)     NOT NULL,
@@ -24,7 +41,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================
--- 2. residencias  (dono único; teto P_max — R2)
+-- 2. residencias  (a casa; dono unico; teto P_max — R2 do modelo)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS residencias (
   id          CHAR(36)     NOT NULL,
@@ -41,7 +58,7 @@ CREATE TABLE IF NOT EXISTS residencias (
 
 -- ============================================================
 -- 3. tomadas  (config do modelo + telemetria compartilhada)
---    `mac` = identidade de hardware (única, imutável).
+--    `mac` = identidade de hardware (unica, imutavel).
 -- ============================================================
 CREATE TABLE IF NOT EXISTS tomadas (
   id                   CHAR(36)     NOT NULL,
@@ -49,7 +66,15 @@ CREATE TABLE IF NOT EXISTS tomadas (
   mac                  VARCHAR(17)  NOT NULL,           -- AA:BB:CC:DD:EE:FF
   nome                 VARCHAR(255) NOT NULL,
   estado               ENUM('OFF','STD','ON') NOT NULL DEFAULT 'OFF',
-  rele_aberto          TINYINT(1)   NOT NULL DEFAULT 1, -- comando manual (só o dono)
+  -- TRI-ESTADO — comando manual do dono (so o dono escreve):
+  --   NULL  = automatico  -> o MILP decide. E o padrao de uma tomada nova.
+  --   TRUE  = cortar      -> trava explicita do dono, ate ele desfazer.
+  --   FALSE = usar agora  -> o firmware abre uma janela temporaria de 30 min e, ao fim
+  --                          dela, devolve esta coluna a NULL sozinho (campo
+  --                          `liberar_manual` do snapshot em POST /telemetria).
+  -- "Sempre ligada" (geladeira, roteador) NAO e esta coluna: e `is_critical` dentro do
+  -- JSON de `config`, que vira W_i = M no modelo.
+  rele_aberto          TINYINT(1)   NULL DEFAULT NULL,
   cstd                 FLOAT        NOT NULL DEFAULT 0,  -- C_{i,STD} (W)
   con                  FLOAT        NOT NULL DEFAULT 0,  -- C_{i,ON}  (W)
   p_medida_atual       FLOAT        NOT NULL DEFAULT 0,
@@ -67,8 +92,8 @@ CREATE TABLE IF NOT EXISTS tomadas (
 --   schedule[24], pi_historico[24], p_limiar_detectado_auto }
 
 -- ============================================================
--- 4. medicoes  (série temporal, enviada em lote idempotente)
---    UNIQUE(tomada_id, timestamp) => base da idempotência (FR-009).
+-- 4. medicoes  (consumo da tomada; serie temporal enviada em lote idempotente)
+--    UNIQUE(tomada_id, timestamp) => base da idempotencia (FR-009).
 -- ============================================================
 CREATE TABLE IF NOT EXISTS medicoes (
   id           BIGINT     NOT NULL AUTO_INCREMENT,
@@ -76,7 +101,7 @@ CREATE TABLE IF NOT EXISTS medicoes (
   timestamp    BIGINT     NOT NULL,              -- epoch (SNTP)
   p_medida     FLOAT      NOT NULL,              -- >= 0 (validado no backend)
   estado       ENUM('OFF','STD','ON') NOT NULL,
-  rele_aberto  TINYINT(1) NOT NULL,
+  rele_aberto  TINYINT(1) NOT NULL,              -- estado FISICO no instante da medida
   criado_em    DATETIME   NOT NULL,
   PRIMARY KEY (id),
   UNIQUE KEY uq_medicoes_tomada_ts (tomada_id, timestamp),
@@ -86,17 +111,17 @@ CREATE TABLE IF NOT EXISTS medicoes (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================
--- 5. eventos  (observabilidade — Princípio VII)
+-- 5. eventos  (observabilidade da tomada — Principio VII)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS eventos (
-  id           BIGINT     NOT NULL AUTO_INCREMENT,
-  tomada_id    CHAR(36)   NULL,
-  timestamp    BIGINT     NOT NULL,
+  id           BIGINT      NOT NULL AUTO_INCREMENT,
+  tomada_id    CHAR(36)    NULL,
+  timestamp    BIGINT      NOT NULL,
   tipo         VARCHAR(40) NOT NULL,
   severidade   ENUM('info','warn','erro') NOT NULL DEFAULT 'info',
   titulo       VARCHAR(255) NOT NULL,
-  detalhes     TEXT       NULL,                  -- entradas + Z + estados + folgas
-  criado_em    DATETIME   NOT NULL,
+  detalhes     TEXT        NULL,                 -- entradas + Z + estados + folgas
+  criado_em    DATETIME    NOT NULL,
   PRIMARY KEY (id),
   KEY idx_eventos_tomada_ts (tomada_id, timestamp DESC),
   CONSTRAINT fk_eventos_tomada FOREIGN KEY (tomada_id)
@@ -104,7 +129,7 @@ CREATE TABLE IF NOT EXISTS eventos (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================
--- 6. device_credentials  (segredo durável por-device; só hash)
+-- 6. device_credentials  (credencial duravel da tomada; so o hash)
 --    Lida APENAS pelo backend (nunca por endpoint de cliente).
 -- ============================================================
 CREATE TABLE IF NOT EXISTS device_credentials (
@@ -119,7 +144,7 @@ CREATE TABLE IF NOT EXISTS device_credentials (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================
--- 7. provisioning_claims  (claim-codes; só hash; uso único; expira)
+-- 7. provisioning_claims  (claim-codes da casa; so o hash; uso unico; expira)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS provisioning_claims (
   id            CHAR(36)    NOT NULL,
@@ -135,8 +160,9 @@ CREATE TABLE IF NOT EXISTS provisioning_claims (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================
--- 8. residencia_secrets  (chave HMAC ESP-NOW por residência)
---    Lida APENAS pelo backend; entregue só na resposta de /provisionar.
+-- 8. residencia_secrets  (chave HMAC do ESP-NOW, uma por casa)
+--    Lida APENAS pelo backend; entregue so na resposta de /provisionar e rotacionada
+--    na mesma transacao do DELETE /tomadas/{id}.
 -- ============================================================
 CREATE TABLE IF NOT EXISTS residencia_secrets (
   residencia_id  CHAR(36)  NOT NULL,
@@ -148,13 +174,14 @@ CREATE TABLE IF NOT EXISTS residencia_secrets (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================
--- Notas de autorização (NÃO há RLS no MySQL):
---   Todo o isolamento default-deny é feito no BACKEND (middleware + filtros por claim):
---   - device (claim tomada_id/residencia_id): lê tomadas/medicoes/eventos da sua residência;
---     escreve só a PRÓPRIA tomada (estado, cstd, con, p_medida_atual, ultimo_uso_ativo_ts,
---     config, config_version) + insere medicoes/eventos da própria tomada. NUNCA toca
---     rele_aberto, p_max, mac, residencia_id, device_credentials, provisioning_claims,
---     residencia_secrets.
---   - usuário (owner_id): CRUD só das próprias residências/tomadas; escreve rele_aberto,
+-- Notas de autorizacao (NAO ha RLS no MySQL):
+--   Todo o isolamento default-deny e feito no BACKEND (middleware + filtros por claim):
+--   - device (claim tomada_id/residencia_id): le tomadas/medicoes/eventos da sua
+--     residencia; escreve so a PROPRIA tomada (estado, cstd, con, p_medida_atual,
+--     ultimo_uso_ativo_ts, config, config_version) + insere medicoes/eventos da propria
+--     tomada. NUNCA toca p_max, mac, residencia_id, device_credentials,
+--     provisioning_claims nem residencia_secrets; em `rele_aberto` a unica escrita
+--     permitida e o `liberar_manual`, que so devolve a coluna a NULL.
+--   - usuario (owner_id): CRUD so das proprias residencias/tomadas; escreve rele_aberto,
 --     p_max, config, nome; cria/consulta claim-codes; revoga devices.
 --   Ver contracts/backend-api.md e contracts/provisioning-api.md.

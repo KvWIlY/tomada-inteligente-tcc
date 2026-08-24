@@ -9,7 +9,7 @@
 //!   1. **botao fisico** na tomada que ja funciona (abre janela de 60 s), e
 //!   2. **PIN de 8 caracteres** dela, digitado no Portal AP da tomada nova.
 //!
-//! O handshake (SPAKE2 -> HKDF -> ChaCha20-Poly1305) vive em `tomada_solver::pareamento`
+//! O handshake (SPAKE2 -> HKDF -> ChaCha20-Poly1305) vive em `crate::solver::pareamento`
 //! (puro, testado no host). Aqui so ha radio, temporizacao e persistencia.
 
 use anyhow::{anyhow, Result};
@@ -20,7 +20,7 @@ use std::sync::{Mutex, OnceLock};
 use std::time::Duration;
 
 use crate::comunicacao::sntp::uptime_s;
-use tomada_solver::pareamento::{
+use crate::solver::pareamento::{
     self, ErroPareamento, Janela, TAM_CHAVE, TAM_NONCE, DURACAO_JANELA_S,
 };
 

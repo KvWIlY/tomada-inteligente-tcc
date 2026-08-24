@@ -17,7 +17,14 @@ const SEVERIDADES: [&str; 3] = ["info", "warn", "erro"];
 #[derive(Debug, Deserialize)]
 pub struct MedicaoIn {
     pub timestamp: i64,
+    /// Potência **ATIVA** (W): o firmware calcula `media(v_k * i_k)` sobre a janela,
+    /// não `Vrms * Irms`. Medições gravadas antes de 2026-08-24 são aparentes (VA).
     pub p_medida: f32,
+    /// `P/S` em [0, 1]. `default` (None) aceita firmware anterior a 2026-08-24, que
+    /// não envia o campo — recusar o lote por ausência dele deixaria um nó antigo
+    /// preso, reenviando para sempre um buffer que nunca é confirmado.
+    #[serde(default)]
+    pub fator_potencia: Option<f32>,
     pub estado: String,
     pub rele_aberto: bool,
 }
@@ -56,6 +63,13 @@ pub fn validar(medicoes: &[MedicaoIn], eventos: &[EventoIn]) -> Result<(), ApiEr
                 "timestamp deve ser epoch positivo".to_string(),
             ));
         }
+        if let Some(fp) = m.fator_potencia {
+            if !fp.is_finite() || !(0.0..=1.0).contains(&fp) {
+                return Err(ApiErro::Validacao(
+                    "fator_potencia deve estar entre 0 e 1".to_string(),
+                ));
+            }
+        }
     }
     for e in eventos {
         if !SEVERIDADES.contains(&e.severidade.as_str()) {
@@ -78,14 +92,15 @@ pub async fn inserir_medicoes(
 ) -> Result<(), sqlx::Error> {
     for m in medicoes {
         sqlx::query(
-            "INSERT INTO medicoes (tomada_id, timestamp, p_medida, estado, rele_aberto, criado_em) \
-             VALUES (?, ?, ?, ?, ?, ?) \
-             ON DUPLICATE KEY UPDATE p_medida = VALUES(p_medida), estado = VALUES(estado), \
+            "INSERT INTO medicoes (tomada_id, timestamp, p_medida, fator_potencia, estado, rele_aberto, criado_em) \
+             VALUES (?, ?, ?, ?, ?, ?, ?) \
+             ON DUPLICATE KEY UPDATE p_medida = VALUES(p_medida), fator_potencia = VALUES(fator_potencia), estado = VALUES(estado), \
              rele_aberto = VALUES(rele_aberto)",
         )
         .bind(tomada_id)
         .bind(m.timestamp)
         .bind(m.p_medida)
+        .bind(m.fator_potencia)
         .bind(&m.estado)
         .bind(m.rele_aberto as i8)
         .bind(Utc::now().naive_utc())
@@ -135,7 +150,7 @@ pub async fn listar_medicoes(
     desde_ts: i64,
 ) -> Result<Vec<Medicao>, sqlx::Error> {
     sqlx::query_as::<_, Medicao>(
-        "SELECT id, tomada_id, timestamp, p_medida, estado, rele_aberto, criado_em \
+        "SELECT id, tomada_id, timestamp, p_medida, fator_potencia, estado, rele_aberto, criado_em \
          FROM medicoes WHERE tomada_id = ? AND timestamp >= ? \
          ORDER BY timestamp LIMIT ?",
     )

@@ -8,7 +8,7 @@
 use anyhow::Result;
 use esp_idf_svc::hal::gpio::{Gpio26, Output, PinDriver};
 
-use tomada_solver::Estado;
+use crate::solver::Estado;
 
 /// Driver do rele. Mantem o pino de saida vivo enquanto existir.
 /// (esp-idf-hal 0.46: `PinDriver<'d, MODE>` — sem parametro de pino; pinos tem lifetime.)

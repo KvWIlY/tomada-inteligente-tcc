@@ -57,6 +57,8 @@ pub fn corrigir<T: Carimbavel>(pendentes: &mut [T], offset: i64) -> Correcao {
 /// hora certa sao incorrigiveis (o `uptime_s` deles se refere a outro boot) e DEVEM ser
 /// descartados — excecao unica e documentada do FR-001a. Devolve quantos foram jogados
 /// fora, para o evento `relogio_descartes`.
+// Sem chamador no firmware: era API do crate `tomada-solver`, usada pelos testes de host.
+#[allow(dead_code)]
 pub fn descartar_incorrigiveis<T: Carimbavel>(pendentes: &mut Vec<T>) -> usize {
     let antes = pendentes.len();
     pendentes.retain(|p| p.ts() != SEM_HORA);
