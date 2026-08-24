@@ -57,7 +57,6 @@ pub enum ResultadoWifi {
     Configurar(Box<CredsRecebidas>),
 }
 
-#[allow(dead_code)]
 pub fn esta_conectado() -> bool {
     CONECTADO.load(Ordering::Relaxed)
 }
