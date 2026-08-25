@@ -1,4 +1,18 @@
 /* ============================================================
+   PREFIXO `l-` = legado (feature 007)
+   ============================================================
+   .btn .card .chart .empty .sidebar colidiam com componentes de
+   mesmo nome do Basecoat. O legado e sem camada e por isso vence
+   nas propriedades que DECLARA — mas nao nas que o Basecoat
+   INTRODUZ. Foi assim que a `.sidebar` do Basecoat deslocou a
+   marca: nosso CSS nunca declarou `position`, entao o dele passou.
+
+   Com o prefixo, o Basecoat so vale onde a marcacao pede por ele.
+   Migrar um componente e trocar `.l-card` por `.card` na view e
+   apagar a regra `.l-card` daqui. Este arquivo encolhe ate sumir.
+   ============================================================ */
+
+/* ============================================================
    Watt — Painel de Energia · Tomadas Inteligentes
    Sistema visual: verde / branco / lavanda · grotesca geométrica
    (portado do design handoff hi-fi; fonte da verdade visual)
@@ -43,7 +57,8 @@
   --shadow-soft: 0 1px 2px rgba(20,23,31,.045), 0 6px 20px -12px rgba(20,23,31,.16);
   --shadow-pop:  0 24px 70px -22px rgba(20,30,50,.42);
 
-  --font: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  /* FR-001: pilha exata. Os @font-face vivem em src/styles/app.css (local). */
+  --font: 'Open Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
   --sidebar-w: 264px;
 }
 
@@ -68,12 +83,12 @@ button { font-family: inherit; cursor: pointer; }
    esticava a altura) some; `#view` estica e o `.auth` centraliza de verdade. Em telas
    baixas o card cresce além de 100% e o `.content` rola (responsivo). */
 .app--auth { grid-template-columns: 1fr; grid-template-rows: 100%; }
-.app--auth .sidebar { display: none; }
+.app--auth .l-sidebar { display: none; }
 .app--auth .content { display: flex; flex-direction: column; }
 .app--auth #view { flex: 1 1 auto; min-height: 0; }
 
 /* ---------------- Sidebar ---------------- */
-.sidebar {
+.l-sidebar {
   background: var(--card);
   border-right: 1px solid var(--line);
   display: flex; flex-direction: column; min-height: 0; z-index: 30;
@@ -174,7 +189,7 @@ button { font-family: inherit; cursor: pointer; }
 .online-pill--offline { background: var(--lav); color: var(--ink-soft); }
 
 /* ============================================================ Cards */
-.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-xl); padding: 26px 28px; box-shadow: var(--shadow-soft); }
+.l-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-xl); padding: 26px 28px; box-shadow: var(--shadow-soft); }
 .card__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 18px; }
 .card__title { font-size: 18.5px; font-weight: 700; letter-spacing: -0.008em; margin: 0; white-space: nowrap; }
 .card__sub { font-size: 13px; color: var(--ink-faint); margin-top: 3px; font-weight: 500; }
@@ -235,14 +250,13 @@ button { font-family: inherit; cursor: pointer; }
 .tcard__bars { width: 78px; height: 38px; flex: none; }
 
 /* ============================================================ Badges */
-.badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px 5px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+/* .badge base: agora vem do Basecoat (feature 007). So a cor fica aqui. */
 .badge--ON  { background: var(--green-bg); color: var(--green-ink); }
 .badge--STD { background: var(--amber-bg); color: var(--amber-ink); }
 .badge--OFF { background: var(--lav); color: var(--ink-soft); }
 .badge .dot { width: 7px; height: 7px; }
 
-.crit-badge { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; background: var(--red-bg); color: var(--red-ink); white-space: nowrap; }
-.crit-badge svg { width: 12px; height: 12px; }
+.badge--crit { background: var(--red-bg); color: var(--red-ink); }
 
 /* ============================================================ Toggle */
 .toggle { --w: 52px; --h: 30px; width: var(--w); height: var(--h); border-radius: 999px; border: 0; padding: 0; background: var(--lav-track); position: relative; flex: none; transition: background .2s; }
@@ -281,7 +295,7 @@ button { font-family: inherit; cursor: pointer; }
 .seg button.is-active { background: #fff; color: var(--green-deep); box-shadow: 0 1px 3px rgba(20,30,40,.12); }
 
 /* charts */
-.chart { width: 100%; display: block; }
+.l-chart { width: 100%; display: block; }
 .chart-axis { font-size: 10.5px; fill: var(--ink-faint); font-family: var(--font); font-weight: 600; }
 
 /* schedule bar (24h) */
@@ -341,7 +355,7 @@ button { font-family: inherit; cursor: pointer; }
 .fitem__time { font-size: 12px; color: var(--ink); white-space: nowrap; font-weight: 400; }
 
 /* empty / placeholder state */
-.empty { text-align: center; padding: 50px 20px; }
+.l-empty { text-align: center; padding: 50px 20px; }
 .empty__mark { width: 56px; height: 56px; border-radius: 17px; background: var(--lav); display: grid; place-items: center; margin: 0 auto 18px; color: var(--ink-faint); }
 .empty__title { font-size: 21px; font-weight: 700; letter-spacing: -0.008em; }
 .empty__sub { font-size: 14px; color: var(--ink-soft); margin-top: 9px; max-width: 42ch; margin-inline: auto; font-weight: 500; line-height: 1.5; }
@@ -369,14 +383,14 @@ button { font-family: inherit; cursor: pointer; }
 .modal--device .modal__title { margin-bottom: 0; }
 /* Respiro entre o código e os botões; Copiar na ponta esquerda, Concluído na direita. */
 .modal--device .modal__actions { margin-top: 24px; }
-.btn { border: 0; border-radius: 11px; padding: 11px 18px; font-size: 14px; font-weight: 700; transition: filter .15s, background .15s; }
-.btn--ghost { background: var(--lav); color: var(--ink); }
-.btn--ghost:hover { background: var(--lav-track); }
-.btn--danger { background: var(--red); color: #fff; }
-.btn--danger:hover { filter: brightness(1.07); }
-.btn--green { background: var(--green); color: #fff; }
-.btn--green:hover { filter: brightness(1.05); }
-.btn:disabled { opacity: .5; cursor: not-allowed; }
+.l-btn { border: 0; border-radius: 11px; padding: 11px 18px; font-size: 14px; font-weight: 700; transition: filter .15s, background .15s; }
+.l-btn--ghost { background: var(--lav); color: var(--ink); }
+.l-btn--ghost:hover { background: var(--lav-track); }
+.l-btn--danger { background: var(--red); color: #fff; }
+.l-btn--danger:hover { filter: brightness(1.07); }
+.l-btn--green { background: var(--green); color: #fff; }
+.l-btn--green:hover { filter: brightness(1.05); }
+.l-btn:disabled { opacity: .5; cursor: not-allowed; }
 
 /* ============================================================ Toasts */
 .toast-wrap { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; flex-direction: column; gap: 10px; align-items: center; pointer-events: none; }
@@ -404,8 +418,8 @@ button { font-family: inherit; cursor: pointer; }
   .topbar__w { font-size: 16px; font-weight: 800; letter-spacing: -.02em; margin-left: auto; }
   .topbar__w small { font-size: 12px; color: var(--ink-faint); font-weight: 700; }
 
-  .sidebar { position: fixed; inset: 0 auto 0 0; width: 290px; max-width: 86vw; transform: translateX(-104%); transition: transform .28s cubic-bezier(.3,.8,.3,1); box-shadow: 0 0 70px rgba(20,20,40,.22); }
-  .sidebar--open { transform: translateX(0); }
+  .l-sidebar { position: fixed; inset: 0 auto 0 0; width: 290px; max-width: 86vw; transform: translateX(-104%); transition: transform .28s cubic-bezier(.3,.8,.3,1); box-shadow: 0 0 70px rgba(20,20,40,.22); }
+  .l-sidebar--open { transform: translateX(0); }
   .scrim { display: block; position: fixed; inset: 0; background: rgba(22,26,40,.34); z-index: 25; opacity: 0; pointer-events: none; transition: opacity .25s; }
   .scrim--show { opacity: 1; pointer-events: auto; }
 

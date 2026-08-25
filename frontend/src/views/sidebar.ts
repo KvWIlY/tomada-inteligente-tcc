@@ -21,7 +21,7 @@ export interface SidebarProps {
 }
 
 export function renderSidebar(el: HTMLElement, p: SidebarProps): void {
-  el.className = `sidebar${p.navOpen ? ' sidebar--open' : ''}`;
+  el.className = `l-sidebar${p.navOpen ? ' l-sidebar--open' : ''}`;
 
   const navItems = p.tomadas
     .map((t) => {

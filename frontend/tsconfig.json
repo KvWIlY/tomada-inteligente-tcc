@@ -13,6 +13,11 @@
     "moduleDetection": "force",
     "noEmit": true,
 
+    /* Alias @/* (feature 007). O guia do shadcn manda usar baseUrl + paths, mas
+       o TypeScript 7 REMOVEU baseUrl (TS5102): paths sozinho resolve relativo a
+       este arquivo. */
+    "paths": { "@/*": ["./src/*"] },
+
     /* Linting */
     "noUnusedLocals": true,
     "noUnusedParameters": true,

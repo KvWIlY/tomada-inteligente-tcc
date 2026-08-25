@@ -2,6 +2,18 @@
 // Bootstrap do dashboard -- gate de auth + conecta tudo (idioma verde/branco)
 // =============================================
 
+import './styles/app.css';
+// O wrapper de graficos do Basecoat NAO importa Chart.js: ele consome
+// `window.Chart` (dist/js/chart.js e uma IIFE que faz `new Chart` a partir do
+// global). Entao o global precisa existir antes de qualquer `basecoat.chart`.
+// `chart.js/auto` ja registra controllers/escalas — sem ele seria preciso
+// chamar `Chart.register(...registerables)` a mao.
+import Chart from 'chart.js/auto';
+declare global {
+  interface Window { Chart: typeof Chart }
+}
+window.Chart = Chart;
+
 import { icon } from './icons';
 import { consumoTotalAtual, temConexaoRecente } from './derive';
 import { createStore } from './store';
@@ -559,7 +571,7 @@ store.subscribe((s) => {
       <div class="placeholder">
         <h2>Sua conta ainda não tem residência</h2>
         <p>Crie uma para começar a parear tomadas a ela.</p>
-        <button class="btn btn--green" data-role="criar-res" style="margin-top:16px">Criar minha residência</button>
+        <button class="l-btn l-btn--green" data-role="criar-res" style="margin-top:16px">Criar minha residência</button>
       </div>`;
     elView.querySelector('[data-role="criar-res"]')?.addEventListener('click', () => void criarResidenciaDemo());
     return;

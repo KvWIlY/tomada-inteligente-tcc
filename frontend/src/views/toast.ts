@@ -55,8 +55,8 @@ export function renderModal(el: HTMLElement, modal: ModalData | null): void {
   const corpo = modal.bodyHtml ?? `<p class="modal__body">${escapeHtml(modal.body)}</p>`;
   const temSecundario = Boolean(modal.secondaryLabel);
   const esquerda = temSecundario
-    ? `<button class="btn btn--ghost" data-role="secondary">${escapeHtml(modal.secondaryLabel!)}</button>`
-    : `<button class="btn btn--ghost" data-role="cancel">Cancelar</button>`;
+    ? `<button class="l-btn l-btn--ghost" data-role="secondary">${escapeHtml(modal.secondaryLabel!)}</button>`
+    : `<button class="l-btn l-btn--ghost" data-role="cancel">Cancelar</button>`;
   el.innerHTML = `
     <div class="modal-scrim" data-role="scrim">
       <div class="modal${modal.className ? ` ${modal.className}` : ''}" role="dialog" aria-modal="true">
@@ -67,7 +67,7 @@ export function renderModal(el: HTMLElement, modal: ModalData | null): void {
         ${corpo}
         <div class="modal__actions${temSecundario ? ' modal__actions--split' : ''}">
           ${esquerda}
-          <button class="btn btn--${modal.danger ? 'danger' : 'green'}" data-role="confirm">${escapeHtml(modal.confirmLabel)}</button>
+          <button class="l-btn l-btn--${modal.danger ? 'danger' : 'green'}" data-role="confirm">${escapeHtml(modal.confirmLabel)}</button>
         </div>
       </div>
     </div>`;

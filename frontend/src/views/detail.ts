@@ -74,8 +74,8 @@ export function renderDetail(el: HTMLElement, p: DetailProps): void {
     el.innerHTML = `
       <div class="content__inner">
         <div class="page-head"><div><h2 class="page-title">${escapeHtml(t.nome)}</h2><div class="page-sub">${escapeHtml(t.localizacao ?? 'Dispositivo')}</div></div></div>
-        <div class="card">
-          <div class="empty">
+        <div class="l-card">
+          <div class="l-empty">
             <div class="empty__mark">${icon('plus', 26, 2.2)}</div>
             <div class="empty__title">Tomada pareada, sem dados ainda</div>
             <div class="empty__sub">Assim que o aparelho for usado, as medições começam a aparecer aqui — consumo, probabilidade de uso e histórico.</div>
@@ -101,7 +101,7 @@ export function renderDetail(el: HTMLElement, p: DetailProps): void {
     <div class="content__inner">
       <div class="detail-stack">
         <!-- hero -->
-        <div class="card" style="padding:0;overflow:hidden">
+        <div class="l-card" style="padding:0;overflow:hidden">
           <div class="dhero" style="padding:28px">
             <div>
               <div class="dhero__titrow">
@@ -126,7 +126,7 @@ export function renderDetail(el: HTMLElement, p: DetailProps): void {
 
         <!-- gráficos -->
         <div class="grid-2">
-          <div class="card" style="display:flex;flex-direction:column">
+          <div class="l-card" style="display:flex;flex-direction:column">
             <div class="card__head">
               <div>
                 <h3 class="card__title">Histórico de Consumo</h3>
@@ -146,7 +146,7 @@ export function renderDetail(el: HTMLElement, p: DetailProps): void {
             </div>
           </div>
 
-          <div class="card">
+          <div class="l-card">
             <div class="card__head">
               <div>
                 <h3 class="card__title">Probabilidade de Uso</h3>
@@ -159,7 +159,7 @@ export function renderDetail(el: HTMLElement, p: DetailProps): void {
         </div>
 
         <!-- agendamento operacional -->
-        <div class="card">
+        <div class="l-card">
           <div class="card__head" style="align-items:center">
             <div>
               <h3 class="card__title" style="display:flex;align-items:center;gap:10px"><span style="color:var(--green)">${icon('grid', 20)}</span>Agendamento Operacional</h3>
@@ -171,7 +171,7 @@ export function renderDetail(el: HTMLElement, p: DetailProps): void {
         </div>
 
         <!-- limites de potência -->
-        <div class="card">
+        <div class="l-card">
           <div class="card__head" style="align-items:center">
             <h3 class="card__title" style="display:flex;align-items:center;gap:10px"><span style="color:var(--green)">${icon('gauge', 20)}</span>Limites de Potência</h3>
           </div>
@@ -198,13 +198,13 @@ export function renderDetail(el: HTMLElement, p: DetailProps): void {
                 <div class="crow__label">Revogar dispositivo</div>
                 <div class="crow__desc">Desassocia este ESP32 (venda, troca ou perda). O histórico é preservado e a chave de coordenação da casa é trocada — as outras tomadas recebem a nova sozinhas. Para religar, é preciso reprovisionar com um novo código.</div>
               </div>
-              <button class="btn btn--danger" data-role="revogar">Revogar</button>
+              <button class="l-btn l-btn--danger" data-role="revogar">Revogar</button>
             </div>
           </div>
 
           <div class="savebar">
             <span class="savebar__ver">Configuração · versão atual <code>v${t.config_version}</code></span>
-            <button class="btn btn--green" data-role="save" ${!p.dirty || p.saving ? 'disabled' : ''}>${p.saving ? 'Salvando…' : p.dirty ? `Salvar (v${t.config_version + 1})` : 'Tudo salvo'}</button>
+            <button class="l-btn l-btn--green" data-role="save" ${!p.dirty || p.saving ? 'disabled' : ''}>${p.saving ? 'Salvando…' : p.dirty ? `Salvar (v${t.config_version + 1})` : 'Tudo salvo'}</button>
           </div>
         </div>
       </div>
