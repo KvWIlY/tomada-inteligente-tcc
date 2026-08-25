@@ -1,0 +1,190 @@
+/* =============================================================
+   Folha raiz da aplicacao — feature 007
+   =============================================================
+   ORDEM IMPORTA. Tailwind e Basecoat entram em @layer; o CSS
+   legado entra SEM camada. Em CSS, regra sem camada vence
+   qualquer camada — e e isso que faz a aparencia atual
+   sobreviver ao preflight do Tailwind enquanto as views ainda
+   nao foram migradas. A medida que cada view migra, legacy.css
+   encolhe ate sumir.
+   ============================================================= */
+
+@import "tailwindcss";
+@import "basecoat-css";
+@import "./legacy.css";
+
+/* -------------------------------------------------------------
+   Tema escuro por PREFERENCIA DO SISTEMA (FR-002a).
+   O Basecoat declara `@custom-variant dark (&:is(html.dark *))`,
+   ou seja, por classe. Redefinimos para media query: o dashboard
+   nao tem seletor de tema, acompanha o SO, e assim nao existe
+   piscada de tema errado antes de um script rodar.
+   ------------------------------------------------------------- */
+@custom-variant dark (@media (prefers-color-scheme: dark));
+
+@theme {
+  /* Sobrepoe o "Geist Sans" que o Basecoat traz por padrao. */
+  --font-sans: 'Open Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+}
+
+/* =============================================================
+   Tipografia — Open Sans LOCAL (FR-001, FR-001a)
+   =============================================================
+   Ate a feature 007 o index.html carregava DM Sans de
+   fonts.googleapis.com. O sistema e offline-first por principio
+   constitucional (VI): numa casa sem WAN a fonte nao carregava.
+   So os subsets `latin` e `latin-ext` — cobrem o portugues e
+   evitam cirilico, grego, hebraico e simbolos que esta interface
+   nunca usa. 6 arquivos (~243 kB) em vez de 30.
+   ============================================================= */
+
+/* latin */
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/open-sans-400-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* latin-ext */
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/open-sans-400-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* latin */
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/open-sans-600-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* latin-ext */
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/open-sans-600-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* latin */
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/open-sans-700-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* latin-ext */
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/open-sans-700-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* =============================================================
+   Tokens (FR-002, FR-002b, FR-002e)
+   =============================================================
+   Duas familias convivem de proposito:
+     * `--bg`, `--ink`, `--green`... — vocabulario do projeto, que
+       o legacy.css inteiro consome;
+     * `--background`, `--foreground`, `--primary`... — vocabulario
+       do shadcn, que o Basecoat consome.
+   A segunda e definida EM TERMOS da primeira. Ha uma fonte de
+   verdade para cada cor, e trocar um valor muda os dois lados.
+   ============================================================= */
+
+:root {
+  --font: 'Open Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+
+  /* Ponte projeto -> Basecoat */
+  --background: var(--bg);
+  --foreground: var(--ink);
+  --card-foreground: var(--ink);
+  --popover: var(--card);
+  --popover-foreground: var(--ink);
+  --primary: var(--green);
+  --primary-foreground: #ffffff;
+  --secondary: var(--lav);
+  --secondary-foreground: var(--ink);
+  --muted: var(--card-2);
+  --muted-foreground: var(--ink-faint);
+  --accent: var(--green-bg);
+  --accent-foreground: var(--green-ink);
+  --destructive: var(--red);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--green);
+  --sidebar: var(--card);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--green);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--green-bg);
+  --sidebar-accent-foreground: var(--green-ink);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--green);
+  --chart-1: var(--green);
+  --chart-2: var(--green-line);
+  --chart-3: var(--amber);
+  --chart-4: var(--lav-bar);
+  --chart-5: var(--green-deep);
+}
+
+/* -------------------------------------------------------------
+   Tema escuro (FR-002a, FR-002c)
+   -------------------------------------------------------------
+   Redefine a paleta do PROJETO; a ponte acima segue por
+   referencia e nao precisa ser repetida.
+
+   Verde e ambar sobem de luminosidade: os tons claros foram
+   escolhidos para fundo branco e, sobre superficie escura,
+   reprovariam o 3:1 que o FR-002c exige de elemento grafico.
+   As variantes `-ink`, usadas em TEXTO (FR-002f), sao as mais
+   claras da familia.
+   ------------------------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:       #10131a;
+    --card:     #171b24;
+    --card-2:   #1d222c;
+    --line:     #262c38;
+    --line-2:   #222833;
+
+    --ink:       #eef1f6;
+    --ink-soft:  #d6dbe4;
+    --ink-faint: #98a1b0;
+
+    --green:       #35c98a;
+    --green-deep:  #2aa872;
+    --green-num:   #4dd89b;
+    --green-line:  #4dd89b;
+    --green-bg:    #12301f;
+    --green-ink:   #7fe0b0;
+
+    --lav:       #232838;
+    --lav-track: #1e2330;
+    --lav-bar:   #2c3244;
+
+    --amber:     #f0b849;  --amber-bg: #3a2c10;  --amber-ink: #f5c96b;
+    --red:       #e4635d;  --red-bg:   #3a1c1b;  --red-ink:   #f28e89;
+
+    --primary-foreground: #0b0e14;
+    --sidebar-primary-foreground: #0b0e14;
+  }
+}

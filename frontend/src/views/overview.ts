@@ -78,7 +78,7 @@ export function renderOverview(el: HTMLElement, p: OverviewProps): void {
       </div>
 
       <div class="ov-top">
-        <div class="card">
+        <div class="l-card">
           <div class="card__head" style="margin-bottom:0">
             <span class="eyebrow">Consumo total agora</span>
             <span style="color:var(--ink-faint)">${icon('gauge', 20)}</span>
@@ -91,7 +91,7 @@ export function renderOverview(el: HTMLElement, p: OverviewProps): void {
           </div>
         </div>
 
-        <div class="card">
+        <div class="l-card">
           <div class="card__head" style="margin-bottom:0">
             <span class="eyebrow">Pontuação de eficiência</span>
           </div>
@@ -116,7 +116,7 @@ export function renderOverview(el: HTMLElement, p: OverviewProps): void {
           <h3 class="section__title">Atividade do Otimizador</h3>
           <span class="card__sub" style="margin-top:0">por que o sistema decidiu o que decidiu</span>
         </div>
-        <div class="card">
+        <div class="l-card">
           ${eventsFeed(eventos)}
         </div>
       </div>

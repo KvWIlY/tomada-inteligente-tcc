@@ -51,7 +51,7 @@ export function renderLogin(el: HTMLElement, p: LoginProps): void {
               value="${escapeHtml(p.senha)}" placeholder="••••••••" ${p.busy ? 'disabled' : ''}/>
           </label>
           ${msg}
-          <button class="btn btn--green auth__submit" type="submit" ${p.busy ? 'disabled' : ''}>${p.busy ? 'Aguarde…' : acao}</button>
+          <button class="l-btn l-btn--green auth__submit" type="submit" ${p.busy ? 'disabled' : ''}>${p.busy ? 'Aguarde…' : acao}</button>
         </form>
 
         <button class="auth__alt" type="button">${alt}</button>

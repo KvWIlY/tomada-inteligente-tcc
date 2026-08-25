@@ -130,7 +130,7 @@ export function consumptionChart(data: number[], estado: Estado): string {
     })
     .join('');
   return `
-    <svg class="chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Histórico de consumo">
+    <svg class="l-chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Histórico de consumo">
       <defs>
         <linearGradient id="cfill" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stop-color="${color}" stop-opacity="0.22"/>
@@ -167,7 +167,7 @@ export function probabilityChart(pi: number[], hourNow: number): string {
       return `<text class="chart-axis" x="${x}" y="${h - 7}" text-anchor="${anchor}">${hh}h</text>`;
     })
     .join('');
-  return `<svg class="chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Probabilidade de uso por hora">${bars}${axis}</svg>`;
+  return `<svg class="l-chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Probabilidade de uso por hora">${bars}${axis}</svg>`;
 }
 
 /** Agendamento operacional 24h (barra pintável). Botões com data-h. */
