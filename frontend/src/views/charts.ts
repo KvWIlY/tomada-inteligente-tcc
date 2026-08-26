@@ -215,7 +215,19 @@ export function miniBars(data: number[], estado: Estado): string {
 
 /** Anel de eficiência (0–100). `null` = sem dados → anel vazio com "—". */
 export function efficiencyRing(value: number | null): string {
-  const size = 150, sw = 13, r = (size - sw) / 2, c = 2 * Math.PI * r;
+  const size = 150;
+  const sw = 13;          // espessura do anel principal
+  const swAro = 2;        // espessura do aro decorativo externo
+  const folga = 2;        // respiro entre o aro e o anel
+
+  // Os raios saem do CENTRO para fora, cada um descontando a propria espessura.
+  // Ate 2026-08-26 o aro tinha raio `r + sw/2 + 2` = 77 num `viewBox` de 150 com
+  // centro em 75: ele estourava 2 px para fora nos quatro lados e o SVG cortava.
+  // A conta certa e a inversa — o traco mais externo nao pode passar da metade
+  // do lado.
+  const raioAro = size / 2 - swAro / 2;              // 74
+  const r = raioAro - swAro / 2 - folga - sw / 2;    // 64,5
+  const c = 2 * Math.PI * r;
   const semDados = value === null;
   const off = semDados ? c : c * (1 - value / 100); // sem dados => anel vazio
   const rotulo = semDados
@@ -224,7 +236,7 @@ export function efficiencyRing(value: number | null): string {
   return `
     <div class="relative my-1.5 size-[150px]">
       <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="${rotulo}">
-        <circle cx="${size / 2}" cy="${size / 2}" r="${r + sw / 2 + 2}" fill="none" stroke="var(--lav)" stroke-width="2"/>
+        <circle cx="${size / 2}" cy="${size / 2}" r="${raioAro}" fill="none" stroke="var(--lav)" stroke-width="${swAro}"/>
         <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="var(--lav-track)" stroke-width="${sw}"/>
         <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="var(--green)" stroke-width="${sw}"
           stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}"
