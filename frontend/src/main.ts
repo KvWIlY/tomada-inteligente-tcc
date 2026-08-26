@@ -378,7 +378,7 @@ function confirmarRevogacao(t: Tomada): void {
       body: '',
       bodyHtml: `
         <p>O ESP32 perde o acesso imediatamente e a chave de coordenação da casa é trocada na mesma
-           transação — as outras tomadas recebem a nova sozinhas.</p>
+           transação. As outras tomadas recebem a nova sozinhas.</p>
         <p class="mt-3">O histórico de medições é <strong>preservado</strong>. Para religar esta tomada será
            preciso reprovisioná-la com um novo código de pareamento.</p>`,
       confirmLabel: 'Revogar dispositivo',

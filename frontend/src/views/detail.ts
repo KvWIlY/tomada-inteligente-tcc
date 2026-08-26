@@ -181,26 +181,26 @@ export function renderDetail(el: HTMLElement, p: DetailProps): void {
 
             <div class="mt-2">
               <div class="field flex-row items-center justify-between gap-4 border-b border-line-soft py-4" data-orientation="horizontal">
-                <section>
+                <section class="min-w-0 flex-1">
                   <label class="label text-[14.5px] font-bold" for="critica">Tomada crítica</label>
-                  <p class="mt-0.5 max-w-[44ch] text-[12.5px] font-medium text-ink-faint">Aparelhos essenciais (geladeira, roteador) nunca são desligados pelo otimizador.</p>
+                  <p class="mt-0.5 max-w-[64ch] text-[12.5px] font-medium text-ink-faint">Aparelhos essenciais (geladeira, roteador) nunca são desligados pelo otimizador.</p>
                 </section>
                 ${toggle(p.draftCritical, 'id="critica" data-role="critical"', 'Marcar como tomada crítica')}
               </div>
 
               <div class="flex items-center justify-between gap-4 border-b border-line-soft py-4">
-                <div>
+                <div class="min-w-0 flex-1">
                   <div class="text-[14.5px] font-bold">Identidade do dispositivo</div>
-                  <p class="mt-0.5 max-w-[44ch] text-[12.5px] font-medium text-ink-faint">Identificador do ESP32 — somente leitura.</p>
+                  <p class="mt-0.5 max-w-[64ch] text-[12.5px] font-medium text-ink-faint">Identificador do ESP32. Somente leitura.</p>
                 </div>
                 <code class="rounded-lg border border-border bg-surface px-2.5 py-1.5 font-mono text-[13px] text-ink-soft">${escapeHtml(identity)}</code>
               </div>
 
               <div class="flex flex-wrap items-center justify-between gap-4 py-4">
-                <div>
+                <div class="min-w-0 flex-1">
                   <div class="text-[14.5px] font-bold">Revogar dispositivo</div>
-                  <p class="mt-0.5 max-w-[44ch] text-[12.5px] font-medium text-ink-faint">Desassocia este ESP32 (venda, troca ou perda). O histórico é preservado e a chave
-                    de coordenação da casa é trocada — as outras tomadas recebem a nova sozinhas. Para religar, é preciso reprovisionar com um novo código.</p>
+                  <p class="mt-0.5 max-w-[64ch] text-[12.5px] font-medium text-ink-faint">Desassocia este ESP32 em caso de venda, troca ou perda.
+                    O histórico é preservado e a chave da casa é trocada, e as outras tomadas recebem a nova sozinhas.</p>
                 </div>
                 <button type="button" class="btn" data-variant="destructive" data-role="revogar">Revogar</button>
               </div>
