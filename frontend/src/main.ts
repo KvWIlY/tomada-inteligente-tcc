@@ -9,11 +9,8 @@ import './styles/app.css';
 // tres que esta interface usa, e nao o `all.min`, que carregaria acordeao,
 // combobox, popover, drawer e select sem nenhum deles aparecer na tela.
 //
-// O `sidebar` NAO e opcional aqui: e ele quem abre e fecha o gaveteiro no
-// celular, papel que ate a 007 era do `navOpen` no estado global + um veu
-// proprio no `index.html`.
+// O JS do `sidebar` foi DELIBERADAMENTE deixado de fora — ver "Barra lateral".
 import 'basecoat-css/basecoat.min';
-import 'basecoat-css/sidebar.min';
 import 'basecoat-css/toast.min';
 import 'basecoat-css/chart.min';
 
@@ -557,14 +554,52 @@ function traduzErroAuth(m: string): string {
 }
 
 // === Render ===
-type Sidebar = HTMLElement & { toggle?: () => void };
-
 const elRoot = document.getElementById('root')!;
-const elSidebar = document.getElementById('sidebar') as Sidebar;
+const elSidebar = document.getElementById('sidebar')!;
 const elTopbar = document.getElementById('topbar')!;
 const elView = document.getElementById('view')!;
 const elToaster = document.getElementById('toaster')!;
 const elModal = document.getElementById('modal')!;
+
+// === Barra lateral ===
+//
+// O JS do Basecoat nao e usado aqui, de proposito. O `handleClick` dele fecha a
+// barra quando o alvo do clique nao esta dentro do `<nav>` — e as nossas views
+// reescrevem `innerHTML` de forma SINCRONA no proprio handler do clique. Quando
+// o evento borbulha ate o `.sidebar`, o botao clicado ja foi desanexado, o
+// `nav.contains(target)` da `false`, e o componente conclui que o clique foi
+// fora e fecha a barra. Nada a reabria: no desktop ela sumia ate um F5.
+//
+// A CSS do componente continua valendo — o que passa a ser nosso e so o estado.
+//
+// No desktop a barra e FIXA: nao ha o que fechar. No celular ela e gaveta, e o
+// `navOpen` do estado global (que existia no tipo desde sempre) volta a mandar.
+const LARGURA_GAVETA = 768; // o `md` do Tailwind, o mesmo do Basecoat
+
+function ehCelular(): boolean {
+  return window.innerWidth < LARGURA_GAVETA;
+}
+
+/** Escreve `aria-hidden`/`inert` a partir do estado. Aberta no desktop, sempre. */
+function aplicarEstadoDaBarra(navOpen: boolean): void {
+  const aberta = !ehCelular() || navOpen;
+  elSidebar.setAttribute('aria-hidden', String(!aberta));
+  elSidebar.toggleAttribute('inert', !aberta);
+}
+
+// O veu escuro e o proprio `.sidebar` no celular: tocar nele (fora do `<nav>`)
+// fecha a gaveta.
+elSidebar.addEventListener('click', (e) => {
+  if (!ehCelular()) return;
+  const nav = elSidebar.querySelector('nav');
+  if (e.target === elSidebar || (nav && !nav.contains(e.target as Node))) {
+    store.set({ navOpen: false });
+  }
+});
+
+// Girar o aparelho ou redimensionar a janela nao pode deixar a barra escondida
+// num desktop nem aberta por acidente num celular.
+window.addEventListener('resize', () => aplicarEstadoDaBarra(store.get().navOpen));
 
 /** Envelope das telas de estado — mesmo cartao das demais telas (FR-005d). */
 function telaDeEstado(conteudo: string): string {
@@ -583,7 +618,7 @@ function renderTopbar(s: AppState, total: number): void {
       ${tomada ? `<button type="button" class="btn text-ink-faint" data-variant="ghost" data-size="icon-sm" data-role="rename" aria-label="Renomear tomada">${icon('edit', 16)}</button>` : ''}
       <span class="tnum ms-auto text-base font-extrabold tracking-tight">${Math.round(total).toLocaleString('pt-BR')}<small class="text-xs font-bold text-ink-faint"> W</small></span>
     </div>`;
-  elTopbar.querySelector('[data-role="burger"]')?.addEventListener('click', () => elSidebar.toggle?.());
+  elTopbar.querySelector('[data-role="burger"]')?.addEventListener('click', () => store.set({ navOpen: !store.get().navOpen }));
   if (tomada) elTopbar.querySelector('[data-role="rename"]')?.addEventListener('click', () => abrirRenomear(tomada));
 }
 
@@ -628,12 +663,13 @@ store.subscribe((s) => {
   const total = consumoTotalAtual(s.tomadas);
   const online = !s.error && temConexaoRecente(s.tomadas, s.medicoesPorTomada);
 
+  aplicarEstadoDaBarra(s.navOpen);
   renderSidebar(elSidebar, {
     tomadas: s.tomadas,
     selectedId: s.selectedId,
     total,
     userEmail: s.userEmail,
-    onSelect: (id) => store.set({ selectedId: id }),
+    onSelect: (id) => store.set({ selectedId: id, navOpen: false }),
     onInfo: (msg) => showToast(msg),
     onRename: (id) => { const t = s.tomadas.find((tt) => tt.id === id); if (t) abrirRenomear(t); },
     onLogout: () => void api.sair(),

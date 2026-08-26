@@ -12,9 +12,14 @@
       desktop (o `<nav>` dentro dele e `position: fixed`) e vira o veu escuro no
       celular. O irmao seguinte recebe `ml-(--sidebar-width)` da propria
       biblioteca — por isso o `<main>` PRECISA ser o irmao imediato.
+
+      `data-sidebar-initialized` e `aria-hidden` sao escritos AQUI, e nao pelo JS
+      do Basecoat: usamos o CSS dele, mas o estado e nosso (ver `main.ts`,
+      "Barra lateral"). A CSS da biblioteca esconde a barra no celular enquanto o
+      atributo de inicializacao nao existir, entao ele precisa vir do HTML.
     -->
     <div id="root">
-      <div id="sidebar" class="sidebar" data-side="left"></div>
+      <div id="sidebar" class="sidebar" data-side="left" data-sidebar-initialized="true" aria-hidden="false"></div>
       <main class="flex min-w-0 flex-1 flex-col overflow-hidden">
         <div id="topbar"></div>
         <div id="view" class="flex-1 overflow-y-auto"></div>

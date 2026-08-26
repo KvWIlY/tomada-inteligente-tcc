@@ -2,10 +2,10 @@
 // Sidebar (264 px) — componente `sidebar` do Basecoat
 // =============================================
 //
-// O elemento `.sidebar` vive no `index.html` e e inicializado pelo JS do
-// Basecoat, que cuida sozinho do gaveteiro no celular (veu, `inert`, fechar ao
-// tocar num item). Esta funcao so preenche o `<nav>` — nao mexe em `className`
-// nem em `aria-hidden`, que sao do componente.
+// O elemento `.sidebar` vive no `index.html`. Usamos o CSS do componente, mas
+// NAO o JS dele — quem abre e fecha e o `main.ts` (ver "Barra lateral" la).
+// Esta funcao so preenche o `<nav>`: nao mexe em `className` nem em
+// `aria-hidden`.
 
 import { icon } from '../icons';
 import type { Tomada } from '../types';
@@ -36,7 +36,7 @@ export function renderSidebar(el: HTMLElement, p: SidebarProps): void {
           </button>
           <button type="button" data-edit="${t.id}" title="Renomear tomada" aria-label="Renomear ${escapeHtml(t.nome)}"
             class="btn absolute end-1 top-1/2 size-7 -translate-y-1/2 rounded-md p-0 text-ink-faint opacity-0 hover:bg-green-bg hover:text-green focus-visible:opacity-100 group-hover:opacity-100"
-            data-variant="ghost" data-size="icon-sm" data-keep-mobile-sidebar-open>${icon('edit', 16)}</button>
+            data-variant="ghost" data-size="icon-sm">${icon('edit', 16)}</button>
         </li>`;
     })
     .join('');
@@ -45,7 +45,7 @@ export function renderSidebar(el: HTMLElement, p: SidebarProps): void {
     <nav aria-label="Navegação principal">
       <header class="border-b border-sidebar-border !p-5">
         <div class="flex items-center gap-3">
-          <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-green text-white">${icon('bolt', 20)}</span>
+          <span class="grid size-10 shrink-0 place-items-center rounded-md bg-green text-primary-foreground">${icon('bolt', 20)}</span>
           <div class="min-w-0">
             <div class="truncate text-lg leading-none font-bold tracking-tight">SmartHome</div>
             <div class="mt-1 text-xs font-medium text-ink-faint">Gerenciador de Energia</div>

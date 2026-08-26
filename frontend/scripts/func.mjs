@@ -44,6 +44,26 @@ await page.reload({ waitUntil: 'networkidle2' });
 await espera(1800);
 ok(await page.$('#view button[data-id]') !== null, 'sessao sobrevive ao recarregar');
 
+console.log('[func] barra lateral fixa no desktop (regressao de 2026-08-26)');
+{
+  // O JS do Basecoat fechava a barra ao selecionar uma tomada: a view reescreve
+  // `innerHTML` no proprio handler, o botao clicado fica desanexado, e o
+  // `nav.contains(target)` do componente concluia que o clique fora fora. No
+  // desktop nada reabria — so um F5.
+  const cards = await page.$$('#view button[data-id]');
+  await cards[0].click();
+  await espera(1000);
+  const barra = await page.$eval('#sidebar', (el) => ({
+    hidden: el.getAttribute('aria-hidden'),
+    inert: el.hasAttribute('inert'),
+    navX: el.querySelector('nav')?.getBoundingClientRect().x,
+  }));
+  ok(barra.hidden === 'false' && !barra.inert, 'barra segue aberta apos selecionar', JSON.stringify(barra));
+  ok(barra.navX === 0, 'o <nav> continua na tela (x=0), nao deslocado para fora');
+  await page.evaluate(() => document.querySelector('[data-overview]')?.click());
+  await espera(700);
+}
+
 console.log('[func] 5. selecao de tomada vive so em memoria');
 await abrirPrimeiraTomada();
 ok(await page.$('[data-role="power-slider"]') !== null, 'detalhe aberto');
