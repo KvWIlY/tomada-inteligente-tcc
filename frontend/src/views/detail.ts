@@ -1,27 +1,44 @@
 // =============================================
-// Detalhe da Tomada (porte do Detail do handoff + agendamento real)
+// Detalhe da Tomada — cartoes e abas do Basecoat
 // =============================================
+//
+// Saiu daqui na feature 007 (FR-009, FR-009a):
+//   * o cartao "Agendamento Operacional" com as 24 horas pintaveis — o
+//     agendamento deixou de fazer parte do produto;
+//   * o cartao "Probabilidade de Uso" — exibia `pi_historico`, que NADA no
+//     sistema calcula (o firmware nunca o preenche);
+//   * a funcao `build7d`, que colapsava 7 dias reais numa media por hora e
+//     multiplicava por um fator de variacao inventado. O seletor "7 dias"
+//     agora plota a serie que o backend devolve (FR-018).
+//
+// Os campos `schedule` e `pi_historico` continuam INTACTOS no contrato e no
+// banco (FR-009b, FR-010a): saiu a tela, nao o dado.
 
 import { icon } from '../icons';
 import { energiaKWh, fatorPotenciaAgregado, fmt2, seriesFromMedicoes } from '../derive';
 import type { Medicao, Residencia, Tomada } from '../types';
 import { badge, critBadge, escapeHtml, stateDot, toggle } from './components';
-import { consumptionChart, powerSlider, probabilityChart, scheduleBar } from './charts';
+import { carimbosDaSerie, consumptionChart, montarConsumo, powerSlider } from './charts';
+
+/** Pontos plotados por janela. 24 h e a cadencia de ~60 s reamostrada; 7 dias
+ *  reduz 7×24 h a um ponto por hora, sem inventar nada entre eles. */
+const PONTOS: Record<'24h' | '7d', number> = { '24h': 60, '7d': 168 };
 
 export interface DetailProps {
   tomada: Tomada;
   residencia: Residencia | null;
+  /** Sempre as 24 h reais — base de kWh e fator de potência. */
   medicoes: Medicao[];
+  /** A série da janela escolhida (igual a `medicoes` quando o seletor está em 24 h). */
+  medicoesJanela: Medicao[];
   online: boolean;
   seg: '24h' | '7d';
-  draftSchedule: boolean[];
   draftCritical: boolean;
   dirty: boolean;
   saving: boolean;
   /** As tres intencoes do dono sobre o rele (ver `ComandoRele` em services/api). */
   onComandoRele: (cmd: 'auto' | 'usar_agora' | 'cortar') => void;
   onChangeSeg: (s: '24h' | '7d') => void;
-  onScheduleToggle: (h: number) => void;
   onToggleCritical: () => void;
   onSaveConfig: () => void;
   onSavePMax: (w: number) => void;
@@ -38,59 +55,58 @@ function modoRotulo(rele: boolean | null): string {
 
 /** Cor do fator de potência. Abaixo de 0,6 é o território das fontes chaveadas
  *  em standby — a carga que o trabalho existe para cortar. `null` = medição
- *  antiga, sem fase gravada: cinza, nunca vermelho (ausência não é problema). */
-function fpCor(fp: number | null): string {
-  if (fp === null) return 'var(--ink-faint)';
-  if (fp < 0.6) return 'var(--amber, #b45309)';
-  return 'var(--green-deep)';
+ *  antiga, sem fase gravada: cinza, nunca vermelho (ausência não é problema).
+ *  Sempre a variante `-ink`: isto é TEXTO (FR-002f). */
+function fpClasse(fp: number | null): string {
+  if (fp === null) return 'text-ink-faint';
+  return fp < 0.6 ? 'text-amber-ink' : 'text-green-ink';
 }
 
-function modoCor(rele: boolean | null): string {
-  if (rele === null) return 'var(--ink-faint)';
-  return rele ? 'var(--ink-faint)' : 'var(--green-deep)';
+function modoClasse(rele: boolean | null): string {
+  if (rele === null) return 'text-ink-faint';
+  return rele ? 'text-ink-faint' : 'text-green-ink';
 }
 
-/** Série de 7 dias estimada a partir da média por hora das 24h reais. */
-function build7d(medicoes: Medicao[]): number[] {
-  const out: number[] = [];
-  for (let d = 6; d >= 0; d--) {
-    for (let h = 0; h < 24; h++) {
-      const sample = medicoes.filter((m) => new Date(m.timestamp * 1000).getHours() === h);
-      const avg = sample.length ? sample.reduce((s, m) => s + m.p_medida, 0) / sample.length : 0;
-      const scale = 0.88 + ((d * 3 + h) % 7) * 0.04;
-      out.push(avg * scale);
-    }
-  }
-  return out;
+/** Uma aba do `tabs` do Basecoat (usado no tri-estado e no seletor de janela). */
+function aba(rotulo: string, ativo: boolean, attrs: string, titulo = ''): string {
+  return `<button type="button" role="tab" aria-selected="${ativo}" ${attrs}
+    ${titulo ? `title="${escapeHtml(titulo)}"` : ''}>${rotulo}</button>`;
 }
 
 export function renderDetail(el: HTMLElement, p: DetailProps): void {
   const t = p.tomada;
   const pMax = p.residencia?.p_max ?? 2540;
-  const hourNow = new Date().getHours();
 
   // Estado vazio: tomada pareada, ainda sem medições.
   if (p.medicoes.length === 0) {
     el.innerHTML = `
-      <div class="content__inner">
-        <div class="page-head"><div><h2 class="page-title">${escapeHtml(t.nome)}</h2><div class="page-sub">${escapeHtml(t.localizacao ?? 'Dispositivo')}</div></div></div>
-        <div class="l-card">
-          <div class="l-empty">
-            <div class="empty__mark">${icon('plus', 26, 2.2)}</div>
-            <div class="empty__title">Tomada pareada, sem dados ainda</div>
-            <div class="empty__sub">Assim que o aparelho for usado, as medições começam a aparecer aqui — consumo, probabilidade de uso e histórico.</div>
-          </div>
+      <div class="mx-auto max-w-[1080px] px-5 pt-6 pb-20 md:px-12 md:pt-9">
+        <div class="mb-7">
+          <h2 class="text-[27px] font-bold tracking-tight md:text-[31px]">${escapeHtml(t.nome)}</h2>
+          <p class="mt-1.5 text-[15px] font-medium text-ink-soft">${escapeHtml(t.localizacao ?? 'Dispositivo')}</p>
+        </div>
+        <div class="card">
+          <section class="empty py-12">
+            <header>
+              <figure class="mb-4 grid size-14 place-items-center rounded-2xl bg-lav text-ink-faint">${icon('plug', 26)}</figure>
+              <h3 class="text-xl font-bold tracking-tight">Tomada pareada, sem dados ainda</h3>
+              <p class="mt-2 text-sm text-ink-soft">Assim que o aparelho for usado, as medições começam a aparecer aqui —
+                 potência ativa, energia acumulada e fator de potência.</p>
+            </header>
+          </section>
         </div>
       </div>`;
     return;
   }
 
-  const serie = p.seg === '24h' ? seriesFromMedicoes(p.medicoes, 60) : build7d(p.medicoes);
+  const n = PONTOS[p.seg];
+  const serie = seriesFromMedicoes(p.medicoesJanela, n);
+  const carimbos = carimbosDaSerie(p.medicoesJanela, n);
   const media = Math.round(serie.reduce((s, v) => s + v, 0) / serie.length);
   const pico = Math.round(Math.max(...serie));
-  // Energia e FP saem SEMPRE das medições de 24 h reais, mesmo com o seletor em
-  // "7 dias": a série de 7d é estimada (`build7d`), e integrar uma estimativa
-  // daria um kWh inventado.
+  // Energia e FP saem SEMPRE das medições de 24 h, mesmo com o seletor em
+  // "7 dias": são os números que sustentam a tese do trabalho e a janela curta
+  // é a que o dono está olhando no cabeçalho.
   const kwh = energiaKWh(p.medicoes);
   const fp = fatorPotenciaAgregado(p.medicoes);
   const syncLabel = p.online ? 'Sincronização ESP32 ao vivo' : 'Offline — decidindo localmente';
@@ -98,117 +114,108 @@ export function renderDetail(el: HTMLElement, p: DetailProps): void {
   const identity = t.mac ?? t.id;
 
   el.innerHTML = `
-    <div class="content__inner">
-      <div class="detail-stack">
+    <div class="mx-auto max-w-[1080px] px-5 pt-6 pb-20 md:px-12 md:pt-9">
+      <div class="flex flex-col gap-5">
+
         <!-- hero -->
-        <div class="l-card" style="padding:0;overflow:hidden">
-          <div class="dhero" style="padding:28px">
+        <div class="card">
+          <section class="grid items-stretch gap-6 md:grid-cols-[1fr_auto]">
             <div>
-              <div class="dhero__titrow">
-                <h2 class="dhero__title">${escapeHtml(t.nome)}</h2>
+              <div class="mb-1.5 flex flex-wrap items-center gap-3">
+                <h2 class="text-[29px] font-bold tracking-tight">${escapeHtml(t.nome)}</h2>
                 ${badge(t.estado)}
                 ${p.draftCritical ? critBadge() : ''}
               </div>
-              <div class="bignum dhero__num tnum">${pNum}<span class="bignum__unit">W</span></div>
-              <span class="dhero__sync">${stateDot(p.online ? 'ON' : 'STD', p.online)}${syncLabel}</span>
-            </div>
-            <div class="manual">
-              <span class="manual__label">Controle Manual</span>
-              <div class="seg" role="group" aria-label="Controle manual do rele">
-                <button class="${t.rele_aberto === null ? 'is-active' : ''}" data-cmd="auto" title="O otimizador decide">Automático</button>
-                <button class="${t.rele_aberto === false ? 'is-active' : ''}" data-cmd="usar_agora" title="Religa por 30 min e volta sozinha ao automático">Usar agora</button>
-                <button class="${t.rele_aberto === true ? 'is-active' : ''}" data-cmd="cortar" title="Mantém desligada até você desfazer">Cortar</button>
+              <div class="tnum my-2 flex items-baseline gap-2 text-[clamp(40px,5.5vw,54px)] leading-[0.92] font-extrabold tracking-[-0.04em] text-green-num">
+                ${pNum}<span class="text-[0.32em] font-bold tracking-normal text-ink-faint">W</span>
               </div>
-              <span class="manual__state" style="color:${modoCor(t.rele_aberto)}">${modoRotulo(t.rele_aberto)}</span>
+              <span class="inline-flex items-center gap-2 text-[13.5px] font-semibold text-ink-soft">${stateDot(p.online ? 'ON' : 'STD', p.online)}${syncLabel}</span>
             </div>
-          </div>
-        </div>
-
-        <!-- gráficos -->
-        <div class="grid-2">
-          <div class="l-card" style="display:flex;flex-direction:column">
-            <div class="card__head">
-              <div>
-                <h3 class="card__title">Histórico de Consumo</h3>
-                <div class="card__sub">${p.seg === '24h' ? 'Últimas 24 horas' : 'Últimos 7 dias (est.)'} · média ${media} W · pico ${pico} W</div>
-                <div class="card__sub" style="margin-top:6px;display:flex;gap:16px;flex-wrap:wrap">
-                  <span title="Energia integrada sobre os timestamps reais das últimas 24 h"><strong class="tnum" style="color:var(--ink)">${fmt2(kwh)}</strong> kWh em 24 h</span>
-                  <span title="${fp === null ? 'Medições anteriores a 2026-08-24 não gravaram fase' : 'Razão entre potência ativa e aparente (ΣP/ΣS)'}">fator de potência <strong class="tnum" style="color:${fpCor(fp)}">${fp === null ? '—' : fmt2(fp)}</strong></span>
+            <div class="flex flex-col justify-center gap-2.5 rounded-2xl bg-surface p-4 md:min-w-[260px]">
+              <span class="text-[11px] font-extrabold tracking-[0.1em] text-ink-soft uppercase">Controle Manual</span>
+              <div class="tabs">
+                <div role="tablist" aria-label="Controle manual do relé" class="w-full">
+                  ${aba('Automático', t.rele_aberto === null, 'data-cmd="auto"', 'O otimizador decide')}
+                  ${aba('Usar agora', t.rele_aberto === false, 'data-cmd="usar_agora"', 'Religa por 30 min e volta sozinha ao automático')}
+                  ${aba('Cortar', t.rele_aberto === true, 'data-cmd="cortar"', 'Mantém desligada até você desfazer')}
                 </div>
               </div>
-              <div class="seg">
-                <button class="${p.seg === '24h' ? 'is-active' : ''}" data-seg="24h">24h</button>
-                <button class="${p.seg === '7d' ? 'is-active' : ''}" data-seg="7d">7 dias</button>
-              </div>
+              <span class="text-[13px] font-bold ${modoClasse(t.rele_aberto)}">${modoRotulo(t.rele_aberto)}</span>
             </div>
-            <div style="flex:1;display:grid;place-items:center">
-              ${consumptionChart(serie, t.estado)}
-            </div>
-          </div>
-
-          <div class="l-card">
-            <div class="card__head">
-              <div>
-                <h3 class="card__title">Probabilidade de Uso</h3>
-                <div class="card__sub">Atividade esperada por hora</div>
-              </div>
-            </div>
-            ${probabilityChart(t.config.pi_historico, hourNow)}
-            <div class="infobox" style="margin-top:14px">${icon('info', 17)}O otimizador evita desligar este aparelho nas horas mais prováveis (barra clara = agora).</div>
-          </div>
+          </section>
         </div>
 
-        <!-- agendamento operacional -->
-        <div class="l-card">
-          <div class="card__head" style="align-items:center">
+        <!-- histórico -->
+        <div class="card">
+          <header class="flex flex-row flex-wrap items-start justify-between gap-4">
             <div>
-              <h3 class="card__title" style="display:flex;align-items:center;gap:10px"><span style="color:var(--green)">${icon('grid', 20)}</span>Agendamento Operacional</h3>
-              <div class="card__sub">Pinte as horas permitidas (verde) e bloqueadas (cinza).</div>
+              <h3>Histórico de Consumo</h3>
+              <p data-description>${p.seg === '24h' ? 'Últimas 24 horas' : 'Últimos 7 dias'} · média ${media} W · pico ${pico} W</p>
+              <p class="mt-1.5 flex flex-wrap gap-4 text-[13px] font-medium text-ink-faint">
+                <span title="Energia integrada sobre os timestamps reais das últimas 24 h"><strong class="tnum text-ink">${fmt2(kwh)}</strong> kWh em 24 h</span>
+                <span title="${fp === null ? 'Medições anteriores a 2026-08-24 não gravaram fase' : 'Razão entre potência ativa e aparente (ΣP/ΣS)'}">fator de potência <strong class="tnum ${fpClasse(fp)}">${fp === null ? '—' : fmt2(fp)}</strong></span>
+              </p>
             </div>
-          </div>
-          ${scheduleBar(p.draftSchedule, p.saving)}
-          <div class="sched__note">Fora das horas permitidas, o otimizador prioriza manter este aparelho desligado (restrição R5 do modelo).</div>
+            <div class="tabs">
+              <div role="tablist" aria-label="Janela do histórico">
+                ${aba('24h', p.seg === '24h', 'data-seg="24h"')}
+                ${aba('7 dias', p.seg === '7d', 'data-seg="7d"')}
+              </div>
+            </div>
+          </header>
+          <section>${consumptionChart(serie, carimbos)}</section>
         </div>
 
         <!-- limites de potência -->
-        <div class="l-card">
-          <div class="card__head" style="align-items:center">
-            <h3 class="card__title" style="display:flex;align-items:center;gap:10px"><span style="color:var(--green)">${icon('gauge', 20)}</span>Limites de Potência</h3>
-          </div>
-          ${powerSlider(pMax, 3000, 'Teto elétrico do circuito · P_max (Watts)')}
-          <div class="infobox">${icon('info', 17)}O P_max é o teto do circuito inteiro. Se o consumo somado das tomadas se aproximar dele, novos comandos manuais podem ser recusados.</div>
+        <div class="card">
+          <header class="flex flex-row items-center">
+            <h3 class="flex items-center gap-2.5"><span class="text-green">${icon('gauge', 20)}</span>Limites de Potência</h3>
+          </header>
+          <section>
+            ${powerSlider(pMax, 3000, 'Teto elétrico do circuito · P_max (Watts)')}
 
-          <div style="margin-top:8px">
-            <div class="crow">
-              <div>
-                <div class="crow__label">Tomada crítica</div>
-                <div class="crow__desc">Aparelhos essenciais (geladeira, roteador) nunca são desligados pelo otimizador.</div>
-              </div>
-              ${toggle(p.draftCritical, 'data-role="critical"')}
+            <div class="mt-5 flex items-start gap-3 rounded-xl bg-lav p-4 text-[13.5px] font-medium text-ink-soft">
+              <span class="mt-px shrink-0 text-green">${icon('info', 17)}</span>
+              O P_max é o teto do circuito inteiro. Se o consumo somado das tomadas se aproximar dele, novos comandos manuais podem ser recusados.
             </div>
-            <div class="crow">
-              <div>
-                <div class="crow__label">Identidade do dispositivo</div>
-                <div class="crow__desc">Identificador do ESP32 — somente leitura.</div>
-              </div>
-              <code>${escapeHtml(identity)}</code>
-            </div>
-            <div class="crow">
-              <div>
-                <div class="crow__label">Revogar dispositivo</div>
-                <div class="crow__desc">Desassocia este ESP32 (venda, troca ou perda). O histórico é preservado e a chave de coordenação da casa é trocada — as outras tomadas recebem a nova sozinhas. Para religar, é preciso reprovisionar com um novo código.</div>
-              </div>
-              <button class="l-btn l-btn--danger" data-role="revogar">Revogar</button>
-            </div>
-          </div>
 
-          <div class="savebar">
-            <span class="savebar__ver">Configuração · versão atual <code>v${t.config_version}</code></span>
-            <button class="l-btn l-btn--green" data-role="save" ${!p.dirty || p.saving ? 'disabled' : ''}>${p.saving ? 'Salvando…' : p.dirty ? `Salvar (v${t.config_version + 1})` : 'Tudo salvo'}</button>
-          </div>
+            <div class="mt-2">
+              <div class="field flex-row items-center justify-between gap-4 border-b border-line-soft py-4" data-orientation="horizontal">
+                <section>
+                  <label class="label text-[14.5px] font-bold" for="critica">Tomada crítica</label>
+                  <p class="mt-0.5 max-w-[44ch] text-[12.5px] font-medium text-ink-faint">Aparelhos essenciais (geladeira, roteador) nunca são desligados pelo otimizador.</p>
+                </section>
+                ${toggle(p.draftCritical, 'id="critica" data-role="critical"', 'Marcar como tomada crítica')}
+              </div>
+
+              <div class="flex items-center justify-between gap-4 border-b border-line-soft py-4">
+                <div>
+                  <div class="text-[14.5px] font-bold">Identidade do dispositivo</div>
+                  <p class="mt-0.5 max-w-[44ch] text-[12.5px] font-medium text-ink-faint">Identificador do ESP32 — somente leitura.</p>
+                </div>
+                <code class="rounded-lg border border-border bg-surface px-2.5 py-1.5 font-mono text-[13px] text-ink-soft">${escapeHtml(identity)}</code>
+              </div>
+
+              <div class="flex flex-wrap items-center justify-between gap-4 py-4">
+                <div>
+                  <div class="text-[14.5px] font-bold">Revogar dispositivo</div>
+                  <p class="mt-0.5 max-w-[44ch] text-[12.5px] font-medium text-ink-faint">Desassocia este ESP32 (venda, troca ou perda). O histórico é preservado e a chave
+                    de coordenação da casa é trocada — as outras tomadas recebem a nova sozinhas. Para religar, é preciso reprovisionar com um novo código.</p>
+                </div>
+                <button type="button" class="btn" data-variant="destructive" data-role="revogar">Revogar</button>
+              </div>
+            </div>
+          </section>
+          <footer class="flex-wrap justify-between gap-3">
+            <span class="text-[12.5px] font-semibold text-ink-faint">Configuração · versão atual
+              <code class="rounded-md border border-border bg-surface px-2 py-0.5 font-mono">v${t.config_version}</code></span>
+            <button type="button" class="btn" data-role="save" ${!p.dirty || p.saving ? 'disabled' : ''}>${p.saving ? 'Salvando…' : p.dirty ? `Salvar (v${t.config_version + 1})` : 'Tudo salvo'}</button>
+          </footer>
         </div>
       </div>
     </div>`;
+
+  montarConsumo(el, serie, carimbos, t.estado);
 
   // --- listeners ---
   el.querySelectorAll<HTMLButtonElement>('[data-cmd]').forEach((btn) =>
@@ -216,37 +223,22 @@ export function renderDetail(el: HTMLElement, p: DetailProps): void {
       p.onComandoRele(btn.dataset.cmd as 'auto' | 'usar_agora' | 'cortar'),
     ),
   );
-  el.querySelector('[data-role="critical"]')?.addEventListener('click', () => p.onToggleCritical());
+  el.querySelector('[data-role="critical"]')?.addEventListener('change', () => p.onToggleCritical());
   el.querySelector('[data-role="save"]')?.addEventListener('click', () => p.onSaveConfig());
-
-  // Revogação em 2 passos: é irreversível sem reprovisionar o hardware, então o
-  // usuário digita o nome da tomada para confirmar (evita clique acidental).
-  el.querySelector('[data-role="revogar"]')?.addEventListener('click', () => {
-    const digitado = window.prompt(
-      `Revogar "${t.nome}"?\n\nO histórico é mantido, mas o ESP32 perde o acesso e a chave da casa é trocada.\nDigite o nome da tomada para confirmar:`,
-    );
-    if (digitado !== null && digitado.trim() === t.nome.trim()) p.onRevogar();
-  });
+  el.querySelector('[data-role="revogar"]')?.addEventListener('click', () => p.onRevogar());
 
   el.querySelectorAll<HTMLButtonElement>('[data-seg]').forEach((btn) =>
     btn.addEventListener('click', () => p.onChangeSeg(btn.dataset.seg as '24h' | '7d')),
   );
 
-  el.querySelectorAll<HTMLButtonElement>('.sched__seg[data-h]').forEach((btn) =>
-    btn.addEventListener('click', () => {
-      const h = Number(btn.dataset.h);
-      if (!Number.isNaN(h)) p.onScheduleToggle(h);
-    }),
-  );
-
-  // Slider de P_max: atualiza label/gradiente ao vivo; persiste no 'change'.
+  // Slider de P_max: atualiza rótulo e trilha ao vivo; persiste só no 'change'
+  // (FR-005e item 3) — persistir a cada 'input' mandaria um PATCH por pixel.
   const slider = el.querySelector<HTMLInputElement>('[data-role="power-slider"]');
   const valEl = el.querySelector<HTMLElement>('[data-role="power-val"]');
   if (slider) {
     slider.addEventListener('input', () => {
       const v = Number(slider.value);
-      const pct = (v / Number(slider.max)) * 100;
-      slider.style.background = `linear-gradient(to right, var(--green) 0%, var(--green) ${pct}%, var(--lav-track) ${pct}%, var(--lav-track) 100%)`;
+      slider.style.setProperty('--rng-pct', `${((v / Number(slider.max)) * 100).toFixed(1)}%`);
       if (valEl) valEl.textContent = `${v.toLocaleString('pt-BR')} W`;
     });
     slider.addEventListener('change', () => p.onSavePMax(Number(slider.value)));

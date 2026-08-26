@@ -1,6 +1,11 @@
 // =============================================
-// Sidebar (264px): marca + navegação por tomada + rodapé
+// Sidebar (264 px) — componente `sidebar` do Basecoat
 // =============================================
+//
+// O elemento `.sidebar` vive no `index.html` e e inicializado pelo JS do
+// Basecoat, que cuida sozinho do gaveteiro no celular (veu, `inert`, fechar ao
+// tocar num item). Esta funcao so preenche o `<nav>` — nao mexe em `className`
+// nem em `aria-hidden`, que sao do componente.
 
 import { icon } from '../icons';
 import type { Tomada } from '../types';
@@ -10,10 +15,8 @@ export interface SidebarProps {
   tomadas: Tomada[];
   selectedId: string | null; // null = visão geral
   total: number;             // consumo total agora (W)
-  navOpen: boolean;
   userEmail: string | null;  // dono logado
   onSelect: (id: string | null) => void; // null = overview
-  onCloseNav: () => void;
   onInfo: (msg: string) => void;
   onRename?: (id: string) => void; // lapis discreto no item (renomeia a tomada)
   onLogout?: () => void;
@@ -21,63 +24,78 @@ export interface SidebarProps {
 }
 
 export function renderSidebar(el: HTMLElement, p: SidebarProps): void {
-  el.className = `l-sidebar${p.navOpen ? ' l-sidebar--open' : ''}`;
-
   const navItems = p.tomadas
     .map((t) => {
       const active = t.id === p.selectedId;
       const w = t.estado === 'OFF' ? '—' : `${Math.round(t.p_medida_atual)} W`;
       return `
-        <button class="nav__item${active ? ' nav__item--active' : ''}" data-id="${t.id}">
-          ${applianceIcon(t)}<span class="nav__name">${escapeHtml(t.nome)}</span>
-          <span class="nav__edit" data-edit title="Renomear tomada" aria-label="Renomear tomada">${icon('edit', 16)}</span>
-          <span class="nav__w tnum">${w}</span>
-        </button>`;
+        <li class="group">
+          <button type="button" data-id="${t.id}" ${active ? 'data-active="true"' : ''}>
+            ${applianceIcon(t)}<span>${escapeHtml(t.nome)}</span>
+            <small class="tnum ms-auto pe-6 text-xs font-bold text-ink-faint group-focus-within:invisible group-hover:invisible">${w}</small>
+          </button>
+          <button type="button" data-edit="${t.id}" title="Renomear tomada" aria-label="Renomear ${escapeHtml(t.nome)}"
+            class="btn absolute end-1 top-1/2 size-7 -translate-y-1/2 rounded-md p-0 text-ink-faint opacity-0 hover:bg-green-bg hover:text-green focus-visible:opacity-100 group-hover:opacity-100"
+            data-variant="ghost" data-size="icon-sm" data-keep-mobile-sidebar-open>${icon('edit', 16)}</button>
+        </li>`;
     })
     .join('');
 
   el.innerHTML = `
-    <div class="brand">
-      <span class="brand__mark">${icon('bolt', 20)}</span>
-      <div>
-        <div class="brand__name">SmartHome</div>
-        <div class="brand__sub">Gerenciador de Energia</div>
-      </div>
-    </div>
+    <nav aria-label="Navegação principal">
+      <header class="border-b border-sidebar-border !p-5">
+        <div class="flex items-center gap-3">
+          <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-green text-white">${icon('bolt', 20)}</span>
+          <div class="min-w-0">
+            <div class="truncate text-lg leading-none font-bold tracking-tight">SmartHome</div>
+            <div class="mt-1 text-xs font-medium text-ink-faint">Gerenciador de Energia</div>
+          </div>
+        </div>
+      </header>
 
-    <nav class="nav">
-      <button class="nav__item${p.selectedId === null ? ' nav__item--active' : ''}" data-overview>
-        ${icon('grid')}<span class="nav__name">Visão Geral</span>
-        <span class="nav__w tnum">${p.total.toLocaleString('pt-BR')} W</span>
-      </button>
+      <section>
+        <div role="group">
+          <ul>
+            <li>
+              <button type="button" data-overview ${p.selectedId === null ? 'data-active="true"' : ''}>
+                ${icon('grid')}<span>Visão Geral</span>
+                <small class="tnum ms-auto text-xs font-bold text-ink-faint">${Math.round(p.total).toLocaleString('pt-BR')} W</small>
+              </button>
+            </li>
+          </ul>
+          <h3 class="mt-3">Tomadas · ${p.tomadas.length}</h3>
+          <ul>${navItems}</ul>
+        </div>
+      </section>
 
-      <div class="nav__label">Tomadas · ${p.tomadas.length}</div>
-      ${navItems}
-    </nav>
+      <footer class="border-t border-sidebar-border">
+        <button type="button" class="btn w-full justify-start gap-2 text-green hover:bg-green-bg hover:text-green-deep" data-variant="ghost" data-add>
+          ${icon('plus', 18, 2.2)}Adicionar Novo Dispositivo
+        </button>
+        ${
+          p.onLogout
+            ? `<button type="button" class="btn w-full justify-start gap-2 text-ink-soft" data-variant="ghost" data-logout>
+                 ${icon('logout')}<span class="min-w-0 truncate">${escapeHtml(p.userEmail ?? 'Sair')}</span>
+               </button>`
+            : ''
+        }
+      </footer>
+    </nav>`;
 
-    <div class="side-foot">
-      <button class="side-action side-action--primary" data-add>${icon('plus', 18, 2.2)}Adicionar Novo Dispositivo</button>
-      ${p.onLogout ? `<button class="side-action side-action--muted" data-logout>${icon('logout')}<span class="nav__name">${escapeHtml(p.userEmail ?? 'Sair')}</span></button>` : ''}
-    </div>`;
-
-  el.querySelector('[data-overview]')?.addEventListener('click', () => {
-    p.onSelect(null);
-    p.onCloseNav();
-  });
-  el.querySelectorAll<HTMLButtonElement>('.nav__item[data-id]').forEach((btn) => {
+  el.querySelector('[data-overview]')?.addEventListener('click', () => p.onSelect(null));
+  el.querySelectorAll<HTMLButtonElement>('button[data-id]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const id = btn.dataset.id;
-      if (id) {
-        p.onSelect(id);
-        p.onCloseNav();
-      }
+      if (id) p.onSelect(id);
     });
   });
-  // Lapis (sobre o W, aparece no hover): renomeia sem disparar o select do item.
-  el.querySelectorAll<HTMLElement>('.nav__edit[data-edit]').forEach((sp) => {
-    sp.addEventListener('click', (e) => {
+  // Lapis (aparece no hover/foco, sobre o W): renomeia sem selecionar a tomada.
+  // E um `<button>` de verdade, e nao um `<span>` como ate a 007: so assim ele
+  // e alcancavel por teclado (FR-015).
+  el.querySelectorAll<HTMLButtonElement>('button[data-edit]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const id = sp.closest<HTMLElement>('.nav__item')?.dataset.id;
+      const id = btn.dataset.edit;
       if (id) p.onRename?.(id);
     });
   });

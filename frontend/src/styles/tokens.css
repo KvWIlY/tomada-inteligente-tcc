@@ -1,0 +1,277 @@
+/* =============================================================
+   Tokens (FR-002, FR-002b, FR-002e)
+   =============================================================
+   Duas familias convivem de proposito:
+     * `--bg`, `--ink`, `--green`... — vocabulario do projeto,
+       fonte da verdade da paleta portada do handoff hi-fi;
+     * `--background`, `--foreground`, `--primary`... —
+       vocabulario do shadcn, que o Basecoat consome.
+   A segunda e definida EM TERMOS da primeira. Ha uma fonte de
+   verdade para cada cor, e trocar um valor muda os dois lados.
+   ============================================================= */
+
+:root {
+  /* Superficies */
+  --bg:       #fbfbfd;
+  --card:     #ffffff;
+  --card-2:   #f8f9fc;
+  --line:     #e9ebf1;
+  --line-2:   #eef0f5;
+
+  /* Tinta */
+  --ink:       #14171f;
+  --ink-soft:  #20252f;
+  --ink-faint: #4a515f;
+
+  /* Verde (acento de energia) */
+  --green:       #1a9d62;
+  --green-deep:  #0f6e45;
+  --green-num:   #15835a;
+  --green-line:  #25b06e;
+  --green-bg:    #e7f4ed;
+  --green-ink:   #11704a;
+
+  /* Lavanda neutra */
+  --lav:       #eceef8;
+  --lav-track: #e6e8f3;
+  --lav-bar:   #dcdfee;
+
+  /* Estados. A variante base pinta FUNDO e ornamento; a `-ink`
+     pinta TEXTO. Ver FR-002f.
+
+     `--amber-ink` desceu de #97670f para #8a5e0d na T036: o tom
+     antigo rendia 4,27:1 sobre `--amber-bg`, e o rotulo "Standby"
+     do badge e texto pequeno (12 px), que a AA cobra em 4,5:1. O
+     novo mede 4,93:1 sobre o badge e 5,69:1 sobre o cartao — os
+     dois papeis que ele tem. Medido, nao estimado. */
+  --amber:     #e3a72e;  --amber-bg: #f8eed6;  --amber-ink: #8a5e0d;
+  --red:       #d8453f;  --red-bg:   #fbe9e8;  --red-ink:   #b5332e;
+
+  /* Ambar que CARREGA SIGNIFICADO num grafico — a linha do
+     historico de uma tomada em standby, o marcador de 85% do
+     P_max. `--amber` mede 2,14:1 sobre o cartao claro e reprova
+     o 3:1 que a WCAG 1.4.11 cobra de elemento grafico
+     nao-textual; este mede 3,36:1. O `--amber` fica com fundo e
+     ornamento redundante (o ponto de estado, que sempre vem
+     acompanhado do rotulo escrito e por isso e decorativo).
+     No tema escuro o proprio `--amber` ja passa com folga
+     (9,57:1) e os dois coincidem. */
+  --amber-line: #b8821a;
+
+  /* Borda de campo: a WCAG 1.4.11 exige 3:1 de elemento
+     funcional, e `--line` (1,19:1 sobre o cartao) reprovava.
+     Mede 3,35:1 sobre o cartao e 3,18:1 sobre `--card-2`, as
+     duas superficies onde um campo aparece. So e usada onde a
+     borda DELIMITA um controle — nao em separador decorativo. */
+  --line-strong: #868c9f;
+
+  --shadow:      0 1px 2px rgba(20,23,31,.05), 0 12px 32px -16px rgba(20,23,31,.2);
+  --shadow-soft: 0 1px 2px rgba(20,23,31,.045), 0 6px 20px -12px rgba(20,23,31,.16);
+  --shadow-pop:  0 24px 70px -22px rgba(20,30,50,.42);
+
+  /* Ponte projeto -> Basecoat/shadcn */
+  --radius: 0.875rem;
+  --background: var(--bg);
+  --foreground: var(--ink);
+  --card-foreground: var(--ink);
+  --popover: var(--card);
+  --popover-foreground: var(--ink);
+  --primary: var(--green);
+  --primary-foreground: #ffffff;
+  --secondary: var(--lav);
+  --secondary-foreground: var(--ink);
+  --muted: var(--lav-track);
+  --muted-foreground: var(--ink-faint);
+  --accent: var(--green-bg);
+  --accent-foreground: var(--green-ink);
+  --destructive: var(--red);
+  --border: var(--line);
+  --input: var(--line-strong);
+  --ring: var(--green);
+  --sidebar: var(--card);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--green);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--green-bg);
+  --sidebar-accent-foreground: var(--green-ink);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--green);
+  --sidebar-width: 16.5rem;          /* 264 px — a largura do handoff */
+  --sidebar-mobile-width: 18rem;
+  --chart-1: var(--green);
+  --chart-2: var(--green-line);
+  --chart-3: var(--amber);
+  --chart-4: var(--lav-bar);
+  --chart-5: var(--green-deep);
+}
+
+/* -------------------------------------------------------------
+   Tema escuro (FR-002a, FR-002c)
+   -------------------------------------------------------------
+   Redefine a paleta do PROJETO; a ponte acima segue por
+   referencia e nao precisa ser repetida.
+
+   Verde e ambar sobem de luminosidade: os tons claros foram
+   escolhidos para fundo branco e, sobre superficie escura,
+   reprovariam o 3:1 que o FR-002c exige de elemento grafico.
+   As variantes `-ink`, usadas em TEXTO (FR-002f), sao as mais
+   claras da familia.
+   ------------------------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --bg:       #10131a;
+    --card:     #171b24;
+    --card-2:   #1d222c;
+    --line:     #262c38;
+    --line-2:   #222833;
+    --line-strong: #6b7488;   /* 3,68:1 sobre o cartao escuro */
+
+    --ink:       #eef1f6;
+    --ink-soft:  #d6dbe4;
+    --ink-faint: #98a1b0;
+
+    --green:       #35c98a;
+    --green-deep:  #2aa872;
+    --green-num:   #4dd89b;
+    --green-line:  #4dd89b;
+    --green-bg:    #12301f;
+    --green-ink:   #7fe0b0;
+
+    --lav:       #232838;
+    --lav-track: #1e2330;
+    --lav-bar:   #2c3244;
+
+    --amber:     #f0b849;  --amber-bg: #3a2c10;  --amber-ink: #f5c96b;
+    --amber-line: #f0b849;   /* 9,57:1 sobre o cartao escuro — o base ja passa */
+    --red:       #e4635d;  --red-bg:   #3a1c1b;  --red-ink:   #f28e89;
+
+    --primary-foreground: #0b0e14;
+    --sidebar-primary-foreground: #0b0e14;
+
+    --shadow:      0 1px 2px rgba(0,0,0,.5), 0 12px 32px -16px rgba(0,0,0,.7);
+    --shadow-soft: 0 1px 2px rgba(0,0,0,.45), 0 6px 20px -12px rgba(0,0,0,.6);
+    --shadow-pop:  0 24px 70px -22px rgba(0,0,0,.8);
+  }
+}
+
+/* -------------------------------------------------------------
+   Tokens do projeto expostos ao Tailwind (FR-003a)
+   -------------------------------------------------------------
+   `@theme inline` emite `--color-green: var(--green)` em vez de
+   copiar o valor: sem o `inline`, a paleta escura acima nao
+   alcancaria os utilitarios, porque eles teriam congelado o
+   hexadecimal do tema claro.
+   ------------------------------------------------------------- */
+@theme inline {
+  --font-sans: 'Open Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+
+  --color-surface:     var(--card-2);
+  --color-line-soft:   var(--line-2);
+  --color-line-strong: var(--line-strong);
+
+  --color-ink:        var(--ink);
+  --color-ink-soft:   var(--ink-soft);
+  --color-ink-faint:  var(--ink-faint);
+
+  --color-green:      var(--green);
+  --color-green-deep: var(--green-deep);
+  --color-green-num:  var(--green-num);
+  --color-green-line: var(--green-line);
+  --color-green-bg:   var(--green-bg);
+  --color-green-ink:  var(--green-ink);
+
+  --color-lav:        var(--lav);
+  --color-lav-track:  var(--lav-track);
+  --color-lav-bar:    var(--lav-bar);
+
+  --color-amber:      var(--amber);
+  --color-amber-line: var(--amber-line);
+  --color-amber-bg:   var(--amber-bg);
+  --color-amber-ink:  var(--amber-ink);
+  --color-red:        var(--red);
+  --color-red-bg:     var(--red-bg);
+  --color-red-ink:    var(--red-ink);
+}
+
+@layer base {
+  html, body { height: 100%; }
+  body {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  #root { height: 100%; display: flex; }
+  button { cursor: pointer; }
+}
+
+/* =============================================================
+   O que o Basecoat NAO cobre (FR-003a)
+   =============================================================
+   Cada regra abaixo existe porque nao ha componente equivalente
+   na biblioteca — nao por gosto. Todas consomem os tokens acima.
+   ============================================================= */
+
+/* Fase de login: sem barra lateral. O `.sidebar` do Basecoat empurra o irmao
+   seguinte com `margin-inline-start`; escondendo um sem zerar o outro sobraria
+   uma faixa de 264 px vazia ao lado do cartao de login. */
+#root[data-auth] > .sidebar { display: none; }
+#root[data-auth] > .sidebar + * { margin-inline-start: 0; }
+
+/* Numeral tabular: sem isso o watt "pula" de largura a cada
+   atualizacao de 15 s. */
+.tnum { font-variant-numeric: tabular-nums lining-nums; font-feature-settings: "tnum" 1, "lnum" 1; }
+
+/* Ponto de estado. Acompanha SEMPRE um rotulo textual (FR-002d);
+   sozinho ele transmitiria o estado so por cor. */
+.dot { width: 8px; height: 8px; border-radius: 50%; flex: none; display: inline-block; }
+.dot--ON  { background: var(--green); }
+.dot--STD { background: var(--amber); }
+.dot--OFF { background: var(--ink-faint); }
+.dot--live.dot--ON { animation: dot-pulse 2.6s ease-out infinite; }
+@keyframes dot-pulse {
+  0%   { box-shadow: 0 0 0 0 color-mix(in oklab, var(--green) 55%, transparent); }
+  70%  { box-shadow: 0 0 0 7px color-mix(in oklab, var(--green) 0%, transparent); }
+  100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--green) 0%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dot--live.dot--ON { animation: none; }
+}
+
+/* Badge de estado: a FORMA vem do `.badge` do Basecoat; so a COR
+   e nossa, e o Basecoat pintaria `bg-primary` sem `data-variant`. */
+.badge--ON  { background: var(--green-bg); color: var(--green-ink); }
+.badge--STD { background: var(--amber-bg); color: var(--amber-ink); }
+.badge--OFF { background: var(--lav);      color: var(--ink-soft); }
+.badge--crit { background: var(--red-bg);  color: var(--red-ink); }
+.badge .dot { width: 7px; height: 7px; }
+
+/* Trilho do P_max: o `.progress` do Basecoat nao tem marcador, e
+   o de 85% e o aviso de que a casa esta perto do teto eletrico. */
+.cap-mark { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--amber-line); border-radius: 2px; }
+
+/* Preenchimento do range: nenhum navegador estiliza o trecho
+   percorrido de um `input[type=range]` sozinho, e o Basecoat
+   pinta a trilha inteira de `--muted` num pseudo-elemento — que
+   cobre qualquer `background` posto no proprio input. Dai o
+   gradiente ir na TRILHA, dirigido por `--rng-pct`, que o JS
+   reescreve a cada `input`. */
+.rng::-webkit-slider-runnable-track {
+  background: linear-gradient(to right, var(--green) var(--rng-pct, 0%), var(--lav-track) var(--rng-pct, 0%));
+}
+/* O Basecoat poe o anel de foco no POLEGAR (`::-webkit-slider-thumb`), que e
+   dificil de enxergar sobre a trilha e invisivel para auditoria automatizada.
+   Este contorno e no controle inteiro (FR-015). */
+.rng:focus-visible { outline: 2px solid var(--ring); outline-offset: 4px; border-radius: 999px; }
+.rng::-moz-range-track {
+  background: linear-gradient(to right, var(--green) var(--rng-pct, 0%), var(--lav-track) var(--rng-pct, 0%));
+}
+
+/* Modo escuro do switch: o Basecoat troca a cor do polegar por
+   `html.dark`, e este projeto e por media query (FR-002a). Sem
+   isto o polegar apagado fica escuro sobre trilho escuro. */
+@media (prefers-color-scheme: dark) {
+  .input[type='checkbox'][role='switch']:not(:checked)::before { background: var(--ink); }
+  .input[type='checkbox'][role='switch']:checked::before { background: var(--primary-foreground); }
+}

@@ -17,9 +17,33 @@
 //
 // O suporte a graficos do Basecoat esta em BETA e a documentacao avisa que a
 // API JavaScript pode mudar antes do 1.0. FR-024 define o gatilho de saida:
-// falhar FR-012 ou FR-013 manda voltar aos graficos SVG proprios.
+// falhar FR-012 ou FR-013 manda voltar aos graficos SVG proprios. Ate aqui os
+// dois passaram — escala adaptativa e valores identicos —, entao `chart.js`
+// segue em uso de verdade (FR-016).
 
-import type { ChartConfiguration } from 'chart.js';
+import type { ChartOptions } from 'chart.js';
+
+/** Uma serie do wrapper: uma chave das linhas de `data` vira um dataset. */
+interface BasecoatSerie {
+  label?: string;
+  /** Aceita `var(--token)`: o wrapper resolve contra o elemento antes de pintar. */
+  color?: string;
+  /** `true` = area chapada; `'gradient'` = degrade ate transparente. */
+  surface?: boolean | 'gradient';
+  /** Repassado cru ao dataset do Chart.js (tensao, espessura, raio do ponto). */
+  dataset?: Record<string, unknown>;
+}
+
+interface BasecoatChartConfig {
+  type?: 'line' | 'bar' | 'doughnut' | 'pie' | 'radar' | 'polarArea';
+  /** Campo das linhas de `data` que vira rotulo do eixo horizontal. */
+  labelKey?: string;
+  data?: Array<Record<string, unknown>>;
+  series?: Record<string, BasecoatSerie>;
+  options?: ChartOptions;
+  legend?: boolean;
+  tooltip?: boolean;
+}
 
 declare global {
   interface Window {
@@ -30,12 +54,12 @@ declare global {
        * legenda opcional gerada).
        *
        * O wrapper consome `window.Chart` — que `main.ts` expoe — em vez de
-       * importar Chart.js por conta propria.
+       * importar Chart.js por conta propria, e LANCA se o global faltar. Quem
+       * chama trata (FR-020).
        */
-      chart(
-        alvo: string | HTMLCanvasElement,
-        config: ChartConfiguration & { legend?: boolean },
-      ): void;
+      chart(alvo: string | HTMLCanvasElement, config?: BasecoatChartConfig): unknown;
+      /** Reprocessa os componentes de um ramo recem-inserido no DOM. */
+      initAll(options?: { force?: boolean }): void;
     };
   }
 }
