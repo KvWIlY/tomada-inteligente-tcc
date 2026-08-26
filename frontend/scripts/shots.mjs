@@ -21,12 +21,35 @@ const browser = await puppeteer.launch({
 const page = await browser.newPage();
 page.on('console', (m) => { if (m.type() === 'error') console.log('  [console]', m.text()); });
 page.on('pageerror', (e) => console.log('  [pageerror]', e.message));
-await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: TEMA }]);
+// O tema deixou de seguir o sistema em 2026-08-26: agora e uma classe no
+// `<html>`, escolhida por botao e persistida em `localStorage` sob `themeMode`.
+// Emular `prefers-color-scheme` aqui nao trocaria nada — o roteiro de escuro
+// passaria a fotografar o tema claro sem reclamar.
+await page.evaluateOnNewDocument((modo) => {
+  try { localStorage.setItem('themeMode', modo); } catch (_) { /* ignora */ }
+}, TEMA);
 await page.setViewport({ width: 1440, height: 960 });
 
+/**
+ * Captura a pagina inteira SEM usar `fullPage`.
+ *
+ * O `fullPage` do Chrome redimensiona a viewport para a altura do conteudo e
+ * fotografa em seguida — e o Chart.js, que e `responsive`, limpa o canvas e so
+ * redesenha no quadro seguinte. O resultado era um cartao de grafico VAZIO na
+ * captura, com o grafico perfeitamente visivel no navegador. Custou uma sessao
+ * de caca a um defeito que nao existia.
+ *
+ * Aqui a viewport e esticada ANTES, com tempo para os graficos assentarem, e a
+ * captura sai da viewport mesma.
+ */
 async function tira(nome, alvo = page) {
   await espera(700);
-  await alvo.screenshot({ path: `${OUT}/${nome}.png`, fullPage: true });
+  const largura = page.viewport().width;
+  const altura = await page.evaluate(() => Math.ceil(document.documentElement.scrollHeight));
+  await page.setViewport({ width: largura, height: altura });
+  await espera(500); // o Chart.js redesenha no quadro seguinte ao resize
+  await alvo.screenshot({ path: `${OUT}/${nome}.png` });
+  await page.setViewport({ width: largura, height: 960 });
   console.log('  ->', nome);
 }
 

@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>SmartHome · Gerenciador de Energia</title>
     <link rel="icon" href="/favicon.svg" />
+    <script>
+      // Tema ANTES da primeira pintura. `main.ts` e um modulo (deferido): se a
+      // classe so fosse aplicada la, quem escolheu escuro veria um lampejo
+      // branco a cada carregamento. `themeMode` e a chave que o
+      // `basecoat.theme.set()` ja usa — nao inventamos outra.
+      // PADRAO: claro. Ausencia de escolha nao consulta o sistema operacional.
+      try {
+        if (localStorage.getItem('themeMode') === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (_) { /* localStorage bloqueado: segue no claro */ }
+    </script>
   </head>
   <body>
     <!--
@@ -24,6 +36,11 @@
         <div id="topbar"></div>
         <div id="view" class="flex-1 overflow-y-auto"></div>
       </main>
+      <!-- Seletor de tema: fixo no canto superior direito, presente tambem na
+           tela de login. No celular a barra do topo ganha respiro a direita
+           (`pe-14`) para o numero de watts nao passar por baixo dele. -->
+      <button id="tema" type="button" class="btn fixed end-4 top-3 z-30 md:end-6 md:top-5"
+        data-variant="outline" data-size="icon"></button>
       <div id="toaster" class="toaster" data-align="center"></div>
       <div id="modal"></div>
     </div>

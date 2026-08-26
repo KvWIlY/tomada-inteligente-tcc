@@ -106,7 +106,7 @@
 }
 
 /* -------------------------------------------------------------
-   Tema escuro (FR-002a, FR-002c)
+   Tema escuro (FR-002c) — ativado pela classe `dark` no <html>
    -------------------------------------------------------------
    Redefine a paleta do PROJETO; a ponte acima segue por
    referencia e nao precisa ser repetida.
@@ -117,43 +117,41 @@
    As variantes `-ink`, usadas em TEXTO (FR-002f), sao as mais
    claras da familia.
    ------------------------------------------------------------- */
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
+:root.dark {
+  color-scheme: dark;
 
-    --bg:       #10131a;
-    --card:     #171b24;
-    --card-2:   #1d222c;
-    --line:     #262c38;
-    --line-2:   #222833;
-    --line-strong: #6b7488;   /* 3,68:1 sobre o cartao escuro */
+  --bg:       #10131a;
+  --card:     #171b24;
+  --card-2:   #1d222c;
+  --line:     #262c38;
+  --line-2:   #222833;
+  --line-strong: #6b7488;   /* 3,68:1 sobre o cartao escuro */
 
-    --ink:       #eef1f6;
-    --ink-soft:  #d6dbe4;
-    --ink-faint: #98a1b0;
+  --ink:       #eef1f6;
+  --ink-soft:  #d6dbe4;
+  --ink-faint: #98a1b0;
 
-    --green:       #35c98a;
-    --green-deep:  #2aa872;
-    --green-num:   #4dd89b;
-    --green-line:  #4dd89b;
-    --green-bg:    #12301f;
-    --green-ink:   #7fe0b0;
+  --green:       #35c98a;
+  --green-deep:  #2aa872;
+  --green-num:   #4dd89b;
+  --green-line:  #4dd89b;
+  --green-bg:    #12301f;
+  --green-ink:   #7fe0b0;
 
-    --lav:       #232838;
-    --lav-track: #1e2330;
-    --lav-bar:   #2c3244;
+  --lav:       #232838;
+  --lav-track: #1e2330;
+  --lav-bar:   #2c3244;
 
-    --amber:     #f0b849;  --amber-bg: #3a2c10;  --amber-ink: #f5c96b;
-    --amber-line: #f0b849;   /* 9,57:1 sobre o cartao escuro — o base ja passa */
-    --red:       #e4635d;  --red-bg:   #3a1c1b;  --red-ink:   #f28e89;
+  --amber:     #f0b849;  --amber-bg: #3a2c10;  --amber-ink: #f5c96b;
+  --amber-line: #f0b849;   /* 9,57:1 sobre o cartao escuro — o base ja passa */
+  --red:       #e4635d;  --red-bg:   #3a1c1b;  --red-ink:   #f28e89;
 
-    --primary-foreground: #0b0e14;
-    --sidebar-primary-foreground: #0b0e14;
+  --primary-foreground: #0b0e14;
+  --sidebar-primary-foreground: #0b0e14;
 
-    --shadow:      0 1px 2px rgba(0,0,0,.5), 0 12px 32px -16px rgba(0,0,0,.7);
-    --shadow-soft: 0 1px 2px rgba(0,0,0,.45), 0 6px 20px -12px rgba(0,0,0,.6);
-    --shadow-pop:  0 24px 70px -22px rgba(0,0,0,.8);
-  }
+  --shadow:      0 1px 2px rgba(0,0,0,.5), 0 12px 32px -16px rgba(0,0,0,.7);
+  --shadow-soft: 0 1px 2px rgba(0,0,0,.45), 0 6px 20px -12px rgba(0,0,0,.6);
+  --shadow-pop:  0 24px 70px -22px rgba(0,0,0,.8);
 }
 
 /* -------------------------------------------------------------
@@ -268,10 +266,6 @@
   background: linear-gradient(to right, var(--green) var(--rng-pct, 0%), var(--lav-track) var(--rng-pct, 0%));
 }
 
-/* Modo escuro do switch: o Basecoat troca a cor do polegar por
-   `html.dark`, e este projeto e por media query (FR-002a). Sem
-   isto o polegar apagado fica escuro sobre trilho escuro. */
-@media (prefers-color-scheme: dark) {
-  .input[type='checkbox'][role='switch']:not(:checked)::before { background: var(--ink); }
-  .input[type='checkbox'][role='switch']:checked::before { background: var(--primary-foreground); }
-}
+/* O polegar do switch no tema escuro NAO precisa de regra aqui: o
+   proprio Basecoat traz `html.dark ... ::before`, e desde que o
+   tema virou classe (2026-08-26) essas regras voltaram a casar. */

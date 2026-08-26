@@ -9,7 +9,13 @@ const espera = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: 'new' });
 const page = await browser.newPage();
-await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: TEMA }]);
+// O tema deixou de seguir o sistema em 2026-08-26: agora e uma classe no
+// `<html>`, escolhida por botao e persistida em `localStorage` sob `themeMode`.
+// Emular `prefers-color-scheme` aqui nao trocaria nada — o roteiro de escuro
+// passaria a fotografar o tema claro sem reclamar.
+await page.evaluateOnNewDocument((modo) => {
+  try { localStorage.setItem('themeMode', modo); } catch (_) { /* ignora */ }
+}, TEMA);
 await page.setViewport({ width: 1440, height: 960 });
 await page.goto(BASE, { waitUntil: 'networkidle2' });
 
@@ -52,7 +58,13 @@ async function contraste(rotulo, seletor, propriedade = 'color') {
   return r;
 }
 
-console.log(`[checks] tema ${TEMA}`);
+const temaAplicado = await page.evaluate(() => (document.documentElement.classList.contains('dark') ? 'dark' : 'light'));
+console.log(`[checks] tema pedido ${TEMA} | aplicado ${temaAplicado}`);
+if (temaAplicado !== TEMA) {
+  console.error('  ABORTANDO: o tema nao foi aplicado — as medicoes abaixo seriam do tema errado');
+  await browser.close();
+  process.exit(1);
+}
 console.log(' login');
 await page.waitForSelector('input[name="email"]');
 await contraste('borda do campo (FR-002c / WCAG 1.4.11 >= 3)', 'input[name="email"]', 'borderColor');

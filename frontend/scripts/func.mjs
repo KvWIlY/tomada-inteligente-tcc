@@ -244,6 +244,44 @@ console.log('[func] FR-001a: legivel com a fonte bloqueada (casa sem WAN)');
   await page.setRequestInterception(false);
 }
 
+console.log('[func] seletor de tema (2026-08-26): padrao claro, alterna, persiste');
+{
+  const ctx = await browser.createBrowserContext();
+  const pg = await ctx.newPage();
+  await pg.setViewport({ width: 1440, height: 960 });
+  // Perfil limpo, e com o SISTEMA em escuro: o padrao tem de ser claro mesmo
+  // assim — a ausencia de escolha nao consulta mais o sistema operacional.
+  await pg.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' }]);
+  await pg.goto(BASE, { waitUntil: 'networkidle2' });
+  await espera(800);
+  const tema = () => pg.evaluate(() => ({
+    dark: document.documentElement.classList.contains('dark'),
+    gravado: localStorage.getItem('themeMode'),
+    fundo: getComputedStyle(document.body).backgroundColor,
+    rotulo: document.getElementById('tema')?.getAttribute('aria-label'),
+  }));
+  const t0 = await tema();
+  ok(!t0.dark, 'padrao e o tema CLARO mesmo com o sistema em escuro', JSON.stringify(t0.fundo));
+  ok(/escuro/.test(t0.rotulo || ''), 'o botao oferece ir para o escuro', t0.rotulo);
+
+  await pg.click('#tema');
+  await espera(500);
+  const t1 = await tema();
+  ok(t1.dark && t1.gravado === 'dark', 'clicar alterna para escuro e grava a escolha');
+  ok(t1.fundo !== t0.fundo, 'o fundo realmente mudou', `${t0.fundo} -> ${t1.fundo}`);
+  ok(/claro/.test(t1.rotulo || ''), 'o botao passa a oferecer o claro', t1.rotulo);
+
+  await pg.reload({ waitUntil: 'networkidle2' });
+  await espera(800);
+  ok((await tema()).dark, 'a escolha sobrevive ao recarregar');
+
+  await pg.click('#tema');
+  await espera(500);
+  const t3 = await tema();
+  ok(!t3.dark && t3.gravado === 'light', 'clicar de novo volta ao claro');
+  await ctx.close();
+}
+
 console.log('[func] 8. fases distinguiveis / logout');
 await page.evaluate(() => document.querySelector('[data-logout]').click());
 await espera(1500);

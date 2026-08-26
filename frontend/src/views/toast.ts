@@ -76,7 +76,7 @@ export function renderModal(el: HTMLElement, modal: ModalData | null): void {
     return;
   }
 
-  const glyph = modal.danger ? icon('warn', 22, 2.2) : icon('check', 22, 2.6);
+  const glyph = modal.danger ? icon('warn', 22) : icon('check', 22);
   const corpo = modal.bodyHtml ?? `<p data-description>${escapeHtml(modal.body)}</p>`;
   const temSecundario = Boolean(modal.secondaryLabel);
   const esquerda = temSecundario

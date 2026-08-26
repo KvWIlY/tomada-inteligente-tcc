@@ -60,6 +60,16 @@ declare global {
       chart(alvo: string | HTMLCanvasElement, config?: BasecoatChartConfig): unknown;
       /** Reprocessa os componentes de um ramo recem-inserido no DOM. */
       initAll(options?: { force?: boolean }): void;
+      /**
+       * Tema por classe no `<html>`. `set`/`toggle` gravam em `localStorage`
+       * (`themeMode`) e disparam `basecoat:themechange`, que o wrapper de
+       * graficos escuta para repintar as cores lidas do CSS.
+       */
+      theme?: {
+        get(): 'light' | 'dark';
+        set(mode: 'light' | 'dark'): void;
+        toggle(): void;
+      };
     };
   }
 }

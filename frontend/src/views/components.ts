@@ -39,7 +39,7 @@ export function badge(estado: Estado): string {
 }
 
 export function critBadge(): string {
-  return `<span class="badge badge--crit gap-1">${icon('warn', 12, 2.2)}Crítico</span>`;
+  return `<span class="badge badge--crit gap-1">${icon('warn', 12)}Crítico</span>`;
 }
 
 /**
@@ -58,9 +58,9 @@ function feedIcon(e: Evento): string {
   switch (e.tipo) {
     case 'chaveamento': return icon('swap', 16);
     case 'config':      return icon('cpu', 16);
-    case 'inviabilidade': return icon('warn', 16, 2.2);
+    case 'inviabilidade': return icon('warn', 16);
     case 'sync_error':  return icon('cloud', 16);
-    case 'cold_start':  return icon('check', 16, 2.6);
+    case 'cold_start':  return icon('check', 16);
     default:            return icon('bolt', 16);
   }
 }

@@ -19,13 +19,15 @@
 @import "./tokens.css";
 
 /* -------------------------------------------------------------
-   Tema escuro por PREFERENCIA DO SISTEMA (FR-002a).
-   O Basecoat declara `@custom-variant dark (&:is(html.dark *))`,
-   ou seja, por classe. Redefinimos para media query: o dashboard
-   nao tem seletor de tema, acompanha o SO, e assim nao existe
-   piscada de tema errado antes de um script rodar.
+   Tema escuro POR CLASSE (`html.dark`) — 2026-08-26.
+   Ate esta data o tema seguia `prefers-color-scheme`, conforme o
+   FR-002a original. O dono pediu um seletor explicito com sol e
+   lua, e claro como padrao; o `@custom-variant` do Basecoat, que
+   ja e por classe, volta a valer sem redefinicao nossa. A escolha
+   e persistida em `localStorage` e aplicada por um script inline
+   no `<head>`, antes da primeira pintura — sem isso, quem escolhe
+   escuro ve um lampejo branco a cada carregamento.
    ------------------------------------------------------------- */
-@custom-variant dark (@media (prefers-color-scheme: dark));
 
 /* =============================================================
    Tipografia — Open Sans LOCAL (FR-001, FR-001a)

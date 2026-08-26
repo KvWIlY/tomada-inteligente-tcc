@@ -113,7 +113,7 @@ export function consumptionChart(valores: number[], carimbos: number[]): string 
     const ultimo = valores[valores.length - 1] ?? 0;
     return `
       <div class="alert" data-variant="destructive" role="status">
-        ${icon('warn', 16, 2.2)}
+        ${icon('warn', 16)}
         <h3>Gráfico indisponível</h3>
         <section>
           <p>O runtime de gráficos não carregou. Os números continuam abaixo, medidos normalmente.</p>
@@ -247,7 +247,7 @@ export function capacityBar(total: number, pMax: number): string {
   const color = pct < 0.7 ? 'var(--green)' : pct < 0.85 ? 'var(--amber-line)' : 'var(--red)';
   const alert = over
     ? `<div class="alert mt-4" data-variant="destructive" role="status">
-         ${icon('warn', 15, 2.2)}
+         ${icon('warn', 15)}
          <section><p>Perto do teto elétrico — novos comandos manuais podem ser recusados para manter a casa segura.</p></section>
        </div>`
     : '';
