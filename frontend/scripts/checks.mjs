@@ -95,6 +95,30 @@ console.log(' detalhe (Carregadores, FP 0,39)');
 await contraste('fator de potencia (texto)', '#view .text-amber-ink');
 console.log('  P_max slider:', JSON.stringify(await page.$eval('[data-role="power-slider"]', (i) => ({ value: i.value, max: i.max, pct: i.style.getPropertyValue('--rng-pct') }))));
 
+// Nenhum traco de SVG proprio pode estourar o `viewBox`.
+//
+// O anel de eficiencia tinha o aro decorativo com raio 77 num `viewBox` de 150
+// centrado em 75: estourava 2 px nos quatro lados e o SVG cortava, deixando o
+// circulo com quatro lados chatos. E o tipo de erro que so aparece quando
+// alguem repara — a conta e que denuncia.
+{
+  const svgs = await page.evaluate(() => {
+    const fora = [];
+    for (const svg of document.querySelectorAll('#view svg[viewBox]')) {
+      const vb = svg.viewBox.baseVal;
+      const metade = Math.min(vb.width, vb.height) / 2;
+      for (const c of svg.querySelectorAll('circle')) {
+        const extremo = (+c.getAttribute('r') || 0) + (+c.getAttribute('stroke-width') || 0) / 2;
+        if (extremo > metade + 0.01) {
+          fora.push({ rotulo: (svg.getAttribute('aria-label') || '').slice(0, 40), extremo, metade });
+        }
+      }
+    }
+    return fora;
+  });
+  console.log(svgs.length === 0 ? '  SVG dentro do viewBox: OK' : '  SVG ESTOURANDO o viewBox: ' + JSON.stringify(svgs));
+}
+
 // foco visivel em todo controle interativo (FR-015).
 // Tem de ser TAB de verdade: `el.focus()` programatico nao casa `:focus-visible`
 // em botao, e o teste daria falso negativo em quase tudo.
