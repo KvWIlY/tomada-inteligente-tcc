@@ -70,7 +70,7 @@ export function renderSidebar(el: HTMLElement, p: SidebarProps): void {
 
       <footer class="border-t border-sidebar-border">
         <button type="button" class="btn w-full justify-start gap-2 text-green hover:bg-green-bg hover:text-green-deep" data-variant="ghost" data-add>
-          ${icon('plus', 18, 2.2)}Adicionar Novo Dispositivo
+          ${icon('plus', 18)}Adicionar Novo Dispositivo
         </button>
         ${
           p.onLogout

@@ -29,9 +29,9 @@ export function renderLogin(el: HTMLElement, p: LoginProps): void {
   const alt = p.mode === 'login' ? 'Não tem conta? Criar uma' : 'Já tem conta? Entrar';
 
   const msg = p.error
-    ? `<div class="alert" data-variant="destructive" role="alert">${icon('warn', 15, 2.2)}<section><p>${escapeHtml(p.error)}</p></section></div>`
+    ? `<div class="alert" data-variant="destructive" role="alert">${icon('warn', 15)}<section><p>${escapeHtml(p.error)}</p></section></div>`
     : p.info
-      ? `<div class="alert border-green bg-green-bg text-green-ink" role="status">${icon('check', 15, 2.6)}<section><p>${escapeHtml(p.info)}</p></section></div>`
+      ? `<div class="alert border-green bg-green-bg text-green-ink" role="status">${icon('check', 15)}<section><p>${escapeHtml(p.info)}</p></section></div>`
       : '';
 
   el.innerHTML = `

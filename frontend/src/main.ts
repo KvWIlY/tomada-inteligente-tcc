@@ -560,6 +560,37 @@ const elTopbar = document.getElementById('topbar')!;
 const elView = document.getElementById('view')!;
 const elToaster = document.getElementById('toaster')!;
 const elModal = document.getElementById('modal')!;
+const elTema = document.getElementById('tema')!;
+
+// === Seletor de tema (claro/escuro) ===
+//
+// Ate 2026-08-26 o tema seguia `prefers-color-scheme` e nao havia seletor
+// (FR-002a). O dono pediu o botao com sol e lua, e **claro como padrao** — o
+// que significa que a ausencia de escolha NAO consulta mais o sistema
+// operacional. A divergencia esta registrada no `RETOMAR.md`.
+//
+// A troca em si e do `basecoat.theme`: ele poe/tira `dark` no `<html>`, grava
+// em `localStorage` sob `themeMode` e dispara `basecoat:themechange` — evento
+// que o wrapper de graficos escuta para repintar as cores do Chart.js, que sao
+// lidas do CSS uma vez na montagem e nao acompanhariam a troca sozinhas.
+//
+// O `<html>` ja nasce com a classe certa: o `index.html` a aplica num script
+// inline, antes da primeira pintura.
+function renderTema(): void {
+  const escuro = document.documentElement.classList.contains('dark');
+  // Mostra o destino, nao o estado: no claro aparece a lua ("ir para escuro").
+  const rotulo = escuro ? 'Mudar para o tema claro' : 'Mudar para o tema escuro';
+  elTema.innerHTML = icon(escuro ? 'sun' : 'moon', 18);
+  elTema.setAttribute('aria-label', rotulo);
+  elTema.setAttribute('title', rotulo);
+  elTema.setAttribute('aria-pressed', String(escuro));
+}
+
+elTema.addEventListener('click', () => {
+  window.basecoat?.theme?.toggle();
+  renderTema();
+});
+renderTema();
 
 // === Barra lateral ===
 //
@@ -610,7 +641,7 @@ function renderTopbar(s: AppState, total: number): void {
   const tomada = s.selectedId ? s.tomadas.find((t) => t.id === s.selectedId) ?? null : null;
   const titulo = tomada ? tomada.nome : 'Visão Geral';
   elTopbar.innerHTML = `
-    <div class="sticky top-0 z-20 flex items-center gap-3.5 border-b border-border bg-card px-4 py-3 md:hidden">
+    <div class="sticky top-0 z-20 flex items-center gap-3.5 border-b border-border bg-card py-3 ps-4 pe-14 md:hidden">
       <button type="button" class="btn" data-variant="outline" data-size="icon" data-role="burger" aria-label="Abrir menu">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
       </button>
@@ -693,7 +724,7 @@ store.subscribe((s) => {
   if (s.semBackend) {
     elView.innerHTML = telaDeEstado(`
       <div class="alert" data-variant="destructive" role="alert">
-        ${icon('warn', 16, 2.2)}
+        ${icon('warn', 16)}
         <h2>Backend não configurado</h2>
         <section>
           <p>Defina <code class="font-mono">VITE_BACKEND_URL</code> em <code class="font-mono">frontend/.env</code> apontando
@@ -709,7 +740,7 @@ store.subscribe((s) => {
       <div class="card">
         <section class="empty py-10">
           <header>
-            <figure class="mb-4 grid size-14 place-items-center rounded-2xl bg-lav text-ink-faint">${icon('plus', 26, 2.2)}</figure>
+            <figure class="mb-4 grid size-14 place-items-center rounded-2xl bg-lav text-ink-faint">${icon('plus', 26)}</figure>
             <h2 class="text-xl font-bold tracking-tight">Sua conta ainda não tem residência</h2>
             <p class="mt-2 text-sm text-ink-soft">Crie uma para começar a parear tomadas a ela.</p>
           </header>
@@ -722,7 +753,7 @@ store.subscribe((s) => {
   if (s.error) {
     elView.innerHTML = telaDeEstado(`
       <div class="alert" data-variant="destructive" role="alert">
-        ${icon('warn', 16, 2.2)}
+        ${icon('warn', 16)}
         <h2>Erro ao carregar</h2>
         <section>
           <p>${escapeHtml(s.error)}</p>
