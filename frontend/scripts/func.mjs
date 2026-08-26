@@ -31,9 +31,15 @@ async function entrar() {
 // "cortar" nela abre o dialogo de confirmacao em vez de comandar o rele. Para
 // exercitar o caminho otimista sem esse desvio, o roteiro usa a segunda.
 async function abrirTomada(i = 1) {
+  await page.waitForSelector('#view button[data-id]', { timeout: 15000 });
   const cards = await page.$$('#view button[data-id]');
   await cards[i].click();
-  await espera(1200);
+  // Esperar o DETALHE aparecer, e nao um numero de milissegundos: com
+  // `espera(1200)` fixo, uma busca mais lenta que o normal fazia o passo
+  // seguinte procurar `[data-cmd]` numa tela que ainda era a visao geral, e o
+  // roteiro quebrava de forma intermitente — o pior tipo de falha de teste.
+  await page.waitForSelector('[data-cmd="cortar"]', { timeout: 15000 });
+  await espera(300);
 }
 const abrirPrimeiraTomada = () => abrirTomada(1);
 
