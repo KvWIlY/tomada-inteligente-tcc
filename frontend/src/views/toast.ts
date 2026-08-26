@@ -1,5 +1,5 @@
 // =============================================
-// Toast (canto inferior, efêmero) + Modal de confirmação
+// Aviso efemero (`toaster` do Basecoat) + dialogo modal (`<dialog>`)
 // =============================================
 
 import { icon } from '../icons';
@@ -10,19 +10,31 @@ export interface ToastData {
   kind: 'ok' | 'alert';
 }
 
+/** O `#toaster` do Basecoat ganha um metodo `toast()` ao ser inicializado. */
+type Toaster = HTMLElement & { toast?: (config: Record<string, unknown>) => void };
+
+let ultimoToast: ToastData | null = null;
+
+/**
+ * Empurra o aviso para o `#toaster`.
+ *
+ * O sumico sozinho (FR-005e item 7) passou a ser do Basecoat — 3 s para aviso
+ * comum, 5 s para erro, com o relogio pausado enquanto o ponteiro esta em cima.
+ * Por isso `main.ts` nao tem mais `setTimeout` proprio: o estado guarda o ultimo
+ * aviso e este comparador de identidade evita reempurrar o mesmo objeto a cada
+ * re-render (o polling redesenha a tela a cada 15 s).
+ *
+ * `title` e `description` entram como HTML cru no componente — escapar aqui nao
+ * e zelo, e a unica barreira: o texto inclui nome de tomada digitado pelo dono.
+ */
 export function renderToast(el: HTMLElement, toast: ToastData | null): void {
-  if (!toast) {
-    el.innerHTML = '';
-    return;
-  }
-  const ic = toast.kind === 'alert' ? icon('warn', 16, 2.2) : icon('check', 16, 2.6);
-  el.innerHTML = `
-    <div class="toast-wrap">
-      <div class="toast toast--${toast.kind}">
-        <span class="toast__ic">${ic}</span>
-        <span>${escapeHtml(toast.msg)}</span>
-      </div>
-    </div>`;
+  if (toast === ultimoToast) return;
+  ultimoToast = toast;
+  if (!toast) return;
+  (el as Toaster).toast?.({
+    category: toast.kind === 'alert' ? 'error' : 'success',
+    title: escapeHtml(toast.msg),
+  });
 }
 
 export interface ModalData {
@@ -32,12 +44,11 @@ export interface ModalData {
   danger: boolean;
   onConfirm: () => void;
   onCancel: () => void;
-  /** Se presente, substitui o corpo de texto (o chamador é responsável por escapar). */
+  /** Se presente, substitui o corpo de texto (o chamador escapa o que insere). */
   bodyHtml?: string;
-  /** Classe extra no `.modal` (variantes visuais, ex.: `modal--device`). */
+  /** Classes extras no cartao do dialogo (variantes de largura, por exemplo). */
   className?: string;
-  /** Botão à esquerda no rodapé (ex.: "Copiar"). Substitui o "Cancelar" e faz o
-   *  rodapé virar `space-between` (secundário à esquerda, confirmar à direita). */
+  /** Botão à esquerda no rodapé (ex.: "Copiar"). Substitui o "Cancelar". */
   secondaryLabel?: string;
   onSecondary?: () => void;
   /** Ações de botões DENTRO do bodyHtml: qualquer `[data-action]` clicado chama
@@ -45,47 +56,71 @@ export interface ModalData {
   onAction?: (action: string, value: string) => void;
 }
 
+/**
+ * Dialogo modal sobre o `<dialog>` nativo, com o vestuario `alert-dialog` do
+ * Basecoat. Trocar a `div` com veu proprio pelo elemento nativo entrega de
+ * graca o que era imitado a mao: camada de topo (sem disputa de `z-index`),
+ * `::backdrop`, foco preso dentro do dialogo e Esc.
+ */
+let ultimoModal: ModalData | null = null;
+
 export function renderModal(el: HTMLElement, modal: ModalData | null): void {
+  // Sem esta guarda o dialogo seria reconstruido a cada tick do polling (15 s),
+  // apagando o que o dono ja tivesse digitado no campo de renomear.
+  if (modal === ultimoModal) return;
+  ultimoModal = modal;
+
   if (!modal) {
+    el.querySelector('dialog')?.close();
     el.innerHTML = '';
     return;
   }
-  const iconKind = modal.danger ? 'danger' : 'ok';
-  const glyph = modal.danger ? icon('warn', 24, 2.2) : icon('check', 24, 2.6);
-  const corpo = modal.bodyHtml ?? `<p class="modal__body">${escapeHtml(modal.body)}</p>`;
+
+  const glyph = modal.danger ? icon('warn', 22, 2.2) : icon('check', 22, 2.6);
+  const corpo = modal.bodyHtml ?? `<p data-description>${escapeHtml(modal.body)}</p>`;
   const temSecundario = Boolean(modal.secondaryLabel);
   const esquerda = temSecundario
-    ? `<button class="l-btn l-btn--ghost" data-role="secondary">${escapeHtml(modal.secondaryLabel!)}</button>`
-    : `<button class="l-btn l-btn--ghost" data-role="cancel">Cancelar</button>`;
-  el.innerHTML = `
-    <div class="modal-scrim" data-role="scrim">
-      <div class="modal${modal.className ? ` ${modal.className}` : ''}" role="dialog" aria-modal="true">
-        <div class="modal__head">
-          <div class="modal__icon modal__icon--${iconKind}">${glyph}</div>
-          <h3 class="modal__title">${escapeHtml(modal.title)}</h3>
-        </div>
-        ${corpo}
-        <div class="modal__actions${temSecundario ? ' modal__actions--split' : ''}">
-          ${esquerda}
-          <button class="l-btn l-btn--${modal.danger ? 'danger' : 'green'}" data-role="confirm">${escapeHtml(modal.confirmLabel)}</button>
-        </div>
-      </div>
-    </div>`;
+    ? `<button type="button" class="btn" data-variant="outline" data-role="secondary">${escapeHtml(modal.secondaryLabel!)}</button>`
+    : `<button type="button" class="btn" data-variant="outline" data-role="cancel">Cancelar</button>`;
 
-  el.querySelector('[data-role="confirm"]')?.addEventListener('click', () => modal.onConfirm());
-  el.querySelectorAll<HTMLElement>('[data-action]').forEach((btn) => {
+  el.innerHTML = `
+    <dialog class="alert-dialog" aria-labelledby="modal-titulo">
+      <article class="${escapeHtml(modal.className ?? '')}">
+        <header>
+          <figure class="grid size-11 place-items-center rounded-xl ${modal.danger ? 'bg-red-bg text-red-ink' : 'bg-green-bg text-green-ink'}">${glyph}</figure>
+          <h2 id="modal-titulo">${escapeHtml(modal.title)}</h2>
+        </header>
+        <section class="px-6 text-sm text-ink-soft">${corpo}</section>
+        <footer class="${temSecundario ? '!justify-between' : ''}">
+          ${esquerda}
+          <button type="button" class="btn" ${modal.danger ? 'data-variant="destructive"' : ''} data-role="confirm">${escapeHtml(modal.confirmLabel)}</button>
+        </footer>
+      </article>
+    </dialog>`;
+
+  const dlg = el.querySelector('dialog')!;
+  dlg.showModal();
+
+  dlg.querySelector('[data-role="confirm"]')?.addEventListener('click', () => modal.onConfirm());
+  dlg.querySelector('[data-role="cancel"]')?.addEventListener('click', () => modal.onCancel());
+  dlg.querySelector('[data-role="secondary"]')?.addEventListener('click', () => modal.onSecondary?.());
+  dlg.querySelectorAll<HTMLElement>('[data-action]').forEach((btn) => {
     btn.addEventListener('click', () =>
       modal.onAction?.(btn.dataset.action ?? '', btn.dataset.value ?? ''),
     );
   });
-  el.querySelector('[data-role="cancel"]')?.addEventListener('click', () => modal.onCancel());
-  el.querySelector('[data-role="secondary"]')?.addEventListener('click', () => modal.onSecondary?.());
-  el.querySelector('[data-role="scrim"]')?.addEventListener('click', (e) => {
-    if (e.target === e.currentTarget) modal.onCancel();
+  // Esc e clique fora fecham pelo mesmo caminho do "Cancelar".
+  dlg.addEventListener('cancel', (e) => {
+    e.preventDefault();
+    modal.onCancel();
+  });
+  dlg.addEventListener('click', (e) => {
+    if (e.target === dlg) modal.onCancel();
   });
 
-  // Modal com campo (ex.: renomear): foca + seleciona o texto e deixa o Enter confirmar.
-  const campo = el.querySelector<HTMLInputElement>('input[autofocus]');
+  // Dialogo com campo (renomear): foca, seleciona o texto e deixa o Enter
+  // confirmar — o `<dialog>` nativo nao submete nada sozinho.
+  const campo = dlg.querySelector<HTMLInputElement>('input[data-autofocus]');
   if (campo) {
     campo.focus();
     campo.select();

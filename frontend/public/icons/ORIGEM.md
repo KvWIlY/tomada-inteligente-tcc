@@ -34,3 +34,13 @@ que motivou esta feature vem de graça.
 Só os 13 efetivamente usados foram copiados (FR-004d). O `icons.ts` antigo
 declarava 26; os 13 de eletrodoméstico nunca são chamados, porque `icone` é
 constante `'plug'` (dívida D-07).
+
+## Por que `lucide-static` nao esta no `package.json`
+
+Os SVG foram extraidos do pacote **`lucide-static@1.34.0`** uma vez e versionados
+aqui. Nada em `src/` importa o pacote — nem em runtime, nem no build —, e SC-008
+proibe dependencia declarada e nao usada, entao ele saiu do `package.json`.
+
+A versao de origem esta gravada no cabecalho de licenca de cada arquivo
+(`<!-- @license lucide-static v1.34.0 - ISC -->`): para atualizar um icone,
+`npm i -D lucide-static@<versao>`, copiar o arquivo, e desinstalar.

@@ -7,16 +7,19 @@
     <link rel="icon" href="/favicon.svg" />
   </head>
   <body>
+    <!--
+      Casca do Basecoat `sidebar`: o elemento `.sidebar` fica com largura zero no
+      desktop (o `<nav>` dentro dele e `position: fixed`) e vira o veu escuro no
+      celular. O irmao seguinte recebe `ml-(--sidebar-width)` da propria
+      biblioteca — por isso o `<main>` PRECISA ser o irmao imediato.
+    -->
     <div id="root">
-      <div class="app">
-        <aside id="sidebar" class="l-sidebar"></aside>
-        <main class="content">
-          <div id="topbar"></div>
-          <div id="view"></div>
-        </main>
-      </div>
-      <div id="scrim" class="scrim"></div>
-      <div id="toast"></div>
+      <div id="sidebar" class="sidebar" data-side="left"></div>
+      <main class="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <div id="topbar"></div>
+        <div id="view" class="flex-1 overflow-y-auto"></div>
+      </main>
+      <div id="toaster" class="toaster" data-align="center"></div>
       <div id="modal"></div>
     </div>
     <script type="module" src="/src/main.ts"></script>

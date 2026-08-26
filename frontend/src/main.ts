@@ -1,8 +1,22 @@
 // =============================================
-// Bootstrap do dashboard -- gate de auth + conecta tudo (idioma verde/branco)
+// Bootstrap do dashboard -- gate de auth + conecta tudo
 // =============================================
 
 import './styles/app.css';
+
+// JS do Basecoat. A ORDEM importa: `basecoat.min` cria `window.basecoat` com o
+// registro de componentes; os outros tres se registram nele. Trazemos so os
+// tres que esta interface usa, e nao o `all.min`, que carregaria acordeao,
+// combobox, popover, drawer e select sem nenhum deles aparecer na tela.
+//
+// O `sidebar` NAO e opcional aqui: e ele quem abre e fecha o gaveteiro no
+// celular, papel que ate a 007 era do `navOpen` no estado global + um veu
+// proprio no `index.html`.
+import 'basecoat-css/basecoat.min';
+import 'basecoat-css/sidebar.min';
+import 'basecoat-css/toast.min';
+import 'basecoat-css/chart.min';
+
 // O wrapper de graficos do Basecoat NAO importa Chart.js: ele consome
 // `window.Chart` (dist/js/chart.js e uma IIFE que faz `new Chart` a partir do
 // global). Entao o global precisa existir antes de qualquer `basecoat.chart`.
@@ -18,7 +32,7 @@ import { icon } from './icons';
 import { consumoTotalAtual, temConexaoRecente } from './derive';
 import { createStore } from './store';
 import * as api from './services/api';
-import type { AppState, Config, Tomada } from './types';
+import type { AppState, Config, Medicao, Tomada } from './types';
 import { renderSidebar } from './views/sidebar';
 import { renderOverview } from './views/overview';
 import { renderDetail } from './views/detail';
@@ -49,8 +63,10 @@ const store = createStore<AppState>({
 
 // === Estado de UI local (não reativo) ===
 let detailSeg: '24h' | '7d' = '24h';
+/** Série da janela de 7 dias, buscada do backend sob demanda (FR-018).
+ *  Vazia enquanto o seletor está em 24 h — nunca preenchida com zeros. */
+let medicoes7d: Medicao[] = [];
 let cfgDraftId: string | null = null;
-let draftSchedule: boolean[] = [];
 let draftCritical = false;
 let savingConfig = false;
 
@@ -63,26 +79,24 @@ let authError: string | null = null;
 let authInfo: string | null = null;
 
 // === Toast helper ===
-let toastTimer: number | null = null;
+//
+// Sem `setTimeout` proprio: o `toaster` do Basecoat fecha o aviso sozinho e
+// pausa a contagem enquanto o ponteiro esta em cima. O estado guarda o ultimo
+// aviso so para que `renderToast` saiba se ja o empurrou.
 function showToast(msg: string, kind: ToastData['kind'] = 'ok'): void {
   store.set({ toast: { msg, kind } });
-  if (toastTimer !== null) clearTimeout(toastTimer);
-  toastTimer = window.setTimeout(() => {
-    store.set({ toast: null });
-    toastTimer = null;
-  }, 3000);
 }
 
 function ensureDraft(t: Tomada): void {
   if (cfgDraftId !== t.id) {
     cfgDraftId = t.id;
-    draftSchedule = [...t.config.schedule];
     draftCritical = t.config.is_critical;
     detailSeg = '24h';
+    medicoes7d = [];
   }
 }
 function draftDirty(t: Tomada): boolean {
-  return draftCritical !== t.config.is_critical || draftSchedule.some((v, i) => v !== t.config.schedule[i]);
+  return draftCritical !== t.config.is_critical;
 }
 
 // === Carga de dados reais de uma residência ===
@@ -132,23 +146,61 @@ async function atualizarResidencia(residenciaId: string): Promise<void> {
   try {
     const tomadas = await api.fetchTomadas(residenciaId);
     const cur = store.get();
+
+    // FR-021: `services/api` engole o erro de rede e devolve LISTA VAZIA — e ele
+    // esta fora do contrato desta feature, entao a guarda vem para ca. Sem ela,
+    // uma queda de Wi-Fi durante o polling escrevia `tomadas: []` no estado e a
+    // tela pulava para "Nenhuma tomada nesta residencia", apagando dados que
+    // continuavam validos. Uma casa que TINHA tomadas nao passa a nao ter por
+    // causa de um GET que falhou; quem remove tomada e a revogacao, que
+    // recarrega por outro caminho.
+    if (tomadas.length === 0 && cur.tomadas.length > 0) {
+      console.warn('[main] polling devolveu lista vazia — mantendo o estado anterior');
+      return;
+    }
+
     const medicoesPorTomada = { ...cur.medicoesPorTomada };
     const eventosPorTomada = { ...cur.eventosPorTomada };
     // So a tomada aberta precisa de serie fresca; as outras so do estado atual.
     const alvo = cur.selectedId;
     if (alvo) {
-      const [meds, evs] = await Promise.all([
-        api.fetchMedicoes(alvo, detailSeg === '7d' ? 24 * 7 : 24),
-        api.fetchEventos(alvo, 100),
-      ]);
-      medicoesPorTomada[alvo] = meds;
-      eventosPorTomada[alvo] = evs;
+      const [meds, evs] = await Promise.all([api.fetchMedicoes(alvo, 24), api.fetchEventos(alvo, 100)]);
+      // Mesma guarda da lista de tomadas: serie vazia so substitui serie vazia.
+      // Trocar 288 medicoes por `[]` mandaria o detalhe para o estado "tomada
+      // pareada, sem dados ainda" — que e uma afirmacao falsa sobre a tomada.
+      if (meds.length > 0 || (medicoesPorTomada[alvo] ?? []).length === 0) medicoesPorTomada[alvo] = meds;
+      if (evs.length > 0 || (eventosPorTomada[alvo] ?? []).length === 0) eventosPorTomada[alvo] = evs;
+      if (detailSeg === '7d') {
+        const sete = await api.fetchMedicoes(alvo, 24 * 7);
+        if (sete.length > 0) medicoes7d = sete;
+      }
     }
     const visao = await api.fetchResidencia(residenciaId);
-    store.set({ tomadas, medicoesPorTomada, eventosPorTomada, visao });
+    // Mesma razao: `null` aqui e "nao consegui perguntar", nao "nao ha score".
+    store.set({ tomadas, medicoesPorTomada, eventosPorTomada, visao: visao ?? cur.visao });
   } catch (err) {
+    // FR-021: falha de rede no polling NAO limpa o que ja esta na tela. O erro
+    // vai para o console e o indicador de conexao cai sozinho, porque
+    // `temConexaoRecente` olha a idade da ultima medicao — nao um flag.
     console.error('[main] polling:', err);
   }
+}
+
+/** Troca a janela do histórico REBUSCANDO do backend (FR-005e item 6). */
+async function trocarJanela(tomadaId: string, seg: '24h' | '7d'): Promise<void> {
+  detailSeg = seg;
+  store.set({});
+  if (seg === '24h') {
+    medicoes7d = [];
+    return;
+  }
+  try {
+    medicoes7d = await api.fetchMedicoes(tomadaId, 24 * 7);
+  } catch (err) {
+    console.error('[main] trocarJanela:', err);
+    showToast('Não foi possível carregar os 7 dias', 'alert');
+  }
+  store.set({});
 }
 
 // Após login: resolve a residência do dono e carrega.
@@ -156,7 +208,7 @@ async function bootstrapDono(): Promise<void> {
   store.set({ phase: 'app', loading: true, error: null, semResidencia: false });
   try {
     const minhas = await api.fetchMinhasResidencias();
-    let residencia = FORCAR_RESIDENCIA
+    const residencia = FORCAR_RESIDENCIA
       ? (minhas.find((r) => r.id === FORCAR_RESIDENCIA) ?? (await api.fetchResidencia(FORCAR_RESIDENCIA)))
       : minhas[0] ?? null;
 
@@ -190,6 +242,7 @@ async function iniciar(): Promise<void> {
       if (store.get().phase !== 'app') void bootstrapDono();
     } else {
       pararPolling();
+      medicoes7d = [];
       store.set({
         phase: 'login', userEmail: null, residencia: null, visao: null, tomadas: [],
         medicoesPorTomada: {}, eventosPorTomada: {}, selectedId: null, semResidencia: false,
@@ -270,7 +323,10 @@ async function saveConfig(t: Tomada): Promise<void> {
   savingConfig = true;
   store.set({});
   const novaVersao = t.config_version + 1;
-  const novaConfig: Config = { ...t.config, schedule: [...draftSchedule], is_critical: draftCritical };
+  // `schedule` e `pi_historico` entram pelo espalhamento da config VIGENTE e
+  // saem iguais (FR-011): as telas que os editavam morreram na 007, e o campo
+  // permanece intacto no contrato por FR-009b/FR-010a.
+  const novaConfig: Config = { ...t.config, is_critical: draftCritical };
   try {
     if (api.hasBackend) await api.saveConfig(t.id, novaConfig, novaVersao);
     const cur = store.get();
@@ -308,6 +364,35 @@ async function revogar(tomada: Tomada): Promise<void> {
     console.error('[main] revogar:', err);
     showToast('Erro ao revogar dispositivo', 'alert');
   }
+}
+
+/**
+ * Confirmacao da revogacao (FR-005e item 4).
+ *
+ * Ate a 007 isto era um `window.prompt` pedindo o nome digitado. O dialogo do
+ * Basecoat diz o mesmo com o texto todo visivel, e o botao destrutivo nomeia a
+ * consequencia — o `prompt` do navegador nao aceita formatacao, nao respeita o
+ * tema e, no celular, aparece descolado do resto da interface.
+ */
+function confirmarRevogacao(t: Tomada): void {
+  store.set({
+    modal: {
+      title: `Revogar "${t.nome}"?`,
+      body: '',
+      bodyHtml: `
+        <p>O ESP32 perde o acesso imediatamente e a chave de coordenação da casa é trocada na mesma
+           transação — as outras tomadas recebem a nova sozinhas.</p>
+        <p class="mt-3">O histórico de medições é <strong>preservado</strong>. Para religar esta tomada será
+           preciso reprovisioná-la com um novo código de pareamento.</p>`,
+      confirmLabel: 'Revogar dispositivo',
+      danger: true,
+      onConfirm: () => {
+        store.set({ modal: null });
+        void revogar(t);
+      },
+      onCancel: () => store.set({ modal: null }),
+    },
+  });
 }
 
 async function savePMax(w: number): Promise<void> {
@@ -351,9 +436,9 @@ function abrirRenomear(t: Tomada): void {
       title: 'Renomear tomada',
       body: '',
       bodyHtml: `
-        <p class="modal__body" style="margin-bottom:14px">Esse nome aparece na barra lateral e no topo da página.</p>
-        <input class="auth__input" data-role="rename-input" type="text" maxlength="40" autofocus
-          value="${escapeHtml(t.nome)}" placeholder="Nome da tomada" style="width:100%" />`,
+        <p class="mb-4">Esse nome aparece na barra lateral e no topo da página.</p>
+        <input class="input" data-role="rename-input" data-autofocus type="text" maxlength="40"
+          value="${escapeHtml(t.nome)}" placeholder="Nome da tomada" aria-label="Nome da tomada" />`,
       confirmLabel: 'Salvar',
       danger: false,
       onConfirm: () => {
@@ -404,16 +489,14 @@ async function abrirNovoDispositivo(): Promise<void> {
         title: 'Parear novo dispositivo',
         body: '',
         bodyHtml: `
-          <p class="modal__body" style="text-align: justify;">Ligue a tomada e conecte-se à rede Wi-Fi dela. No portal que abrir, informe
-            o Wi-Fi da casa e <b>este código</b>. Ela entra direto em <b>${escapeHtml(s.residencia.nome)}</b>.</p>
-          <div class="claim-code">
-            <code class="claim-code__val" data-role="claim-code">${escapeHtml(code)}</code>
-          </div>
-          <p class="modal__body" style="font-size:12px;color:#6e6e73;margin-top:10px">Uso único · expira às ${escapeHtml(quando)}.
-            Copie ANTES de trocar para a rede da tomada.</p>`,
+          <p>Ligue a tomada e conecte-se à rede Wi-Fi dela. No portal que abrir, informe o Wi-Fi da casa
+             e <b>este código</b>. Ela entra direto em <b>${escapeHtml(s.residencia.nome)}</b>.</p>
+          <code class="mt-3.5 block rounded-xl border border-dashed border-green bg-lav px-4 py-3.5 text-center font-mono
+                       text-xl font-bold tracking-widest break-words text-green-ink select-all">${escapeHtml(code)}</code>
+          <p class="mt-2.5 text-xs text-ink-faint">Uso único · expira às ${escapeHtml(quando)}.
+             Copie ANTES de trocar para a rede da tomada.</p>`,
         confirmLabel: 'Concluído',
         danger: false,
-        className: 'modal--device',
         secondaryLabel: 'Copiar código',
         onConfirm: () => store.set({ modal: null }),
         onCancel: () => store.set({ modal: null }),
@@ -474,42 +557,48 @@ function traduzErroAuth(m: string): string {
 }
 
 // === Render ===
-const elApp = document.querySelector<HTMLElement>('.app')!;
-const elSidebar = document.getElementById('sidebar')!;
+type Sidebar = HTMLElement & { toggle?: () => void };
+
+const elRoot = document.getElementById('root')!;
+const elSidebar = document.getElementById('sidebar') as Sidebar;
 const elTopbar = document.getElementById('topbar')!;
 const elView = document.getElementById('view')!;
-const elScrim = document.getElementById('scrim')!;
-const elToast = document.getElementById('toast')!;
+const elToaster = document.getElementById('toaster')!;
 const elModal = document.getElementById('modal')!;
+
+/** Envelope das telas de estado — mesmo cartao das demais telas (FR-005d). */
+function telaDeEstado(conteudo: string): string {
+  return `<div class="grid min-h-full place-items-center p-6"><div class="w-full max-w-lg">${conteudo}</div></div>`;
+}
 
 function renderTopbar(s: AppState, total: number): void {
   const tomada = s.selectedId ? s.tomadas.find((t) => t.id === s.selectedId) ?? null : null;
-  const titulo = tomada ? tomada.nome : s.selectedId ? 'Tomada' : 'Visão Geral';
+  const titulo = tomada ? tomada.nome : 'Visão Geral';
   elTopbar.innerHTML = `
-    <div class="topbar">
-      <button class="topbar__burger" data-role="burger" aria-label="Menu">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    <div class="sticky top-0 z-20 flex items-center gap-3.5 border-b border-border bg-card px-4 py-3 md:hidden">
+      <button type="button" class="btn" data-variant="outline" data-size="icon" data-role="burger" aria-label="Abrir menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
       </button>
-      <span class="topbar__title">${escapeHtml(titulo)}</span>
-      ${tomada ? `<button class="icon-btn" data-role="rename" title="Renomear tomada" aria-label="Renomear tomada">${icon('edit', 16)}</button>` : ''}
-      <span class="topbar__w tnum">${Math.round(total).toLocaleString('pt-BR')}<small> W</small></span>
+      <span class="min-w-0 truncate text-[17px] font-bold text-green-ink">${escapeHtml(titulo)}</span>
+      ${tomada ? `<button type="button" class="btn text-ink-faint" data-variant="ghost" data-size="icon-sm" data-role="rename" aria-label="Renomear tomada">${icon('edit', 16)}</button>` : ''}
+      <span class="tnum ms-auto text-base font-extrabold tracking-tight">${Math.round(total).toLocaleString('pt-BR')}<small class="text-xs font-bold text-ink-faint"> W</small></span>
     </div>`;
-  elTopbar.querySelector('[data-role="burger"]')?.addEventListener('click', () => store.set({ navOpen: true }));
+  elTopbar.querySelector('[data-role="burger"]')?.addEventListener('click', () => elSidebar.toggle?.());
   if (tomada) elTopbar.querySelector('[data-role="rename"]')?.addEventListener('click', () => abrirRenomear(tomada));
 }
 
 store.subscribe((s) => {
-  renderToast(elToast, s.toast);
+  renderToast(elToaster, s.toast);
   renderModal(elModal, s.modal);
 
-  // Login/checking: sem sidebar — colapsa o grid e some com a barra lateral.
-  elApp.classList.toggle('app--auth', s.phase === 'login' || s.phase === 'checking');
+  // Login/checking: sem barra lateral (regra em `tokens.css`).
+  const semSidebar = s.phase === 'login' || s.phase === 'checking';
+  elRoot.toggleAttribute('data-auth', semSidebar);
 
   // Tela de login: ocupa tudo, sem sidebar/topbar.
   if (s.phase === 'login') {
     elSidebar.innerHTML = '';
     elTopbar.innerHTML = '';
-    elScrim.className = 'scrim';
     renderLogin(elView, {
       mode: authMode, email: authEmail, senha: authSenha, busy: authBusy, error: authError, info: authInfo,
       // Não re-renderiza a cada tecla (senão o <input> é recriado e perde o foco):
@@ -523,7 +612,15 @@ store.subscribe((s) => {
   if (s.phase === 'checking') {
     elSidebar.innerHTML = '';
     elTopbar.innerHTML = '';
-    elView.innerHTML = `<div class="placeholder"><h2>Carregando…</h2></div>`;
+    elView.innerHTML = telaDeEstado(`
+      <div class="card">
+        <header><h2>Carregando…</h2></header>
+        <section class="space-y-3">
+          <div class="skeleton h-4 w-2/3"></div>
+          <div class="skeleton h-4 w-full"></div>
+          <div class="skeleton h-24 w-full"></div>
+        </section>
+      </div>`);
     return;
   }
 
@@ -531,17 +628,12 @@ store.subscribe((s) => {
   const total = consumoTotalAtual(s.tomadas);
   const online = !s.error && temConexaoRecente(s.tomadas, s.medicoesPorTomada);
 
-  elScrim.className = `scrim${s.navOpen ? ' scrim--show' : ''}`;
-  elScrim.onclick = () => store.set({ navOpen: false });
-
   renderSidebar(elSidebar, {
     tomadas: s.tomadas,
     selectedId: s.selectedId,
     total,
-    navOpen: s.navOpen,
     userEmail: s.userEmail,
-    onSelect: (id) => store.set({ selectedId: id, navOpen: false }),
-    onCloseNav: () => store.set({ navOpen: false }),
+    onSelect: (id) => store.set({ selectedId: id }),
     onInfo: (msg) => showToast(msg),
     onRename: (id) => { const t = s.tomadas.find((tt) => tt.id === id); if (t) abrirRenomear(t); },
     onLogout: () => void api.sair(),
@@ -550,46 +642,73 @@ store.subscribe((s) => {
   renderTopbar(s, total);
 
   if (s.loading) {
-    elView.innerHTML = `<div class="placeholder"><h2>Carregando…</h2><p>Buscando dados do servidor.</p></div>`;
+    elView.innerHTML = telaDeEstado(`
+      <div class="card">
+        <header><h2>Carregando…</h2><p data-description>Buscando dados do servidor.</p></header>
+        <section class="space-y-3">
+          <div class="skeleton h-4 w-1/2"></div>
+          <div class="skeleton h-24 w-full"></div>
+          <div class="skeleton h-4 w-3/4"></div>
+        </section>
+      </div>`);
     return;
   }
   // Sem VITE_BACKEND_URL não há origem de dados. Estado terminal e explícito.
   if (s.semBackend) {
-    elView.innerHTML = `
-      <div class="placeholder">
+    elView.innerHTML = telaDeEstado(`
+      <div class="alert" data-variant="destructive" role="alert">
+        ${icon('warn', 16, 2.2)}
         <h2>Backend não configurado</h2>
-        <p>Defina <code>VITE_BACKEND_URL</code> em <code>frontend/.env</code> apontando para a
-           API (ex.: <code>http://localhost:8080</code>) e recarregue a página.</p>
-        <p style="margin-top:12px;font-size:13px;color:#6e6e73">O dashboard lê exclusivamente
-           do backend — não há modo de demonstração com dados fabricados.</p>
-      </div>`;
+        <section>
+          <p>Defina <code class="font-mono">VITE_BACKEND_URL</code> em <code class="font-mono">frontend/.env</code> apontando
+             para a API (ex.: <code class="font-mono">http://localhost:8080</code>) e recarregue a página.</p>
+          <p>O dashboard lê exclusivamente do backend — não há modo de demonstração com dados fabricados.</p>
+        </section>
+      </div>`);
     return;
   }
 
   if (s.semResidencia) {
-    elView.innerHTML = `
-      <div class="placeholder">
-        <h2>Sua conta ainda não tem residência</h2>
-        <p>Crie uma para começar a parear tomadas a ela.</p>
-        <button class="l-btn l-btn--green" data-role="criar-res" style="margin-top:16px">Criar minha residência</button>
-      </div>`;
+    elView.innerHTML = telaDeEstado(`
+      <div class="card">
+        <section class="empty py-10">
+          <header>
+            <figure class="mb-4 grid size-14 place-items-center rounded-2xl bg-lav text-ink-faint">${icon('plus', 26, 2.2)}</figure>
+            <h2 class="text-xl font-bold tracking-tight">Sua conta ainda não tem residência</h2>
+            <p class="mt-2 text-sm text-ink-soft">Crie uma para começar a parear tomadas a ela.</p>
+          </header>
+          <footer class="mt-5"><button type="button" class="btn" data-role="criar-res">Criar minha residência</button></footer>
+        </section>
+      </div>`);
     elView.querySelector('[data-role="criar-res"]')?.addEventListener('click', () => void criarResidenciaDemo());
     return;
   }
   if (s.error) {
-    elView.innerHTML = `
-      <div class="placeholder">
-        <h2>Erro: ${escapeHtml(s.error)}</h2>
-        <p>Verifique se o backend está no ar e se você tem acesso a esta residência.</p>
-      </div>`;
+    elView.innerHTML = telaDeEstado(`
+      <div class="alert" data-variant="destructive" role="alert">
+        ${icon('warn', 16, 2.2)}
+        <h2>Erro ao carregar</h2>
+        <section>
+          <p>${escapeHtml(s.error)}</p>
+          <p>Verifique se o backend está no ar e se você tem acesso a esta residência.</p>
+        </section>
+      </div>`);
     return;
   }
   if (s.tomadas.length === 0) {
-    elView.innerHTML = `
-      <div class="placeholder">
-        <h2>Nenhuma tomada nesta residência</h2>
-        <p>Pareie uma tomada ESP32 à residência ${escapeHtml(s.residencia?.nome ?? '')} (provisionamento do firmware).</p>
-      </div>`;
+    elView.innerHTML = telaDeEstado(`
+      <div class="card">
+        <section class="empty py-10">
+          <header>
+            <figure class="mb-4 grid size-14 place-items-center rounded-2xl bg-lav text-ink-faint">${icon('plug', 26)}</figure>
+            <h2 class="text-xl font-bold tracking-tight">Nenhuma tomada nesta residência</h2>
+            <p class="mt-2 text-sm text-ink-soft">Pareie uma tomada ESP32 a ${escapeHtml(s.residencia?.nome ?? 'esta residência')} pelo
+               portal Wi-Fi do firmware, usando um código de pareamento.</p>
+          </header>
+          <footer class="mt-5"><button type="button" class="btn" data-role="novo-disp">Gerar código de pareamento</button></footer>
+        </section>
+      </div>`);
+    elView.querySelector('[data-role="novo-disp"]')?.addEventListener('click', () => void abrirNovoDispositivo());
     return;
   }
 
@@ -613,23 +732,25 @@ store.subscribe((s) => {
     return;
   }
   ensureDraft(tomada);
+  const medicoes = s.medicoesPorTomada[tomada.id] ?? [];
   renderDetail(elView, {
     tomada,
     residencia: s.residencia,
-    medicoes: s.medicoesPorTomada[tomada.id] ?? [],
+    medicoes,
+    // Enquanto os 7 dias não chegam, segue plotando as 24 h já em mãos — nunca
+    // uma série de zeros (CHK032).
+    medicoesJanela: detailSeg === '7d' && medicoes7d.length > 0 ? medicoes7d : medicoes,
     online,
     seg: detailSeg,
-    draftSchedule,
     draftCritical,
     dirty: draftDirty(tomada),
     saving: savingConfig,
     onComandoRele: (cmd) => onComandoRele(tomada, cmd),
-    onChangeSeg: (sg) => { detailSeg = sg; store.set({}); },
-    onScheduleToggle: (h) => { draftSchedule = draftSchedule.map((v, i) => (i === h ? !v : v)); store.set({}); },
+    onChangeSeg: (sg) => void trocarJanela(tomada.id, sg),
     onToggleCritical: () => { draftCritical = !draftCritical; store.set({}); },
     onSaveConfig: () => void saveConfig(tomada),
     onSavePMax: (w) => void savePMax(w),
-    onRevogar: () => void revogar(tomada),
+    onRevogar: () => confirmarRevogacao(tomada),
   });
 });
 

@@ -11,8 +11,8 @@ Cada nó mede tensão e corrente, calcula a **potência ativa** (média do produ
 |-----------|-------|------|
 | `firmware/` | Rust + esp-idf no ESP32: sensores, relé, ESP-NOW, cliente do backend — e `src/solver/`, a lógica pura do MILP | Xtensa |
 | `backend/` | Rust + Actix-Web sobre MySQL: **fonte única de verdade**, auth própria (JWT), autorização default-deny | host |
-| `frontend/` | Vite + TypeScript: dashboard do dono | browser |
-| `specs/` | Especificações speckit (001–005) — leia o plano da feature ativa antes de codar | — |
+| `frontend/` | Vite + TypeScript 7 + Tailwind 4 + Basecoat UI, sem framework: dashboard do dono | browser |
+| `specs/` | Especificações speckit (001–005, 007) — leia o plano da feature ativa antes de codar | — |
 
 O `tomada-solver` era um crate separado, host-testável; em 2026-08-24 foi absorvido em
 `firmware/src/solver/`. A lógica continua pura (sem I/O, sem `esp-idf`), mas passou a compilar
@@ -69,8 +69,17 @@ cd C:\y\frontend
 copy .env.example .env       # VITE_BACKEND_URL=http://localhost:8080
 npm install
 npm run dev
+npm run verify               # roteiro de regressao headless (backend precisa estar no ar)
 ```
-Sem `VITE_BACKEND_URL` o dashboard roda com dados MOCK.
+
+**Nao ha modo MOCK.** Sem `VITE_BACKEND_URL` o dashboard mostra uma tela dizendo o que falta
+configurar e para por ali. O gerador de dados falsos foi removido: ele mascarava exatamente as
+falhas de integracao que so aparecem contra a API real.
+
+A pilha visual e **Basecoat UI sobre Tailwind CSS 4** — CSS puro, sem React. As views continuam
+funcoes TypeScript que devolvem marcacao (`src/views/*.ts`), e o tema claro/escuro acompanha a
+preferencia do sistema. Verificacao em `frontend/scripts/README.md`: nao existe teste unitario
+de frontend, existem tres roteiros headless que dirigem a interface real.
 
 ### Firmware
 ```powershell
@@ -105,7 +114,8 @@ ver `ok/08-dividas-tecnicas.md`.
 
 Features **004** (backend próprio) e **005** (offline-first + pareamento local) implementadas:
 firmware compila para Xtensa sem warnings, backend com 5 testes de integração verdes contra o
-MySQL real, frontend com typecheck limpo e bundle de 45,79 kB.
+MySQL real, e o dashboard redesenhado (feature **007**) com typecheck limpo, roteiro de regressão
+headless verde e contraste AA medido nos dois temas.
 
 **Nenhum teste de host roda hoje** — o harness do MILP foi apagado em `f2a59bf` e a absorção do
 `tomada-solver` levou junto o alvo de host dos demais módulos puros. É violação vigente do
