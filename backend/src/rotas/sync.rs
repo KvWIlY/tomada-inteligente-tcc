@@ -1,7 +1,7 @@
-//! T029/T030 [US2] — plano de dados do dispositivo: `POST /telemetria` (lote
+//! T029/T030 [US2] - plano de dados do dispositivo: `POST /telemetria` (lote
 //! idempotente) e `GET /config` (pull do desired-state).
 //!
-//! T031 — **o escopo vem sempre do claim** (`DispositivoAutenticado`), nunca do
+//! T031 - **o escopo vem sempre do claim** (`DispositivoAutenticado`), nunca do
 //! corpo ou da URL. Um device não consegue nomear outra tomada nem que tente:
 //! não há parâmetro para isso. O claim ainda é confrontado com o banco (uma
 //! assinatura válida apontando para tomada inexistente → 403).
@@ -22,7 +22,7 @@ pub struct TelemetriaReq {
     #[serde(default)]
     pub eventos: Vec<EventoIn>,
     /// Estado instantâneo do nó. `ultimo_uso_ativo_ts` é decidido pelo firmware
-    /// (só avança quando ele detecta uso real), então o backend não o infere —
+    /// (só avança quando ele detecta uso real), então o backend não o infere -
     /// apenas persiste, para que as irmãs possam lê-lo no fallback (US4/UC22).
     #[serde(default)]
     pub snapshot: Option<SnapshotReq>,
@@ -38,7 +38,7 @@ pub struct SnapshotReq {
     /// O nó terminou a janela de "usar agora" e está devolvendo o controle ao
     /// otimizador: zera `rele_aberto` (→ automático). Sem isso o `GET /config`
     /// seguinte repetiria o comando e a tomada nunca sairia do modo manual.
-    /// É a ÚNICA escrita de `rele_aberto` feita por um device — e só na direção
+    /// É a ÚNICA escrita de `rele_aberto` feita por um device - e só na direção
     /// de liberar; um dispositivo nunca consegue cortar ou ligar a si mesmo por
     /// aqui (Princípio VIII: default-deny, superfície mínima).
     #[serde(default)]
@@ -109,7 +109,7 @@ pub async fn config(
     }
     // Revogação verificada A CADA requisição (005/FR-013). Um JWT ainda dentro do
     // prazo NÃO basta: sem esta checagem, o dispositivo revogado continuaria puxando
-    // config — e, pior, receberia a chave da casa recém-rotacionada, anulando a
+    // config - e, pior, receberia a chave da casa recém-rotacionada, anulando a
     // revogação na malha ESP-NOW.
     let cred = db::credenciais::buscar_credencial(&pool, &dev.tomada_id)
         .await?
@@ -135,18 +135,18 @@ pub async fn config(
         "residencia_key": residencia_key,
         // Fonte de hora da LAN. O SNTP publico exige internet; numa casa sem WAN o
         // dispositivo nunca sincronizava, e sem hora certa o firmware neutraliza as
-        // regras horarias do MILP (A_it/Pi_it) e descarta o buffer a cada reboot.
+        // regras horarias do MILP (A_it) e descarta o buffer a cada reboot.
         // O backend ja e a fonte da verdade de config, P_max, rele e chave da casa
-        // pelo mesmo canal autenticado — servir a hora nao amplia a confianca.
+        // pelo mesmo canal autenticado - servir a hora nao amplia a confianca.
         // O firmware usa isto so como FALLBACK: onde ha SNTP, o SNTP ganha.
         "now": Utc::now().timestamp(),
     })))
 }
 
-/// T048 [US4] — carga das irmãs para o fallback de partição da malha (UC22).
+/// T048 [US4] - carga das irmãs para o fallback de partição da malha (UC22).
 /// O backend **não decide estados** (FR-016): devolve `p_medida_atual` e
 /// `ultimo_uso_ativo_ts` crus e o firmware aplica a janela de frescor e soma
-/// como `carga_fixa` — a lógica de 003 (`tomada-solver::coordenacao`) fica
+/// como `carga_fixa` - a lógica de 003 (`tomada-solver::coordenacao`) fica
 /// intacta. A residência da URL precisa bater com a do claim.
 pub async fn consumo_irmas(
     pool: web::Data<MySqlPool>,

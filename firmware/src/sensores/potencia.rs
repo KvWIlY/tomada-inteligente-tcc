@@ -4,12 +4,12 @@
 //! e feita aqui (media da janela), tanto no RMS quanto no produto instantaneo.
 //!
 //! Duas potencias saem daqui e NAO sao a mesma coisa:
-//!   * APARENTE `S = Vrms * Irms` (VA) — o que este modulo calculava ate 2026-08-24;
-//!   * ATIVA `P = media(v_k * i_k)` (W) — o watt de verdade, o que o modelo consome.
+//!   * APARENTE `S = Vrms * Irms` (VA) - o que este modulo calculava ate 2026-08-24;
+//!   * ATIVA `P = media(v_k * i_k)` (W) - o watt de verdade, o que o modelo consome.
 //! Elas so coincidem em carga puramente resistiva. As cargas-alvo desta tomada
 //! (fontes chaveadas em standby: carregador, TV, roteador) tem fator de potencia
 //! baixo, e usar a aparente como se fosse watt superestimava `cstd`/`con` e apertava
-//! o teto `p_max` (R2) em VA — inflando a economia de fantasma que o sistema mede.
+//! o teto `p_max` (R2) em VA - inflando a economia de fantasma que o sistema mede.
 
 /// Resultado de uma janela de medicao.
 #[derive(Debug, Clone, Copy)]
@@ -21,7 +21,7 @@ pub struct Leitura {
     /// Potencia **ATIVA** (W). E o `p_medida` que atravessa o sistema inteiro:
     /// decisao do MILP, calibracao de `cstd`/`con`, heartbeat ESP-NOW e banco.
     pub p: f32,
-    /// Potencia **APARENTE** (VA) = `vrms * irms`. Nao e persistida — existe para
+    /// Potencia **APARENTE** (VA) = `vrms * irms`. Nao e persistida - existe para
     /// derivar o `fp` e para o log de diagnostico.
     pub s: f32,
     /// Fator de potencia `P/S` em [0, 1].
@@ -75,7 +75,7 @@ pub fn potencia_ativa(v_mv: &[f32], i_mv: &[f32], fator_v: f32, fator_i: f32) ->
 
 /// Fator de potencia `P/S`, saturado em [0, 1].
 ///
-/// Sem carga (`s ~ 0`) devolve 0 — nao ha fase definida para relatar, e 0/0 viraria NaN
+/// Sem carga (`s ~ 0`) devolve 0 - nao ha fase definida para relatar, e 0/0 viraria NaN
 /// que o backend recusa. O `clamp` cobre o caso de `p` sair marginalmente acima de `s`
 /// por ruido de arredondamento em corrente baixa.
 pub fn fator_potencia(p_ativa: f32, p_aparente: f32) -> f32 {
@@ -96,9 +96,12 @@ pub fn deriva_u_i(p_atual: f32, p_limiar: f32) -> bool {
     p_atual > p_limiar
 }
 
-/// `F_i` (consumo fantasma): energizado (rele fechado) e ocioso por tempo > `t_limite`.
+/// `F_i` (consumo fantasma): ocioso por tempo > `t_limite`, com o rele aberto ou fechado.
 /// Ocioso = potencia entre o standby e o limiar de uso. `ociosa_desde_s` = ha quantos
 /// segundos a tomada esta ociosa (gerido pelo ciclo); `t_limite` em s (R4).
-pub fn deriva_f_i(rele_fechado: bool, p_atual: f32, p_limiar: f32, ociosa_ha_s: i64, t_limite: i64) -> bool {
-    rele_fechado && p_atual <= p_limiar && ociosa_ha_s >= t_limite
+///
+/// Nao exige rele fechado: se exigisse, o corte zeraria o `F_i`, a R4 liberaria o STD de
+/// novo e o rele oscilaria a cada ciclo sempre que `alpha * W_i > c_std`.
+pub fn deriva_f_i(p_atual: f32, p_limiar: f32, ociosa_ha_s: i64, t_limite: i64) -> bool {
+    p_atual <= p_limiar && ociosa_ha_s >= t_limite
 }

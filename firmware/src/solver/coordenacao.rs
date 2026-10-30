@@ -2,7 +2,7 @@
 //!
 //! Quando o mesh ESP-NOW nao traz NENHUM peer vivo mas o no esta online, as
 //! tomadas-irmas lidas da nuvem entram como **carga fixa** (W) subtraida do
-//! P_max — caminho degradado e conservador para particao do mesh. As irmas NAO
+//! P_max - caminho degradado e conservador para particao do mesh. As irmas NAO
 //! viram variaveis de decisao do MILP: o snapshot de nuvem e eventualmente
 //! consistente e quebraria o determinismo que o ESP-NOW garante.
 //!

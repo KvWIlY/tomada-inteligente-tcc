@@ -1,0 +1,29 @@
+# Simulador da feature 009: roda o MILP do firmware no PC, sobre uma base CSV de consumo.
+#
+# NAO e membro do workspace da raiz (que e o do firmware, alvo Xtensa): tem o proprio
+# `[workspace]`, como o `backend/`. Compila para o host com a toolchain `stable`.
+# Os fontes do firmware entram por `#[path]` em `src/main.rs`, sem copia (research D1).
+[workspace]
+
+[package]
+name = "simulador"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+anyhow = "1"
+log = "0.4"
+clap = { version = "4", features = ["derive"] }
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+sha2 = "0.10"
+# Puxadas pelo `firmware/src/solver/pareamento.rs`, que entra junto com a pasta `solver/`.
+spake2 = "0.4"
+hkdf = "0.12"
+hmac = { version = "0.12", default-features = false }
+chacha20poly1305 = "0.10"
+
+[profile.release]
+opt-level = 3

@@ -9,7 +9,7 @@
 
 use crate::sensores::potencia::rms_centrado;
 
-/// Volts-de-rede por mV-RMS-no-ADC. PLACEHOLDER — calibrar no hardware real.
+/// Volts-de-rede por mV-RMS-no-ADC. PLACEHOLDER - calibrar no hardware real.
 /// Ex.: se 220 V reais dao ~700 mV RMS no ADC, FATOR ~ 220/700 ≈ 0.314.
 pub const FATOR_TENSAO: f32 = 0.314;
 

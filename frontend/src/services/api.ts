@@ -3,7 +3,7 @@
 // =============================================
 //
 // Todo acesso a dados passa por HTTP autenticado com o JWT
-// de USUARIO emitido por `POST /auth/login` — nao existe mais acesso direto ao banco
+// de USUARIO emitido por `POST /auth/login` - nao existe mais acesso direto ao banco
 // nem RLS: a autorizacao e default-deny no backend (Constituicao v2.0.0, Princ. VI/VIII).
 //
 // Contrato: specs/004-backend-actix-mysql/contracts/backend-api.md
@@ -19,7 +19,7 @@ export const hasBackend: boolean = Boolean(BASE);
 // =============================================
 //
 // Este modulo e o dono da sessao: guarda o token, o `exp` e o e-mail (so p/ exibir)
-// — nunca a senha.
+// - nunca a senha.
 
 const CHAVE_SESSAO = 'tcc.sessao';
 
@@ -59,7 +59,7 @@ function gravarSessao(s: SessaoGravada | null): void {
   for (const cb of ouvintes) cb(pub);
 }
 
-/** `sub` do JWT — o backend nao tem endpoint de "quem sou eu", entao lemos do payload. */
+/** `sub` do JWT - o backend nao tem endpoint de "quem sou eu", entao lemos do payload. */
 function paraSessaoDono(s: SessaoGravada): SessaoDono {
   let userId = '';
   try {
@@ -87,7 +87,7 @@ export async function entrar(email: string, senha: string): Promise<void> {
   gravarSessao({ jwt: r.jwt, jwtExp: r.jwt_exp, email });
 }
 
-/** Cria a conta e ja entra — o backend nao exige confirmacao de e-mail. */
+/** Cria a conta e ja entra - o backend nao exige confirmacao de e-mail. */
 export async function cadastrar(email: string, senha: string): Promise<{ precisaConfirmar: boolean }> {
   await req<{ id: string }>('POST', '/auth/register', { email, senha }, false);
   await entrar(email, senha);
@@ -251,13 +251,13 @@ export async function fetchEventos(tomadaId: string, _limite = 100): Promise<Eve
 // Escrita
 // =============================================
 
-/** P_max da residencia (teto eletrico — safety-critical, UC07). */
+/** P_max da residencia (teto eletrico - safety-critical, UC07). */
 export async function savePMax(residenciaId: string, pMax: number): Promise<void> {
   await req('PATCH', `/residencias/${residenciaId}`, { p_max: pMax });
 }
 
 /** As tres intencoes do dono sobre o rele. Sao coisas diferentes, e nao graus da
- *  mesma coisa — por isso um tipo fechado em vez de um boolean. */
+ *  mesma coisa - por isso um tipo fechado em vez de um boolean. */
 export type ComandoRele = 'auto' | 'usar_agora' | 'cortar';
 
 /** Comando manual (UC09). O no puxa em `GET /config` no proximo tick de nuvem.
@@ -273,7 +273,7 @@ export async function renameTomada(tomadaId: string, nome: string): Promise<void
 }
 
 /**
- * Salva a config do modelo (UC06). O **servidor** incrementa `config_version` — o
+ * Salva a config do modelo (UC06). O **servidor** incrementa `config_version` - o
  * dashboard nao cunha versao (fazer isso no cliente permitia corrida entre abas).
  * Por isso `novaVersao` e ignorado; fica na assinatura so para nao quebrar chamadas.
  */
@@ -287,7 +287,6 @@ export async function saveConfig(
     w_i: config.w_i,
     t_limite: config.t_limite,
     schedule: config.schedule,
-    pi_historico: config.pi_historico,
   };
   if (config.p_limiar_detectado_auto !== undefined) {
     configJson.p_limiar_detectado_auto = config.p_limiar_detectado_auto;
@@ -329,7 +328,7 @@ function comoBool(v: unknown): boolean {
   return v === true || v === 1 || v === '1';
 }
 
-/** Idem, mas preservando `null` — em `tomadas.rele_aberto` o nulo NAO e "false":
+/** Idem, mas preservando `null` - em `tomadas.rele_aberto` o nulo NAO e "false":
  *  e o modo AUTOMATICO, em que quem manda no rele e o MILP (migration 0002). */
 function comoBoolOuNulo(v: unknown): boolean | null {
   return v === null || v === undefined ? null : comoBool(v);
@@ -337,7 +336,7 @@ function comoBoolOuNulo(v: unknown): boolean | null {
 
 /**
  * Linha de `tomadas` -> tipo Tomada. Os parametros do modelo vivem no JSON `config`;
- * `localizacao`/`icone` NAO existem no banco — sao defaults locais da UI.
+ * `localizacao`/`icone` NAO existem no banco - sao defaults locais da UI.
  */
 function normalizeTomada(raw: Record<string, unknown>): Tomada {
   const cfgJson = (raw.config ?? {}) as Record<string, unknown>;
@@ -349,18 +348,12 @@ function normalizeTomada(raw: Record<string, unknown>): Tomada {
     schedule = [...schedule, ...Array(24 - schedule.length).fill(true)].slice(0, 24);
   }
 
-  let piHistorico = (cfgJson.pi_historico ?? Array(24).fill(0.5)) as number[];
-  if (!Array.isArray(piHistorico) || piHistorico.length !== 24) {
-    piHistorico = [...(piHistorico || []), ...Array(24).fill(0.5)].slice(0, 24);
-  }
-
   const cfg: Config = {
     p_limiar_detectado_auto: (cfgJson.p_limiar_detectado_auto ?? undefined) as number | undefined,
     t_limite: Number(cfgJson.t_limite ?? 600),
     is_critical: Boolean(cfgJson.is_critical ?? false),
     schedule,
     w_i: Number(cfgJson.w_i ?? 10),
-    pi_historico: piHistorico,
   };
 
   return {

@@ -6,7 +6,7 @@
 //!
 //! Contrato vigente: `specs/004-backend-actix-mysql/contracts/backend-api.md`
 //! (`POST /telemetria`). Originalmente escrito para a feature 002 contra PostgREST; a
-//! feature 004 trocou a camada de nuvem pelo backend próprio e a lógica **não mudou** —
+//! feature 004 trocou a camada de nuvem pelo backend próprio e a lógica **não mudou** -
 //! o backend ignora o `tomada_id` que `montar_corpo_lote` inclui em cada registro e usa
 //! o claim do JWT, e a dedup deixou de ser `on_conflict` para ser
 //! `INSERT ... ON DUPLICATE KEY UPDATE` sobre o mesmo `UNIQUE (tomada_id, timestamp)`.
@@ -18,7 +18,7 @@ use crate::solver::tipos::Estado;
 
 /// Registro sincronizável (espelha `firmware::persistencia::medicao::Medicao`).
 ///
-/// Identidade natural = `(tomada_id, timestamp)` — casa com o `unique (tomada_id,
+/// Identidade natural = `(tomada_id, timestamp)` - casa com o `unique (tomada_id,
 /// timestamp)` da tabela `medicoes` (schema da 001), base da idempotência de reenvio.
 /// `confirmado` é estado **local** (não vai no corpo): `true` só após 2xx da nuvem.
 #[derive(Debug, Clone, PartialEq)]
@@ -34,7 +34,7 @@ pub struct SyncRecord {
 }
 
 /// Decide se o JWT deve ser renovado: `true` quando faltam `margem_s` segundos (ou
-/// menos) para `jwt_exp`, ou se já expirou. Função pura — `agora` e `jwt_exp` em epoch.
+/// menos) para `jwt_exp`, ou se já expirou. Função pura - `agora` e `jwt_exp` em epoch.
 ///
 /// Contrato (research §2): renovação **proativa** por margem + reativa no `401`.
 pub fn deve_renovar(jwt_exp: i64, agora: i64, margem_s: i64) -> bool {
@@ -42,13 +42,13 @@ pub fn deve_renovar(jwt_exp: i64, agora: i64, margem_s: i64) -> bool {
 }
 
 /// Decide se a config remota deve ser adotada: somente quando a versão remota é
-/// **estritamente maior** que a local (FR-015 — sem regressão em versões iguais/menores).
+/// **estritamente maior** que a local (FR-015 - sem regressão em versões iguais/menores).
 pub fn deve_adotar_config(versao_remota: i64, versao_local: i64) -> bool {
     versao_remota > versao_local
 }
 
 /// Seleciona os índices dos registros **pendentes** (`confirmado == false`), ordenados
-/// por `timestamp` crescente, até no máximo `max` (FR-010 — montagem de lote).
+/// por `timestamp` crescente, até no máximo `max` (FR-010 - montagem de lote).
 ///
 /// Retorna índices na fatia original (preserva o vínculo com o buffer do chamador).
 /// `max == 0` ⇒ vazio.
@@ -69,7 +69,7 @@ pub fn selecionar_pendentes(registros: &[SyncRecord], max: usize) -> Vec<usize> 
 /// indicados por `indices`. Inclui só as colunas que o role `device` escreve em
 /// `medicoes`; **não** inclui `confirmado` (estado local).
 ///
-/// `p_medida` é formatado com 2 casas (`{:.2}`) — mesmo formato do firmware (bug Xtensa).
+/// `p_medida` é formatado com 2 casas (`{:.2}`) - mesmo formato do firmware (bug Xtensa).
 /// `fator_potencia` usa 3 casas: o valor vive em [0, 1] e 2 casas jogariam fora a
 /// diferença entre uma fonte chaveada ruim (0,45) e uma decente (0,55).
 /// Um `indices` vazio produz `"[]"`.

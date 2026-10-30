@@ -3,15 +3,15 @@
 //! Sao DOIS gatilhos, com papeis diferentes:
 //!
 //! 1. **Espaco** (a cada chamada, barato): quando o livre cai abaixo de
-//!    `GATILHO_LIVRE_PCT`, remove baldes — mais antigo primeiro, preferindo os ja
-//!    confirmados — ate o livre voltar a `ALVO_LIVRE_PCT`. A decisao de QUAIS baldes
+//!    `GATILHO_LIVRE_PCT`, remove baldes - mais antigo primeiro, preferindo os ja
+//!    confirmados - ate o livre voltar a `ALVO_LIVRE_PCT`. A decisao de QUAIS baldes
 //!    e pura e host-testada em `crate::solver::retencao`.
 //! 2. **Idade** (a cada 5 dias, marcador `/lfs/last_purge.txt`): remove balde
 //!    totalmente confirmado com idade >= 5 dias, e qualquer balde com idade > 7 dias
 //!    (cap rigido, mesmo sem confirmacao).
 //!
 //! Sem o gatilho de espaco, a aritmetica nao fecha: a 1 medicao/min (~238 KB/dia) uma
-//! particao de 640 KB enche em ~2,5 dias, e a purga por idade so agiria no 5o — havia
+//! particao de 640 KB enche em ~2,5 dias, e a purga por idade so agiria no 5o - havia
 //! uma janela de ~2,5 dias em que a gravacao local falhava e nada limpava nada.
 //!
 //! Granularidade por balde (1 arquivo/dia) torna a purga O(1) por dia (um `remove`).
@@ -28,20 +28,20 @@ const CAP_RIGIDO_DIAS: i64 = 7;
 const IDADE_PURGA_DIAS: i64 = 5;
 
 /// Abaixo desta fracao de espaco livre, a purga por espaco dispara.
-/// 15% de 640 KB ~ 96 KB ~ 10 h de medicao — folga suficiente para varios ticks.
+/// 15% de 640 KB ~ 96 KB ~ 10 h de medicao - folga suficiente para varios ticks.
 const GATILHO_LIVRE_PCT: usize = 15;
 /// Fracao de espaco livre que a purga tenta restabelecer. Acima do gatilho para nao
 /// purgar a cada tick (histerese); um balde de dia cheio (~238 KB) ja cobre a diferenca.
 const ALVO_LIVRE_PCT: usize = 30;
 
-/// O que uma passada de purga fez — material de observabilidade para o `main`.
+/// O que uma passada de purga fez - material de observabilidade para o `main`.
 #[derive(Debug, Default)]
 pub struct Resumo {
     /// Baldes removidos pelo gatilho de idade.
     pub por_idade: usize,
     /// Baldes removidos pelo gatilho de espaco.
     pub por_espaco: usize,
-    /// Destes, quantos tinham registro NAO confirmado — perda real de dado.
+    /// Destes, quantos tinham registro NAO confirmado - perda real de dado.
     pub baldes_com_perda: usize,
     /// Bytes liberados pelo gatilho de espaco.
     pub bytes_liberados: u64,
@@ -73,7 +73,7 @@ fn registrar_purga(agora: i64) -> Result<()> {
 /// (uma consulta ao LittleFS) e o de idade continua limitado a 1x a cada 5 dias.
 /// `agora` = epoch atual (SNTP; uptime enquanto nao ha hora certa).
 ///
-/// Deve rodar ANTES do flush do buffer de RAM — e justamente para o flush ter onde
+/// Deve rodar ANTES do flush do buffer de RAM - e justamente para o flush ter onde
 /// gravar que a purga por espaco existe.
 pub fn talvez_purgar(agora: i64) -> Result<Resumo> {
     let mut r = Resumo::default();
@@ -94,7 +94,7 @@ pub fn talvez_purgar(agora: i64) -> Result<Resumo> {
 
 /// Gatilho de espaco: libera disco antes que a gravacao local comece a falhar.
 ///
-/// O dado de um balde confirmado ja esta no banco — apaga-lo nao perde nada. Se ainda
+/// O dado de um balde confirmado ja esta no banco - apaga-lo nao perde nada. Se ainda
 /// faltar espaco depois de esgotar os confirmados, apaga os nao confirmados do mesmo
 /// jeito (o combinado: perder o dado mais antigo e melhor que parar de medir), mas
 /// isso vira evento de observabilidade em `Resumo::baldes_com_perda`.

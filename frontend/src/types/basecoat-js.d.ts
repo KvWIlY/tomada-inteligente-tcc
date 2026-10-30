@@ -1,6 +1,6 @@
 // Modulos JS do Basecoat, importados so pelo efeito colateral.
 //
-// Sao IIFEs sem `export` — nao ha superficie a tipar, so a existencia do modulo
+// Sao IIFEs sem `export` - nao ha superficie a tipar, so a existencia do modulo
 // a declarar para o `tsc`. O que eles instalam em `window` (o registro e
 // `basecoat.chart`) esta tipado em `basecoat.d.ts`.
 //

@@ -24,9 +24,6 @@ impl Estado {
             Estado::On => "ON",
         }
     }
-
-    /// Os tres estados em ordem de indice.
-    pub const TODOS: [Estado; 3] = [Estado::Off, Estado::Std, Estado::On];
 }
 
 /// Pesos da funcao objetivo. Convencao do PDF: `beta, gamma >> 1`.
@@ -43,7 +40,10 @@ pub struct Pesos {
 impl Default for Pesos {
     fn default() -> Self {
         // beta, gamma >> 1 para dominar o consumo em Watts.
-        Pesos { alpha: 1.0, beta: 1.0e6, gamma: 1.0e6 }
+        // alpha = 0.5 absorve o `Pi_{i,t}` que saiu em 2026-09-14: nada no sistema o
+        // calculava e ele valia 0.5 fixo, entao `alpha*Pi*W` virou `alpha*W` com o
+        // mesmo numero. Nenhuma decisao muda.
+        Pesos { alpha: 0.5, beta: 1.0e6, gamma: 1.0e6 }
     }
 }
 
@@ -58,8 +58,6 @@ pub struct TomadaInput {
     pub u_i: bool,
     /// `F_i`: consumo fantasma detectado (R4).
     pub f_i: bool,
-    /// `Pi_{i,t}` da hora corrente (0..1).
-    pub pi: f64,
     /// `W_i`: peso de criticidade (M se critico).
     pub w_i: f64,
     /// `A_{i,t}`: horario permitido na hora corrente (R5).
@@ -71,7 +69,7 @@ pub struct TomadaInput {
 pub struct SolverInput {
     /// `P_max` (W), teto global (R2).
     pub p_max: f64,
-    /// Hora corrente 0..23 (ja usada para indexar `pi`/`a_it` no firmware).
+    /// Hora corrente 0..23 (ja usada para indexar `a_it` no firmware).
     pub hora: u8,
     /// Pesos da objetivo.
     pub pesos: Pesos,

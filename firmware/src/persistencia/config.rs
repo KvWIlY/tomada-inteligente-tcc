@@ -1,4 +1,4 @@
-//! Configuracao da tomada (`Tomada`) — parametros do modelo MILP, versionada.
+//! Configuracao da tomada (`Tomada`) - parametros do modelo MILP, versionada.
 //!
 //! Espelha o JSON `tomadas.config` do schema (004 `db-schema-mysql.sql`) + a coluna
 //! `config_version`. Persistida localmente em LittleFS (`/lfs/config.json`) para operar
@@ -7,7 +7,10 @@
 //!
 //! Mapeamento modelo (data-model.md §2):
 //!   is_critical -> W_i = M ; w_i -> peso ; p_max -> teto R2 ; t_limite -> F_i ;
-//!   schedule[24] -> A_{i,t} ; pi_historico[24] -> Pi_{i,t} ; p_limiar_detectado_auto -> U_i.
+//!   schedule[24] -> A_{i,t} ; p_limiar_detectado_auto -> U_i.
+//!
+//! `pi_historico` saiu em 2026-09-14: nada o calculava. Configs antigas que ainda o
+//! trazem no JSON continuam carregando, porque o serde ignora campo desconhecido.
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
@@ -15,8 +18,10 @@ use std::io::Write;
 
 use crate::persistencia::littlefs;
 
-/// Valor grande para criticidade (W_i = M quando `is_critical`).
-pub const W_CRITICO: f32 = 1.0e6;
+/// Valor grande para criticidade (W_i = M quando `is_critical`). `alpha * M` precisa
+/// superar `beta`: senao, numa sobrecarga, cortar um critico ocioso sai mais barato
+/// que cortar um aparelho comum em uso.
+pub const W_CRITICO: f32 = 1.0e9;
 
 /// Parametros do modelo para esta tomada. Os campos ate `p_limiar_detectado_auto`
 /// correspondem 1:1 ao jsonb `tomadas.config`; `config_version` e a coluna separada.
@@ -37,9 +42,6 @@ pub struct Tomada {
     /// `A_{i,t}`: agendamento por hora (true = permitido).
     #[serde(default = "schedule_default")]
     pub schedule: [bool; 24],
-    /// `Pi_{i,t}`: probabilidade historica de uso por hora (0..1).
-    #[serde(default = "pi_default")]
-    pub pi_historico: [f32; 24],
     /// `P_limiar,i` (W) autodetectado pelo firmware (U_i = P_atual > limiar). None = nao detectado.
     #[serde(default)]
     pub p_limiar_detectado_auto: Option<f32>,
@@ -52,7 +54,6 @@ fn um() -> f32 { 1.0 }
 fn p_max_default() -> f32 { 2000.0 }
 fn t_limite_default() -> i64 { 600 }
 fn schedule_default() -> [bool; 24] { [true; 24] }
-fn pi_default() -> [f32; 24] { [0.5; 24] }
 
 impl Default for Tomada {
     fn default() -> Self {
@@ -62,7 +63,6 @@ impl Default for Tomada {
             p_max: p_max_default(),
             t_limite: t_limite_default(),
             schedule: schedule_default(),
-            pi_historico: pi_default(),
             p_limiar_detectado_auto: None,
             config_version: 0,
         }
@@ -82,7 +82,7 @@ fn caminho() -> String {
 }
 
 /// Carrega a config local. Se o arquivo nao existir (1o boot), retorna `Tomada::default()`
-/// e o registra — o dispositivo opera com defaults seguros ate o 1o pull/configuracao.
+/// e o registra - o dispositivo opera com defaults seguros ate o 1o pull/configuracao.
 pub fn load() -> Result<Tomada> {
     let path = caminho();
     match std::fs::read_to_string(&path) {

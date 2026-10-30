@@ -114,7 +114,7 @@ pub fn gerar_hex_32() -> String {
 }
 
 /// Garante que a credencial tem PIN (credenciais da 004 nao tinham). Regrava so
-/// quando precisa criar — escrita pontual, nao desgasta a flash (Principio III).
+/// quando precisa criar - escrita pontual, nao desgasta a flash (Principio III).
 pub fn garantir_pin(c: &mut CredenciaisLocais) -> Result<()> {
     if !c.pin.is_empty() {
         return Ok(());
@@ -130,7 +130,7 @@ fn caminho() -> String {
 }
 
 /// Le as credenciais provisionadas. `Ok(None)` se o dispositivo ainda nao foi
-/// provisionado (arquivo ausente) — o caller deve disparar o fluxo de provisionamento.
+/// provisionado (arquivo ausente) - o caller deve disparar o fluxo de provisionamento.
 pub fn load() -> Result<Option<CredenciaisLocais>> {
     let path = caminho();
     match std::fs::read_to_string(&path) {
@@ -157,7 +157,7 @@ pub fn save(c: &CredenciaisLocais) -> Result<()> {
 }
 
 /// Atualiza somente o cache de JWT (apos `renovar`/`provisionar`) e regrava.
-/// Renovacao e infrequente (TTL 1..24h) — escrita pontual, nao desgasta a flash.
+/// Renovacao e infrequente (TTL 1..24h) - escrita pontual, nao desgasta a flash.
 pub fn salvar_jwt(jwt: &str, jwt_exp: i64) -> Result<()> {
     let mut c = load()?.context("salvar_jwt sem credencial provisionada")?;
     c.jwt = jwt.to_string();
@@ -167,7 +167,7 @@ pub fn salvar_jwt(jwt: &str, jwt_exp: i64) -> Result<()> {
 
 // ============================================================
 // Claim-code pendente (coletado no portal AP; sobrevive ao restart do Wi-Fi).
-// O device NUNCA cunha o claim — so o transporta do portal ate `provisionar`.
+// O device NUNCA cunha o claim - so o transporta do portal ate `provisionar`.
 // ============================================================
 
 fn caminho_claim() -> String {
@@ -204,7 +204,7 @@ pub fn limpar_claim_pendente() {
     let _ = std::fs::remove_file(caminho_claim());
 }
 
-/// Atualiza SO a chave da residencia (rotacao apos revogacao — FR-012).
+/// Atualiza SO a chave da residencia (rotacao apos revogacao - FR-012).
 pub fn salvar_residencia_key(hex: &str) -> Result<()> {
     let mut c = load()?.context("salvar_residencia_key sem credencial")?;
     c.residencia_key = hex.trim().to_string();

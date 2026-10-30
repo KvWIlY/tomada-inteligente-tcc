@@ -1,4 +1,4 @@
-//! T024 [US2] — queries de `tomadas`.
+//! T024 [US2] - queries de `tomadas`.
 //!
 //! Regra de autorização que esta camada respeita (ver notas do schema): o device
 //! só escreve as colunas do PRÓPRIO nó (`estado`, `cstd`, `con`,
@@ -41,7 +41,7 @@ pub async fn listar_por_residencia(
     .await
 }
 
-/// Insere uma tomada nova no provisionamento. `config` nasce `{}` — o device
+/// Insere uma tomada nova no provisionamento. `config` nasce `{}` - o device
 /// puxa o desired-state em `GET /config` e o dono preenche pelo dashboard.
 pub async fn inserir(
     conn: &mut MySqlConnection,
@@ -83,7 +83,7 @@ pub async fn atualizar_snapshot(
 ) -> Result<(), sqlx::Error> {
     // `liberar_manual` só sabe LIMPAR: com a flag em 0 a coluna fica intocada, e o
     // device nunca consegue escrever `true`/`false` nela. Uma ordem do dono emitida
-    // enquanto o POST estava em voo sobrevive — a única perda possível é o próprio
+    // enquanto o POST estava em voo sobrevive - a única perda possível é o próprio
     // comando que a janela já estava consumindo.
     sqlx::query(
         "UPDATE tomadas SET p_medida_atual = ?, ultimo_uso_ativo_ts = ?, estado = ?, \
@@ -103,7 +103,7 @@ pub async fn atualizar_snapshot(
 }
 
 /// Carga instantânea das **irmãs** (US4/UC22): exclui a própria tomada. O
-/// backend só devolve dados — quem decide frescor e soma é o firmware (FR-016).
+/// backend só devolve dados - quem decide frescor e soma é o firmware (FR-016).
 #[derive(Debug, Serialize, sqlx::FromRow)]
 pub struct ConsumoIrma {
     pub tomada_id: String,
@@ -128,11 +128,11 @@ pub async fn consumo_irmas(
 
 // ── Escrita do dono (US3) ───────────────────────────────────────────────────
 
-/// PATCH do dashboard. `config` é o único campo que bumpa `config_version` — é
+/// PATCH do dashboard. `config` é o único campo que bumpa `config_version` - é
 /// esse número que o nó compara para decidir se re-aplica o desired-state
 /// (UC28); renomear ou mexer no relé não deve forçar re-leitura de config.
 /// `rele_aberto`: `None` = não mexe; `Some(None)` = volta ao automático (NULL);
-/// `Some(Some(b))` = grava o comando. `COALESCE` não serve aqui — ele não consegue
+/// `Some(Some(b))` = grava o comando. `COALESCE` não serve aqui - ele não consegue
 /// expressar "grave NULL de propósito", que é exatamente o valor de "automático".
 pub async fn atualizar(
     pool: &MySqlPool,
@@ -177,8 +177,8 @@ struct LinhaScore {
 pub struct VisaoGeral {
     pub tomadas: i64,
     pub consumo_total_atual: f64,
-    /// `None` quando nenhuma tomada tem standby calibrado — sem base para o
-    /// cálculo, a UI mostra "—" em vez de inventar um número.
+    /// `None` quando nenhuma tomada tem standby calibrado - sem base para o
+    /// cálculo, a UI mostra "-" em vez de inventar um número.
     pub efficiency_score: Option<i64>,
 }
 

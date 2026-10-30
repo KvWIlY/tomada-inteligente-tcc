@@ -5,7 +5,7 @@
 //! 2. Se NVS vazio mas .env tem credenciais: usa .env e GRAVA no NVS.
 //! 3. Se ambos vazios: vai pro Portal AP sem nem tentar STA.
 //! 4. Tenta STA com retry+backoff (3 tentativas: 5s, 10s, 20s).
-//! 5. Se TODAS falharem: abre o Portal AP — que, a partir da 005, CONTINUA tentando a
+//! 5. Se TODAS falharem: abre o Portal AP - que, a partir da 005, CONTINUA tentando a
 //!    rede salva em segundo plano e fecha sozinho quando ela volta (FR-002). Sem isso,
 //!    uma queda de energia com roteador lento deixava a tomada presa no portal.
 //!
@@ -35,7 +35,7 @@ const NVS_KEY_PWD: &str = "pwd";
 const NVS_KEY_BUILD: &str = "build_id";
 /// Flag que pede o Portal AP no proximo boot.
 const NVS_KEY_FORCAR: &str = "forcar_prov";
-/// Causa da reabertura do portal (uso unico) — `MotivoPortal::as_str`.
+/// Causa da reabertura do portal (uso unico) - `MotivoPortal::as_str`.
 const NVS_KEY_MOTIVO: &str = "motivo_portal";
 
 const MAX_TENTATIVAS: u32 = 3;
@@ -142,7 +142,7 @@ pub fn conectar(modem: Modem<'static>, ctx: ContextoBoot) -> Result<ResultadoWif
             }
         } else if ctx.modo_standalone_sem_rede {
             // Standalone sem Wi-Fi configurado: nao ha nada a conectar e o portal nao
-            // deve abrir — a tomada opera offline (FR-006).
+            // deve abrir - a tomada opera offline (FR-006).
             log::warn!("[WIFI] standalone sem rede configurada -- operando sem Wi-Fi");
             return Ok(ResultadoWifi::Pronto(finalizar_handle_e_spawn_reconexao(
                 wifi,
@@ -241,7 +241,7 @@ pub(super) fn salvar_credenciais_nvs(
 ///
 /// `EspDefaultNvsPartition::take()` e singleton: chamar de novo enquanto a primeira
 /// instancia esta viva devolve `ESP_ERR_INVALID_STATE`. Quem precisar da NVS fora deste
-/// modulo tem que pegar por aqui — nao por um `take()` proprio.
+/// modulo tem que pegar por aqui - nao por um `take()` proprio.
 pub(crate) fn nvs_particao() -> Option<EspDefaultNvsPartition> {
     NVS_PART.get().cloned()
 }
@@ -314,7 +314,7 @@ fn gravar_motivo(nvs_part: &EspDefaultNvsPartition, motivo: MotivoPortal) {
     }
 }
 
-/// Le e limpa a causa da reabertura (uso unico — FR-019).
+/// Le e limpa a causa da reabertura (uso unico - FR-019).
 fn consumir_motivo(nvs_part: &EspDefaultNvsPartition) -> Option<MotivoPortal> {
     let nvs = EspNvs::new(nvs_part.clone(), NVS_NAMESPACE, true).ok()?;
     let mut buf = [0u8; 32];

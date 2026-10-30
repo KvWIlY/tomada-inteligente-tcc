@@ -1,4 +1,4 @@
-//! T028 [US2] — `POST /provisionar` e `POST /renovar`.
+//! T028 [US2] - `POST /provisionar` e `POST /renovar`.
 //!
 //! São os únicos endpoints públicos além de `/auth/*`: o device ainda não tem
 //! JWT quando chega aqui. A credencial de entrada é o **claim-code** (uso único,
@@ -29,7 +29,7 @@ pub struct RenovarReq {
     pub device_secret: String,
 }
 
-/// `AA:BB:CC:DD:EE:FF` — 6 octetos hex separados por `:`. Normaliza para
+/// `AA:BB:CC:DD:EE:FF` - 6 octetos hex separados por `:`. Normaliza para
 /// maiúsculas, que é como o firmware formata `esp_efuse_mac_get_default()`.
 fn normalizar_mac(bruto: &str) -> Result<String, ApiErro> {
     let mac = bruto.trim().to_uppercase();
@@ -68,7 +68,7 @@ pub async fn provisionar(
     if claim.usado_em.is_some() || claim.expira_em <= Utc::now().naive_utc() {
         return Err(ApiErro::NaoAutorizado);
     }
-    // Consumo atômico — quem perde a corrida recebe 401, não uma 2ª identidade.
+    // Consumo atômico - quem perde a corrida recebe 401, não uma 2ª identidade.
     if !db::credenciais::consumir_claim(&mut tx, &claim.id).await? {
         return Err(ApiErro::NaoAutorizado);
     }
@@ -126,20 +126,33 @@ pub async fn renovar(
     body: web::Json<RenovarReq>,
 ) -> Result<HttpResponse, ApiErro> {
     limite::checar(&req)?;
+    // O hash sai antes da consulta para que o trabalho seja o mesmo com
+    // `tomada_id` existente ou inventado.
+    let enviado = senha::sha256_hex(&body.device_secret);
+
+    // TUDO aqui responde 401, inclusive "tomada_id não existe". O 404 que estava
+    // nesta linha deixava qualquer anônimo separar um UUID de tomada real de um
+    // chutado, sem apresentar credencial nenhuma.
     let cred = db::credenciais::buscar_credencial(&pool, &body.tomada_id)
         .await?
-        .ok_or(ApiErro::NaoEncontrado)?;
+        .ok_or(ApiErro::NaoAutorizado)?;
     if cred.revoked_at.is_some() {
         return Err(ApiErro::NaoAutorizado);
     }
-    if !senha::comparar_ct(&senha::sha256_hex(&body.device_secret), &cred.secret_hash) {
+    if !senha::comparar_ct(&enviado, &cred.secret_hash) {
         return Err(ApiErro::NaoAutorizado);
     }
 
-    // A residência vem do banco, nunca do corpo — o device não escolhe escopo.
-    let tomada = db::tomadas::buscar_por_id(&pool, &body.tomada_id)
-        .await?
-        .ok_or(ApiErro::NaoEncontrado)?;
+    // A residência vem do banco, nunca do corpo - o device não escolhe escopo.
+    // Credencial sem tomada é inconsistência de banco, não entrada do cliente:
+    // vai para o log e devolve o mesmo 401, sem contar qual dos dois falhou.
+    let tomada = match db::tomadas::buscar_por_id(&pool, &body.tomada_id).await? {
+        Some(t) => t,
+        None => {
+            log::error!("credencial sem tomada correspondente: {}", body.tomada_id);
+            return Err(ApiErro::NaoAutorizado);
+        }
+    };
 
     db::credenciais::marcar_renovacao(&pool, &body.tomada_id).await?;
     let (token, exp) = jwt::emitir_device(

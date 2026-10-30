@@ -6,7 +6,7 @@
 .specify/
 skills-lock.json
 specs/
-
+CLAUDE.md
 # Markdown na raiz: sobe só o README.md (ignora CLAUDE.md etc.)
 /*.md
 !/README.md
@@ -22,16 +22,13 @@ ok/
 !.env.example
 
 # ─────────────────────────────────────────────────────────────
-# Build — Rust / host (solver)
+# Build - Rust / host (solver)
 # ─────────────────────────────────────────────────────────────
 target/
 *.rs.bk
 *.pdb
-# Artefatos regeneráveis do experimento do dataset (CSVs de saída).
-# O CSV canônico de ENTRADA (tomada-solver/tests/data/) fica versionado.
-saida_dataset/
 
-# Build — ESP-IDF / firmware
+# Build - ESP-IDF / firmware
 .embuild/
 build/
 sdkconfig
@@ -39,7 +36,7 @@ sdkconfig.old
 *.bin
 *.elf
 
-# Build — Node.js (frontend)
+# Build - Node.js (frontend)
 node_modules/
 dist/
 dist-ssr/
@@ -55,3 +52,48 @@ dist-ssr/
 *.swo
 .DS_Store
 Thumbs.db
+
+# ─────────────────────────────────────────────────────────────
+# Tudo que não é código: TCC, artigos, relatórios, dados e análises
+# (o lugar disso é ok/, que já está ignorado; estas regras pegam o
+# que for salvo por engano fora dela)
+# ─────────────────────────────────────────────────────────────
+# Documentos
+*.pdf
+*.doc
+*.docx
+*.odt
+*.ppt
+*.pptx
+*.xls
+*.xlsx
+# LaTeX
+*.tex
+*.bib
+*.aux
+*.bbl
+*.blg
+*.toc
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+# Imagens de figuras e capturas (o frontend usa só .svg)
+*.png
+*.jpg
+*.jpeg
+# Dados e análises (scripts Python, planilhas, capturas seriais)
+*.py
+__pycache__/
+*.csv
+!firmware/partitions.csv
+*.tsv
+*.zip
+*.tar.gz
+# Notas e relatórios: sobe só README.md de cada projeto e a
+# atribuição dos ícones, que acompanha a licença
+*.md
+!README.md
+!frontend/public/icons/ORIGEM.md
+reports/
+research_notes/
+ok/

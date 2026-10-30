@@ -6,7 +6,7 @@ use backend::{config::Config, db, rotas_config};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    // T054 — observabilidade (Princípio VII). `RUST_LOG` controla o nível;
+    // T054 - observabilidade (Princípio VII). `RUST_LOG` controla o nível;
     // `info` por padrão para que decisões de autorização e falhas apareçam sem
     // precisar reconfigurar nada em campo.
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
@@ -20,6 +20,11 @@ async fn main() -> std::io::Result<()> {
         .expect("falha ao aplicar migrations");
     log::info!("migrations aplicadas");
 
+    // Gera o hash de referência do login agora, no boot: se ele nascesse na
+    // primeira tentativa com e-mail inexistente, aquela requisição pagaria dois
+    // Argon2 e voltaria a destoar das outras.
+    backend::auth::senha::verificar_dummy("aquecimento");
+
     let bind = cfg.bind_addr.clone();
     let origens = cfg.cors_origins.clone();
     log::info!("CORS liberado para: {}", origens.join(", "));
@@ -29,10 +34,10 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         // O dashboard roda noutra origem (Vite em :5173, ou o `dist/` servido de
-        // outro host na LAN), então o navegador exige CORS — inclusive um
+        // outro host na LAN), então o navegador exige CORS - inclusive um
         // preflight OPTIONS antes de todo POST/PATCH/DELETE com JSON. Lista
         // explícita em vez de `permissive()`: default-deny também aqui
-        // (Princípio VIII), e não usamos cookies — o JWT vai no header
+        // (Princípio VIII), e não usamos cookies - o JWT vai no header
         // Authorization, então `supports_credentials` é desnecessário.
         let mut cors = Cors::default()
             .allowed_methods(vec!["GET", "POST", "PATCH", "DELETE", "OPTIONS"])
@@ -47,7 +52,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(cfg_data.clone())
             .wrap(cors)
             // Uma linha por requisição: método, rota, status e duração. NUNCA
-            // registra corpo nem `Authorization` — segredos não vão para o log
+            // registra corpo nem `Authorization` - segredos não vão para o log
             // (Princípio VII/VIII).
             .wrap(Logger::new("%r -> %s (%Dms) de %a"))
             .configure(rotas_config)

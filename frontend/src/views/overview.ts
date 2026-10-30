@@ -1,5 +1,5 @@
 // =============================================
-// Visão Geral da Casa — cartoes do Basecoat
+// Visão Geral da Casa - cartoes do Basecoat
 // =============================================
 
 import { icon } from '../icons';
@@ -25,7 +25,7 @@ function tcard(t: Tomada, medicoes: Medicao[]): string {
   const w = t.estado === 'OFF' ? '0' : Math.round(t.p_medida_atual).toLocaleString('pt-BR');
   const kwh = energiaKWh(medicoes);
   const fp = fatorPotenciaAgregado(medicoes);
-  // FP baixo é a assinatura da fonte chaveada em standby — o alvo do trabalho.
+  // FP baixo é a assinatura da fonte chaveada em standby - o alvo do trabalho.
   // O tom e a variante `-ink` (FR-002f): isto e TEXTO, e `--amber` rende 2,14:1
   // sobre o cartao claro, reprovando o 4,5:1 do FR-002c.
   const fpTxt =
@@ -117,10 +117,7 @@ export function renderOverview(el: HTMLElement, p: OverviewProps): void {
       </section>
 
       <section class="mt-8">
-        <div class="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-          <h3 class="text-[19.5px] font-bold tracking-tight">Atividade do Otimizador</h3>
-          <span class="text-[13px] font-medium text-ink-faint">por que o sistema decidiu o que decidiu</span>
-        </div>
+        <h3 class="mb-4 text-[19.5px] font-bold tracking-tight">Atividade do Otimizador</h3>
         <div class="card">
           <section>${eventsFeed(eventos)}</section>
         </div>

@@ -1,9 +1,9 @@
-//! Medicoes (`Medicao`) — buffer em RAM + baldes por dia em LittleFS.
+//! Medicoes (`Medicao`) - buffer em RAM + baldes por dia em LittleFS.
 //!
 //! Cadencia 1/min (FR-016). Para proteger a flash (Principio III) NAO gravamos por
 //! minuto: acumulamos em RAM e damos `flush` em lote. A persistencia usa **baldes por
 //! dia** (`/lfs/med_<dia>.txt`, 1 JSON por linha) para que a purga (retencao.rs) seja a
-//! remocao de um arquivo inteiro — barato e sem reescrever grandes arquivos (research §6).
+//! remocao de um arquivo inteiro - barato e sem reescrever grandes arquivos (research §6).
 //!
 //! Idempotencia/sync: a logica pura (selecao de pendentes, montagem do corpo) vive em
 //! `crate::solver::sync` (host-testada). Aqui convertendo `Medicao` <-> `SyncRecord` e
@@ -28,10 +28,10 @@ pub const DIA_S: i64 = 86_400;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Medicao {
     pub tomada_id: String,
-    /// Epoch real, ou `relogio::SEM_HORA` (0) enquanto nao houve sincronizacao —
+    /// Epoch real, ou `relogio::SEM_HORA` (0) enquanto nao houve sincronizacao -
     /// corrigido por deslocamento quando a hora chega (FR-001a).
     pub timestamp: i64,
-    /// Potencia **ATIVA** (W) — media do produto instantaneo v*i, nao `Vrms*Irms`.
+    /// Potencia **ATIVA** (W) - media do produto instantaneo v*i, nao `Vrms*Irms`.
     pub p_medida: f32,
     /// Fator de potencia `P/S` em [0, 1] da mesma janela. `#[serde(default)]` => 0.0
     /// nos baldes gravados por firmware anterior a 2026-08-24, que nao tinham o campo:
@@ -110,7 +110,7 @@ pub fn registrar(m: Medicao) {
 /// Apaga TODOS os baldes de medicao em disco + o buffer de RAM. Usado no reset de
 /// identidade (build novo/reprovisionamento): medicoes gravadas com o `tomada_id` antigo
 /// nao passam no `with check` da RLS sob o JWT novo (403) e, como nunca confirmam,
-/// travariam o sync — descarta-las evita esse deadlock.
+/// travariam o sync - descarta-las evita esse deadlock.
 pub fn limpar_tudo() {
     buffer().lock().unwrap().clear();
     if let Ok(dias) = dias_em_disco() {
@@ -183,7 +183,7 @@ pub(crate) fn dias_em_disco() -> Result<Vec<i64>> {
 
 /// Inventario dos baldes em disco para a purga por espaco: tamanho em bytes e se o
 /// balde inteiro ja foi confirmado pelo servidor. Le cada balde UMA vez.
-/// Balde vazio/ilegivel conta como confirmado — nao ha dado a perder nele.
+/// Balde vazio/ilegivel conta como confirmado - nao ha dado a perder nele.
 pub(crate) fn inventario() -> Result<Vec<Balde>> {
     let mut out = Vec::new();
     for dia in dias_em_disco()? {
@@ -222,8 +222,8 @@ pub(crate) fn ler_balde(dia: i64) -> Result<Vec<Medicao>> {
 /// `crate::solver::sync::selecionar_pendentes` (host-testada) sobre os `SyncRecord`.
 ///
 /// Registros SEM HORA (`timestamp == SEM_HORA`) nunca sobem: ou sao corrigidos por
-/// `corrigir_carimbos` quando a hora chega, ou — se sobraram de um boot anterior que
-/// nunca teve hora — sao incorrigiveis e ficam de fora (FR-001a, excecao unica).
+/// `corrigir_carimbos` quando a hora chega, ou - se sobraram de um boot anterior que
+/// nunca teve hora - sao incorrigiveis e ficam de fora (FR-001a, excecao unica).
 pub fn carregar_pendentes() -> Result<Vec<Medicao>> {
     flush_para_disco()?;
     let mut pend = Vec::new();
@@ -249,7 +249,7 @@ pub fn carregar_pendentes() -> Result<Vec<Medicao>> {
 /// Aplica o deslocamento do 1o sync SNTP a tudo que foi medido sem hora (FR-001a).
 ///
 /// Corrige o buffer de RAM e reescreve os baldes afetados UMA vez (Principio III). Os
-/// registros do buffer sao os do boot atual — corrigiveis por definicao; em disco,
+/// registros do buffer sao os do boot atual - corrigiveis por definicao; em disco,
 /// corrige os que tem `uptime_s` e descarta os incorrigiveis de boots anteriores.
 /// Devolve `(corrigidos, descartados)` para o evento de observabilidade.
 pub fn corrigir_carimbos(offset: i64) -> Result<(usize, usize)> {
@@ -284,7 +284,7 @@ pub fn corrigir_carimbos(offset: i64) -> Result<(usize, usize)> {
     Ok((corrigidos, descartados))
 }
 
-/// Descarta, na carga do boot, medicoes sem hora vindas de boots anteriores — elas
+/// Descarta, na carga do boot, medicoes sem hora vindas de boots anteriores - elas
 /// nunca poderao ser datadas (FR-001a). Devolve quantas foram removidas.
 pub fn descartar_sem_hora_de_boot_anterior() -> Result<usize> {
     let mut total = 0usize;

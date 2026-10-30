@@ -24,8 +24,6 @@ chrono        = { version = "0.4", default-features = false, features = ["clock"
 # RustCrypto puro (sem asm) -> compila sob xtensa-esp32-espidf.
 sha2          = "0.10"
 hmac          = { version = "0.12", default-features = false }
-# Solver LP do MILP (era dep transitiva via crate tomada-solver, absorvido em src/solver/).
-minilp = "0.2"
 spake2 = "0.4"
 hkdf = "0.12"
 chacha20poly1305 = "0.10"

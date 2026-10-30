@@ -1,9 +1,9 @@
 // =============================================
-// Sidebar (264 px) — componente `sidebar` do Basecoat
+// Sidebar (264 px) - componente `sidebar` do Basecoat
 // =============================================
 //
 // O elemento `.sidebar` vive no `index.html`. Usamos o CSS do componente, mas
-// NAO o JS dele — quem abre e fecha e o `main.ts` (ver "Barra lateral" la).
+// NAO o JS dele - quem abre e fecha e o `main.ts` (ver "Barra lateral" la).
 // Esta funcao so preenche o `<nav>`: nao mexe em `className` nem em
 // `aria-hidden`.
 
@@ -27,7 +27,7 @@ export function renderSidebar(el: HTMLElement, p: SidebarProps): void {
   const navItems = p.tomadas
     .map((t) => {
       const active = t.id === p.selectedId;
-      const w = t.estado === 'OFF' ? '—' : `${Math.round(t.p_medida_atual)} W`;
+      const w = t.estado === 'OFF' ? '-' : `${Math.round(t.p_medida_atual)} W`;
       return `
         <li class="group">
           <button type="button" data-id="${t.id}" ${active ? 'data-active="true"' : ''}>
@@ -101,7 +101,7 @@ export function renderSidebar(el: HTMLElement, p: SidebarProps): void {
   });
   el.querySelector('[data-add]')?.addEventListener('click', () => {
     if (p.onAddDevice) p.onAddDevice();
-    else p.onInfo('Parear novo dispositivo — use o provisionamento do firmware.');
+    else p.onInfo('Parear novo dispositivo: use o provisionamento do firmware.');
   });
   el.querySelector('[data-logout]')?.addEventListener('click', () => p.onLogout?.());
 }

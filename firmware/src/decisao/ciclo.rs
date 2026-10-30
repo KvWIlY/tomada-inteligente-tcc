@@ -5,7 +5,7 @@
 //!
 //! Mantem estado entre ciclos (calibracao `cstd`/`con`, `ultimo_uso_ativo_ts`,
 //! `p_limiar` autodetectado, estado vigente do rele). O I/O (atuar, persistir, sincronizar)
-//! fica em `main`/`atuador`/`backend` — aqui so a logica de decisao.
+//! fica em `main`/`atuador`/`backend` - aqui so a logica de decisao.
 
 use crate::solver::uso_agora::Efeito;
 use crate::solver::{resolver, Estado, Pesos, SolverInput, TomadaInput};
@@ -36,9 +36,9 @@ pub struct Decisao {
     pub cstd: f32,
     pub con: f32,
     pub ultimo_uso_ativo_ts: i64,
-    /// `U_i` vigente (uso ativo) — usado p/ montar o heartbeat ESP-NOW.
+    /// `U_i` vigente (uso ativo) - usado p/ montar o heartbeat ESP-NOW.
     pub u_i: bool,
-    /// `F_i` vigente (fantasma) — usado p/ montar o heartbeat ESP-NOW.
+    /// `F_i` vigente (fantasma) - usado p/ montar o heartbeat ESP-NOW.
     pub f_i: bool,
     pub eventos: Vec<EventoCiclo>,
 }
@@ -50,6 +50,11 @@ pub struct Ciclo {
     con: f32,
     ultimo_uso_ativo_ts: i64,
     p_limiar: f32,
+    /// Cortada EM USO (pelo P_max) e ainda com o rele aberto. Aberto, o rele mede 0 W e
+    /// a tomada pareceria ociosa: o STD voltaria a ser permitido, o rele fecharia, o
+    /// aparelho puxaria a carga cheia e seria cortado de novo, a cada ciclo. Lembrando a
+    /// demanda, ela segue contando como uso (`c_on` na R2) e volta quando couber.
+    demanda_pendente: bool,
 }
 
 impl Ciclo {
@@ -61,12 +66,13 @@ impl Ciclo {
             con,
             ultimo_uso_ativo_ts: agora,
             p_limiar: config.p_limiar_detectado_auto.unwrap_or(P_LIMIAR_DEFAULT),
+            demanda_pendente: false,
         }
     }
 
     /// O dono pediu o aparelho de volta (botao fisico ou dashboard): conta como uso
     /// ativo AGORA. Isso re-ancora `ultimo_uso_ativo_ts` para que, quando a janela
-    /// expirar, o `F_i` volte a ser medido a partir deste instante — e nao a partir da
+    /// expirar, o `F_i` volte a ser medido a partir deste instante - e nao a partir da
     /// ociosidade antiga, que reabriria o corte no mesmo ciclo.
     pub fn marcar_uso_agora(&mut self, agora: i64) {
         self.ultimo_uso_ativo_ts = agora;
@@ -76,13 +82,13 @@ impl Ciclo {
     ///
     /// - `leitura`: potencia/tensao/corrente medidas agora.
     /// - `peers_vivos`: `(MAC, TomadaInput)` de cada peer com heartbeat valido (ESP-NOW).
-    /// - `carga_fixa`: consumo (W) dos peers AUSENTES (degradacao segura) — subtraido do `P_max`.
-    /// - `proprio_mac`: MAC deste no — chave de ordenacao canonica e de auto-localizacao.
+    /// - `carga_fixa`: consumo (W) dos peers AUSENTES (degradacao segura) - subtraido do `P_max`.
+    /// - `proprio_mac`: MAC deste no - chave de ordenacao canonica e de auto-localizacao.
     /// - `rele_manual`: comando do dashboard (`rele_aberto`): None=automatico (o MILP
     ///   manda), Some(true)=cortar. `Some(false)` NAO chega aqui como trava: a `main`
     ///   o converte numa janela de "usar agora" e o entrega via `efeito`.
     /// - `efeito`: janela de "usar agora" vigente (botao fisico ou dashboard).
-    /// - `hora`: hora do dia (0..23) p/ indexar `Pi`/`schedule`.
+    /// - `hora`: hora do dia (0..23) p/ indexar `schedule`.
     /// - `agora`: epoch atual.
     #[allow(clippy::too_many_arguments)]
     pub fn decidir(
@@ -106,8 +112,13 @@ impl Ciclo {
             self.p_limiar = p;
         }
 
-        // U_i / atualizacao de ultimo uso ativo.
-        let u_i = deriva_u_i(p_atual, self.p_limiar);
+        // U_i / atualizacao de ultimo uso ativo. Com o rele aberto a medicao e 0 W: vale a
+        // demanda lembrada do corte (ver `demanda_pendente`) ou o "usar agora" pedido com o
+        // rele aberto. Sem este ultimo, o religar entrava em STD contando so o `cstd`, o
+        // aparelho puxava a carga cheia por um ciclo e so entao o P_max era conferido.
+        let rele_fechado = self.estado_atual != Estado::Off;
+        let u_medido = deriva_u_i(p_atual, self.p_limiar);
+        let u_i = u_medido || (!rele_fechado && (self.demanda_pendente || efeito.forcar_ligada));
         if u_i {
             self.ultimo_uso_ativo_ts = agora;
         }
@@ -119,12 +130,13 @@ impl Ciclo {
         // religar duraria um ciclo: quando o dono aperta o botao a tomada esta ociosa
         // ha muito mais que `t_limite`, a R4 proibiria STD e o solver cortaria de novo
         // na iteracao seguinte.
-        let rele_fechado = self.estado_atual != Estado::Off;
+        // Critica nunca e fantasma: com ON reservado ao uso ativo, a R4 a deixaria so com OFF.
         let f_i = !efeito.suprimir_fantasma
-            && deriva_f_i(rele_fechado, p_atual, self.p_limiar, ociosa_ha_s, config.t_limite);
+            && !config.is_critical
+            && deriva_f_i(p_atual, self.p_limiar, ociosa_ha_s, config.t_limite);
 
         // Calibracao EMA de cstd/con a partir da medicao real.
-        self.calibrar(p_atual, u_i, rele_fechado);
+        self.calibrar(p_atual, u_medido, rele_fechado);
 
         // TomadaInput do proprio no.
         let propria = TomadaInput {
@@ -132,7 +144,6 @@ impl Ciclo {
             c_on: self.con as f64,
             u_i,
             f_i,
-            pi: config.pi_historico[h] as f64,
             w_i: config.w_efetivo() as f64,
             a_it: config.schedule[h],
         };
@@ -177,8 +188,8 @@ impl Ciclo {
         }
 
         // Precedencia das intencoes humanas, da mais forte para a mais fraca:
-        //   1. cortar (dashboard)  — explicito e sempre seguro;
-        //   2. usar agora (janela) — botao fisico ou dashboard, temporario;
+        //   1. cortar (dashboard)  - explicito e sempre seguro;
+        //   2. usar agora (janela) - botao fisico ou dashboard, temporario;
         //   3. o que o MILP decidiu.
         // "Sempre ligada" (geladeira) NAO entra aqui: e `is_critical` -> W_i = M, ja
         // resolvido dentro do modelo.
@@ -188,11 +199,13 @@ impl Ciclo {
             // `Some(false)` SEM janela ativa nao e trava: e um "usar agora" que a
             // `main` ja consumiu (ou cuja janela expirou) e ainda nao conseguiu
             // liberar no servidor. Tratar como automatico evita a tomada ficar ligada
-            // ate o proximo tick de nuvem — ate 60 s depois do fim da janela.
+            // ate o proximo tick de nuvem - ate 60 s depois do fim da janela.
             _ => None,
         };
         // Comando manual do dashboard SUBORDINADO ao P_max (FR-016).
-        estado = self.aplicar_comando_manual(estado, comando, &entrada, &saida, &mut eventos);
+        estado = self.aplicar_comando_manual(estado, comando, u_i, &entrada, &saida, &mut eventos);
+        // Corte do proprio dono nao deixa demanda: ele quis desligar.
+        self.demanda_pendente = estado == Estado::Off && u_i && rele_manual != Some(true);
 
         // Fantasma eliminado (R4): estava fechado, F_i ativo, decidimos OFF.
         if f_i && estado == Estado::Off && rele_fechado {
@@ -250,6 +263,7 @@ impl Ciclo {
         &self,
         estado_solver: Estado,
         rele_manual: Option<bool>,
+        u_i: bool,
         entrada: &SolverInput,
         saida: &crate::solver::SolverOutput,
         eventos: &mut Vec<EventoCiclo>,
@@ -257,24 +271,22 @@ impl Ciclo {
         match rele_manual {
             Some(true) => Estado::Off, // usuario cortou; sempre seguro
             Some(false) if estado_solver == Estado::Off => {
-                // Usuario quer ligado, mas o solver decidiu OFF. So liga (STD) se couber.
-                let consumo_total = saida.consumo(entrada);
-                let nosso = match estado_solver {
-                    Estado::Off => 0.0,
-                    Estado::Std => self.cstd as f64,
-                    Estado::On => self.con as f64,
-                };
-                let outros = consumo_total - nosso;
-                if outros + self.cstd as f64 <= entrada.p_max - entrada.carga_fixa {
-                    Estado::Std
+                // Usuario quer ligado, mas o solver decidiu OFF. So liga se couber, contando
+                // o que o aparelho puxa EM USO, que e o que o dono pediu: com o `cstd`, um
+                // aquecedor cortado pelo P_max "cabia" com o standby e voltava estourando.
+                let nosso = self.con.max(self.cstd);
+                let estado = if u_i { Estado::On } else { Estado::Std };
+                let outros = saida.consumo(entrada); // o proprio no esta OFF: soma so os outros
+                if outros + nosso as f64 <= entrada.p_max - entrada.carga_fixa {
+                    estado
                 } else {
                     eventos.push(EventoCiclo {
                         tipo: "penalidade_uso",
                         severidade: "warn",
                         titulo: "Comando manual negado pelo P_max".to_string(),
                         detalhes: format!(
-                            "rele_aberto=false negado: outros={outros:.2} cstd={:.2} p_max={:.2}",
-                            self.cstd, entrada.p_max
+                            "rele_aberto=false negado: outros={outros:.2} nosso={nosso:.2} p_max={:.2}",
+                            entrada.p_max
                         ),
                     });
                     Estado::Off

@@ -6,7 +6,7 @@
 -- `tcc_test`): os testes de integracao gravam usuarios/residencias/tomadas de
 -- verdade, e este script e o botao de "zerar" quando o lixo incomodar.
 --
--- NAO mexe em `_sqlx_migrations` — o backend nao vai tentar re-aplicar nada no
+-- NAO mexe em `_sqlx_migrations` - o backend nao vai tentar re-aplicar nada no
 -- proximo boot. Para recomecar TAMBEM o schema, use DROP DATABASE + bootstrap.
 -- Isto e irreversivel: faca o dump antes se os dados importarem
 --   mysqldump -u tcc_app -p --databases tcc --single-transaction > backup.sql

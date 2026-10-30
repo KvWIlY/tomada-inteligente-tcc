@@ -1,4 +1,4 @@
-//! T026 [US2] — inserção idempotente de `medicoes` e `eventos`.
+//! T026 [US2] - inserção idempotente de `medicoes` e `eventos`.
 //!
 //! Idempotência (FR-009): o device re-envia o lote inteiro enquanto não receber
 //! confirmação, então o mesmo `(tomada_id, timestamp)` chega várias vezes.
@@ -21,7 +21,7 @@ pub struct MedicaoIn {
     /// não `Vrms * Irms`. Medições gravadas antes de 2026-08-24 são aparentes (VA).
     pub p_medida: f32,
     /// `P/S` em [0, 1]. `default` (None) aceita firmware anterior a 2026-08-24, que
-    /// não envia o campo — recusar o lote por ausência dele deixaria um nó antigo
+    /// não envia o campo - recusar o lote por ausência dele deixaria um nó antigo
     /// preso, reenviando para sempre um buffer que nunca é confirmado.
     #[serde(default)]
     pub fator_potencia: Option<f32>,
@@ -138,7 +138,7 @@ pub async fn inserir_eventos(
     Ok(())
 }
 
-// ── Leitura (US3 — dashboard) ───────────────────────────────────────────────
+// ── Leitura (US3 - dashboard) ───────────────────────────────────────────────
 
 /// Teto de pontos por série: 7 dias amostrados a cada minuto dão ~10k linhas;
 /// o corte evita que uma tomada muito falante derrube o gráfico.

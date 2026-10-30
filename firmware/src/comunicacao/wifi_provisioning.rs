@@ -1,4 +1,4 @@
-//! Portal AP v2 — configuracao local da tomada (feature 005, `contracts/portal-ap.md`).
+//! Portal AP v2 - configuracao local da tomada (feature 005, `contracts/portal-ap.md`).
 //!
 //! Diferencas para o v1 (todas motivadas por falhas reais de campo):
 //!   - **AP+STA**: enquanto o portal esta aberto, o no continua tentando a rede salva a
@@ -6,7 +6,7 @@
 //!     tomada deixava o no preso no portal PARA SEMPRE (FR-002).
 //!   - **Corpo por `Content-Length`**: o v1 fazia um unico `read` de 512 B e gravava
 //!     senha truncada em silencio (FR-015).
-//!   - **Modos**: nuvem | standalone | parear — a tomada deixa de exigir servidor e
+//!   - **Modos**: nuvem | standalone | parear - a tomada deixa de exigir servidor e
 //!     claim-code para funcionar (FR-004/008).
 //!   - **Banner de causa** e **preservacao do Wi-Fi salvo** (FR-017/019).
 //!
@@ -70,7 +70,7 @@ pub struct ContextoPortal {
     pub servidor_default: String,
     /// Se ja existe identidade de nuvem (exige confirmacao para virar standalone).
     pub tem_identidade_nuvem: bool,
-    /// PIN DESTA tomada — exibido no portal para quem for parear a partir dela.
+    /// PIN DESTA tomada - exibido no portal para quem for parear a partir dela.
     pub pin_proprio: String,
 }
 
@@ -127,7 +127,7 @@ pub fn iniciar(
     log::info!("[PROV] aguardando formulario (retry STA a cada 30 s se houver rede salva)...");
 
     // Laco unico: o formulario tem prioridade; no timeout, tenta a rede salva.
-    // Tudo na MESMA thread — nao ha concorrencia sobre o driver Wi-Fi.
+    // Tudo na MESMA thread - nao ha concorrencia sobre o driver Wi-Fi.
     loop {
         match rx.recv_timeout(INTERVALO_RETRY_STA) {
             Ok(creds) => {
@@ -176,7 +176,7 @@ fn tentar_reconectar(wifi: &mut BlockingWifi<EspWifi<'static>>) -> bool {
 ///
 /// O default do esp-idf-svc (`RouterConfiguration::default`) manda o servidor DHCP do AP
 /// anunciar **8.8.8.8** como DNS. Com isso o celular manda toda consulta de nome para
-/// 8.8.8.8 — que nao e nosso endereco, entao os pacotes NUNCA chegam ao listener de
+/// 8.8.8.8 - que nao e nosso endereco, entao os pacotes NUNCA chegam ao listener de
 /// `iniciar_dns_captive` em UDP:53, nenhum nome resolve para a tomada, e nenhum sistema
 /// operacional detecta o portal. O DNS sequestrador existia e nunca recebia nada.
 ///
@@ -217,7 +217,7 @@ fn configurar_ap_e_sta(
             .map_err(|e| anyhow!("swap_netif_ap falhou: {e:?}"))
     }) {
         Ok(_) => log::info!("[PROV] netif do AP: DNS anunciado por DHCP = {AP_IP}"),
-        // Sem isso o portal ainda funciona digitando o IP na mao — nao vale abortar o boot.
+        // Sem isso o portal ainda funciona digitando o IP na mao - nao vale abortar o boot.
         Err(e) => log::warn!("[PROV] captive portal degradado ({e:?}); use http://{AP_IP}"),
     }
 
@@ -239,7 +239,7 @@ fn configurar_ap_e_sta(
     match ssid_salvo {
         Some(ssid) if !ssid.is_empty() => {
             // A senha vem da NVS via `EspWifi` (ja gravada); aqui basta o SSID e o
-            // auth_method correto — senha vazia => rede aberta (FR-016).
+            // auth_method correto - senha vazia => rede aberta (FR-016).
             let cliente = super::wifi::client_config_salvo(ssid)?;
             wifi.set_configuration(&Configuration::Mixed(cliente, ap))?;
         }
@@ -370,7 +370,7 @@ fn subir_http_server(
     Ok(server)
 }
 
-/// 400/413 com a causa — nunca gravacao parcial (contracts/portal-ap.md).
+/// 400/413 com a causa - nunca gravacao parcial (contracts/portal-ap.md).
 fn responder_erro<C>(
     req: esp_idf_svc::http::server::Request<C>,
     e: &ErroForm,

@@ -1,18 +1,18 @@
 //! Coordenacao multi-no via ESP-NOW (Principio V; contrato
 //! `specs/005-offline-pareamento-local/contracts/pareamento-espnow.md` parte A).
 //!
-//! Cada no difunde um `Heartbeat` (48 bytes, protocolo v5 autenticado) por ciclo; todos
+//! Cada no difunde um `Heartbeat` (44 bytes, protocolo v6 autenticado) por ciclo; todos
 //! montam o mesmo `SolverInput` e resolvem o MILP de forma replicada/deterministica.
 //! Peers vivos viram variaveis de decisao; peers conhecidos porem ausentes viram **carga
-//! fixa** (degradacao segura — nunca subestima o consumo => nunca viola o P_max).
+//! fixa** (degradacao segura - nunca subestima o consumo => nunca viola o P_max).
 //!
 //! v5 (feature 005): o frescor deixou de ser `epoch` +- 30 s (que exigia SNTP nos dois
-//! lados) e passou a ser `(boot_id, contador)` por remetente — a coordenacao funciona
+//! lados) e passou a ser `(boot_id, contador)` por remetente - a coordenacao funciona
 //! numa casa sem internet, com relogios completamente diferentes. A chave da casa vive
 //! num `Mutex` porque ROTACIONA quando o dono revoga uma tomada.
 //!
 //! NOTA: as assinaturas exatas de `EspNow::take`, `register_recv_cb` e `add_peer` variam
-//! entre versoes de esp-idf-svc — ponto provavel de ajuste fino ao compilar. O `main`
+//! entre versoes de esp-idf-svc - ponto provavel de ajuste fino ao compilar. O `main`
 //! trata `iniciar()` como best-effort: se falhar, o no opera sozinho.
 
 use anyhow::{anyhow, Result};
@@ -33,14 +33,19 @@ type HmacSha256 = Hmac<Sha256>;
 /// Versao do protocolo (005: `contracts/pareamento-espnow.md` parte A).
 /// v5 = v4 (HMAC-SHA256 por-residencia cobrindo dados + MAC do remetente) com o
 /// `epoch` trocado por `(boot_id, contador)`: o frescor deixa de exigir relogio
-/// sincronizado — numa casa sem internet, o v4 fazia os nos REJEITAREM heartbeats
+/// sincronizado - numa casa sem internet, o v4 fazia os nos REJEITAREM heartbeats
 /// legitimos uns dos outros e a coordenacao morria em silencio (FR-010).
-pub const VERSAO: u8 = 5;
-/// Bytes de dados do heartbeat (campos 0..32).
-const DADOS: usize = 32;
+/// v6 (2026-09-14) = v5 sem o `pi_hora` (bytes 24..28): o `Pi_{i,t}` saiu do modelo.
+/// Um no v5 e um v6 nao se entendem (tamanho e versao diferentes): atualizar todos.
+/// v7 (2026-10-27) = v6 com `boot_id` crescente e persistido, no lugar do aleatorio
+/// (`solver::replay`). Mesmo formato de 44 B; a versao muda para um v6 nao ser lido
+/// como v7 (o `boot_id` aleatorio dele seria comparado por ordem).
+pub const VERSAO: u8 = 7;
+/// Bytes de dados do heartbeat (campos 0..28).
+const DADOS: usize = 28;
 /// Bytes do tag HMAC-SHA256 truncado anexado ao payload.
 const TAG: usize = 16;
-/// Tamanho total do payload (dados + tag) = 48 B.
+/// Tamanho total do payload (dados + tag) = 44 B.
 pub const TAM: usize = DADOS + TAG;
 /// Endereco de broadcast ESP-NOW.
 pub const BROADCAST: [u8; 6] = [0xff; 6];
@@ -50,19 +55,29 @@ pub const BROADCAST: [u8; 6] = [0xff; 6];
 /// no `GET /config` e trocam em runtime, sem reflash (FR-012).
 static RES_KEY: Mutex<Option<[u8; 32]>> = Mutex::new(None);
 
-/// Identificador deste boot (32 bits aleatorios, nunca 0) e contador de difusoes.
-/// Substituem o `epoch` do v4 no anti-replay — vivem em RAM, zero escrita em Flash
-/// (Principio III).
+/// Numero deste boot e contador de difusoes: o par de anti-replay (`solver::replay`).
+/// O contador vive em RAM; o numero do boot e o anterior + 1, gravado na NVS antes da
+/// primeira difusao (uma escrita por boot). O reset de fabrica nao apaga essa chave.
 static BOOT_ID: OnceLock<u32> = OnceLock::new();
 static CONTADOR: AtomicU32 = AtomicU32::new(0);
+const NVS_NAMESPACE_HB: &str = "heartbeat";
+const NVS_KEY_BOOT: &str = "boot";
 
 fn boot_id() -> u32 {
     *BOOT_ID.get_or_init(|| {
-        let mut v = unsafe { sys::esp_random() };
-        if v == 0 {
-            v = 1; // 0 e reservado (`replay::aceitar` recusa)
+        let nvs = crate::comunicacao::wifi::nvs_particao()
+            .and_then(|p| esp_idf_svc::nvs::EspNvs::new(p, NVS_NAMESPACE_HB, true).ok());
+        let Some(nvs) = nvs else {
+            // Sem NVS o numero nao cresce: apos cada reinicio as irmas recusam este no
+            // ate esquece-lo (`esquecer_antigos`), e ele fica nesse meio tempo na carga fixa.
+            log::error!("[ESPNOW] NVS indisponivel -- boot_id fixo em 1");
+            return 1;
+        };
+        let n = nvs.get_u32(NVS_KEY_BOOT).ok().flatten().unwrap_or(0).saturating_add(1);
+        if let Err(e) = nvs.set_u32(NVS_KEY_BOOT, n) {
+            log::error!("[ESPNOW] falha gravando boot_id {n} na NVS: {e:?}");
         }
-        v
+        n
     })
 }
 
@@ -71,7 +86,7 @@ pub fn chave_ativa() -> Option<[u8; 32]> {
     *RES_KEY.lock().unwrap()
 }
 
-/// Troca a chave da casa em runtime (rotacao apos revogacao — FR-012).
+/// Troca a chave da casa em runtime (rotacao apos revogacao - FR-012).
 /// Peers autenticados com a chave antiga deixam de validar; a particao temporaria
 /// enquanto as irmas nao atualizam e aceita (Clarification Q4).
 pub fn definir_chave(nova: [u8; 32]) {
@@ -85,7 +100,7 @@ pub fn definir_chave(nova: [u8; 32]) {
 pub struct Heartbeat {
     pub versao: u8,
     pub tomada_id: u8, // indice curto 0..N-1 (informativo; a chave do peer e o MAC)
-    /// Identificador do boot do REMETENTE (aleatorio por boot, nunca 0).
+    /// Numero do boot do REMETENTE (crescente entre boots, nunca 0).
     pub boot_id: u32,
     /// Contador crescente dentro deste boot (anti-replay sem relogio).
     pub contador: u32,
@@ -94,13 +109,12 @@ pub struct Heartbeat {
     pub flags: u8, // bit0=U_i bit1=F_i bit2=rele_manual bit3=A_it(hora)
     pub c_std: f32,
     pub c_on: f32,
-    pub pi_hora: f32,
     pub w_i: f32,
 }
 
 impl Heartbeat {
     /// Monta o heartbeat deste ciclo. `boot_id`/`contador` sao deste no (o contador
-    /// avanca a cada chamada — um quadro, um numero).
+    /// avanca a cada chamada - um quadro, um numero).
     #[allow(clippy::too_many_arguments)]
     pub fn novo(
         tomada_id: u8,
@@ -112,7 +126,6 @@ impl Heartbeat {
         a_it: bool,
         c_std: f32,
         c_on: f32,
-        pi_hora: f32,
         w_i: f32,
     ) -> Self {
         let flags = (u_i as u8) | ((f_i as u8) << 1) | ((rele_manual as u8) << 2) | ((a_it as u8) << 3);
@@ -132,13 +145,12 @@ impl Heartbeat {
             flags,
             c_std,
             c_on,
-            pi_hora,
             w_i,
         }
     }
 
-    /// Os 32 bytes de dados (sem o tag), conforme a tabela de offsets do contrato
-    /// `pareamento-espnow.md` parte A. f32 via to_le_bytes (operacao de bits — NAO
+    /// Os 28 bytes de dados (sem o tag): a tabela de offsets do contrato
+    /// `pareamento-espnow.md` parte A, sem o `pi_hora` do v5. f32 via to_le_bytes (operacao de bits - NAO
     /// dispara o bug LLVM Xtensa do serde).
     fn serializar_dados(&self) -> [u8; DADOS] {
         let mut b = [0u8; DADOS];
@@ -151,13 +163,12 @@ impl Heartbeat {
         b[15] = self.flags;
         b[16..20].copy_from_slice(&self.c_std.to_le_bytes());
         b[20..24].copy_from_slice(&self.c_on.to_le_bytes());
-        b[24..28].copy_from_slice(&self.pi_hora.to_le_bytes());
-        b[28..32].copy_from_slice(&self.w_i.to_le_bytes());
+        b[24..28].copy_from_slice(&self.w_i.to_le_bytes());
         b
     }
 
-    /// Payload completo (48 bytes): 32 de dados + HMAC-SHA256(key, dados || MAC)[..16].
-    /// `mac` = MAC do REMETENTE (nao trafega no payload — o receptor o ve no frame).
+    /// Payload completo (44 bytes): 28 de dados + HMAC-SHA256(key, dados || MAC)[..16].
+    /// `mac` = MAC do REMETENTE (nao trafega no payload - o receptor o ve no frame).
     pub fn serializar_assinado(&self, key: &[u8; 32], mac: &[u8; 6]) -> [u8; TAM] {
         let dados = self.serializar_dados();
         let tag = hmac_tag(key, &dados, mac);
@@ -170,7 +181,7 @@ impl Heartbeat {
     /// Desserializa e AUTENTICA: tamanho, versao e HMAC (tempo ~constante, cobrindo o
     /// `src_mac` do frame). `None` se qualquer checagem falhar (forjado/MAC spoofado/de
     /// outra casa). O anti-replay NAO acontece aqui: e decidido por remetente em
-    /// `crate::solver::replay::aceitar`, no callback de recepcao — e por isso nao
+    /// `crate::solver::replay::aceitar`, no callback de recepcao - e por isso nao
     /// depende mais de relogio (FR-010).
     pub fn desserializar_verificado(
         b: &[u8],
@@ -180,7 +191,7 @@ impl Heartbeat {
         if b.len() != TAM || b[0] != VERSAO {
             return None;
         }
-        // Autenticidade + integridade: HMAC sobre os 32 bytes de dados + MAC de origem.
+        // Autenticidade + integridade: HMAC sobre os 28 bytes de dados + MAC de origem.
         let esperado = hmac_tag(key, &b[..DADOS], src_mac);
         if !ct_eq(&esperado, &b[DADOS..]) {
             return None;
@@ -196,8 +207,7 @@ impl Heartbeat {
             flags: b[15],
             c_std: f32_at(16),
             c_on: f32_at(20),
-            pi_hora: f32_at(24),
-            w_i: f32_at(28),
+            w_i: f32_at(24),
         })
     }
 
@@ -208,7 +218,6 @@ impl Heartbeat {
             c_on: self.c_on as f64,
             u_i: self.flags & 0b0001 != 0,
             f_i: self.flags & 0b0010 != 0,
-            pi: self.pi_hora as f64,
             w_i: self.w_i as f64,
             a_it: self.flags & 0b1000 != 0,
         }
@@ -216,7 +225,7 @@ impl Heartbeat {
 }
 
 // ============================================================
-// HMAC (autenticacao do heartbeat — protocolo v3)
+// HMAC (autenticacao do heartbeat - protocolo v3)
 // ============================================================
 
 /// HMAC-SHA256(key, dados || mac_remetente) truncado em `TAG` bytes. Cobrir o MAC
@@ -247,7 +256,7 @@ fn ct_eq(a: &[u8], b: &[u8]) -> bool {
 // Tabela de peers (RAM), preenchida pelo callback de recepcao.
 // ============================================================
 
-/// Um peer conhecido: ultimo heartbeat aceito, quando chegou (UPTIME local — nunca
+/// Um peer conhecido: ultimo heartbeat aceito, quando chegou (UPTIME local - nunca
 /// SNTP) e o estado de anti-replay do remetente.
 struct Peer {
     hb: Heartbeat,
@@ -269,12 +278,12 @@ pub fn iniciar(residencia_key: [u8; 32]) -> Result<EspNow<'static>> {
     let espnow = EspNow::take().map_err(|e| anyhow!("EspNow::take falhou: {e:?}"))?;
 
     // Callback de recepcao: AUTENTICA (HMAC) e aplica o anti-replay por remetente.
-    // Forjados, de outra residencia (HMAC nao bate) ou reapresentados (contador nao
-    // cresceu no mesmo boot_id) sao descartados — sem depender de relogio (FR-010).
+    // Forjados, de outra residencia (HMAC nao bate) ou reapresentados (boot_id menor, ou
+    // contador que nao cresceu no mesmo boot_id) sao descartados - sem relogio (FR-010).
     espnow
         .register_recv_cb(|info: &ReceiveInfo, data: &[u8]| {
             // Frames de pareamento (0xB0..0xB4) vao para o outro modulo: sao a UNICA
-            // conversa ESP-NOW que acontece SEM a chave da casa — e justamente para
+            // conversa ESP-NOW que acontece SEM a chave da casa - e justamente para
             // obte-la (FR-008).
             if crate::comunicacao::pareamento::talvez_encaminhar(info, data) {
                 return;
@@ -290,7 +299,7 @@ pub fn iniciar(residencia_key: [u8; 32]) -> Result<EspNow<'static>> {
                 return; // replay/duplicata
             }
             if veredito == replay::Veredito::Reancorado {
-                log::info!("[ESPNOW] peer {:02X?} reiniciou (boot_id novo)", info.src_addr);
+                log::info!("[ESPNOW] peer {:02X?} reiniciou (boot_id {})", info.src_addr, hb.boot_id);
             }
             if let Some(estado) = novo {
                 tabela.insert(
@@ -336,6 +345,8 @@ pub fn difundir(espnow: &EspNow<'static>, hb: &Heartbeat, proprio_mac: &[u8; 6])
 /// Monta a coordenacao para o ciclo: `(peers_vivos com MAC, carga_fixa W)`.
 ///   - peer com heartbeat dentro de `ttl_s` => variavel de decisao (`(MAC, TomadaInput)`).
 ///   - peer conhecido porem ausente (stale) => carga fixa = ultimo `p_medida` conhecido.
+///     Reservar o `c_on` foi testado em 2026-10-29 (ok/reverificacao-2026-10-29) e
+///     piorou: a tomada surda reservava a casa inteira e se cortava, geladeira inclusive.
 ///
 /// O MAC acompanha cada peer porque a ordenacao canonica (self + peers por MAC) acontece
 /// no ciclo, garantindo entrada IDENTICA entre nos (espnow-protocol.md §"Regras de

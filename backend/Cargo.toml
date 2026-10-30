@@ -1,12 +1,12 @@
-# Workspace próprio: isola o backend (alvo host) do workspace esp-idf da raiz
-# (firmware/Xtensa + tomada-solver). Ver plan.md / research.md §1.
+# Workspace próprio: isola o backend (alvo host) do workspace esp-idf da raiz, que fixa
+# a toolchain `esp` e profiles com workarounds do bug LLVM Xtensa. Ver README.md.
 [workspace]
 
 [package]
 name = "backend"
 version = "0.1.0"
 edition = "2021"
-description = "Backend próprio (Actix-Web + MySQL) — feature 004"
+description = "Backend próprio (Actix-Web + MySQL) - feature 004"
 
 [lib]
 name = "backend"
@@ -32,7 +32,3 @@ chrono = { version = "0.4", features = ["serde"] }
 dotenvy = "0.15"
 log = "0.4"
 env_logger = "0.11"
-
-[dev-dependencies]
-actix-rt = "2.11.0"
-tokio = { version = "1.53.1", features = ["macros", "rt-multi-thread"] }

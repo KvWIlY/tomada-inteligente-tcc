@@ -1,4 +1,4 @@
-//! T025 [US2] — `device_credentials`, `provisioning_claims` e
+//! T025 [US2] - `device_credentials`, `provisioning_claims` e
 //! `residencia_secrets`. Estas tabelas são lidas APENAS aqui: nenhum endpoint de
 //! cliente as expõe, e só o hash dos segredos é persistido (Princípio VIII).
 use crate::dominio::{DeviceCredential, ProvisioningClaim};
@@ -63,7 +63,7 @@ pub async fn revogar(conn: &mut MySqlConnection, tomada_id: &str) -> Result<u64,
 /// Rotaciona a chave de coordenação da residência (feature 005, FR-011).
 ///
 /// Sem isto, revogar uma tomada cortava só o acesso dela ao servidor: ela seguia
-/// conhecendo a chave da casa e continuava sendo aceita — e influenciando as decisões —
+/// conhecendo a chave da casa e continuava sendo aceita - e influenciando as decisões -
 /// na malha ESP-NOW das irmãs. Chamada na MESMA transação do revoke.
 pub async fn rotacionar_residencia_key(
     conn: &mut MySqlConnection,
@@ -83,7 +83,7 @@ pub async fn rotacionar_residencia_key(
     Ok(nova)
 }
 
-/// Chave corrente da residência (entregue ao device no `GET /config` — FR-012).
+/// Chave corrente da residência (entregue ao device no `GET /config` - FR-012).
 pub async fn buscar_residencia_key(
     pool: &MySqlPool,
     residencia_id: &str,

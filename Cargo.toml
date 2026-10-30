@@ -2,10 +2,11 @@
 #
 # `backend/` NAO e membro deste workspace: e um projeto cargo independente, com o
 # proprio `[workspace]` no `backend/Cargo.toml`, compilado para o HOST (x86_64) com a
-# toolchain estavel. Misturar os dois quebraria os dois lados — este workspace fixa
+# toolchain estavel. Misturar os dois quebraria os dois lados - este workspace fixa
 # `rust-toolchain.toml` = esp e profiles com workarounds do bug LLVM Xtensa (abaixo),
 # nenhum dos quais faz sentido para um servidor Actix-Web. Para mexer no backend:
-# `cd backend && cargo test`. Ver specs/004-backend-actix-mysql/plan.md §Estrutura.
+# `cd backend && cargo check`. Ver specs/004-backend-actix-mysql/plan.md §Estrutura.
+# Nao ha nenhum membro que compile para o host: o workspace e so o firmware.
 [workspace]
 members = ["firmware"]
 resolver = "2"
@@ -25,11 +26,6 @@ codegen-units = 1
 [profile.release.package.serde_json]
 opt-level = 0
 
-# Mitigacao do mesmo bug LLVM Xtensa em codigo float-pesado do solver (minilp, usado
-# por src/solver/solver.rs). Se opt-level >= 1 for confirmado OK, esta linha pode sair.
-[profile.release.package.minilp]
-opt-level = 0
-
 # Dev: opt-level = "s" (NAO 0).
 # Com opt-level = 0 o binario passou a NAO CABER na particao factory de 3.31 MB depois
 # que a 005 trouxe spake2/curve25519-dalek/chacha20poly1305 (.flash.text = 3.03 MB,
@@ -39,7 +35,7 @@ opt-level = 0
 # serde_json -- mas o override [profile.*.package.serde_json] NAO resolve: `deserialize`
 # e generico e a monomorfizacao e emitida na CGU de QUEM instancia. O simbolo que quebra
 # termina em `_10y_firmware`. Por isso o opt-level = 0 vai no proprio y-firmware; as
-# dependencias (esp-idf-svc, std, curve25519, minilp) sao o grosso do .text e
+# dependencias (esp-idf-svc, std, curve25519) sao o grosso do .text e
 # ficam em "s".
 # debug = true nao custa flash (secoes .debug_* nao sao carregaveis), so tamanho do ELF.
 # codegen-units = 1: no Windows, o default (256) gera ~257 .o e estoura o limite de
@@ -50,7 +46,4 @@ opt-level     = "s"
 codegen-units = 1
 
 [profile.dev.package.y-firmware]
-opt-level = 0
-
-[profile.dev.package.minilp]
 opt-level = 0

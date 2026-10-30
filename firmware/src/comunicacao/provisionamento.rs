@@ -9,7 +9,7 @@
 //!     (logica pura `crate::solver::sync::deve_renovar`); `renovar_agora()` forca (em 401).
 //!
 //! O segredo de assinatura do JWT vive SO no servidor; aqui so consumimos. Estes dois
-//! endpoints sao os unicos chamados SEM `Authorization` — o device ainda nao tem JWT, e
+//! endpoints sao os unicos chamados SEM `Authorization` - o device ainda nao tem JWT, e
 //! a credencial de entrada e o claim-code (uso unico) ou o `device_secret` duravel.
 
 use anyhow::{anyhow, Context, Result};
@@ -28,13 +28,13 @@ use crate::solver::sync::deve_renovar;
 const MARGEM_RENOVACAO_S: i64 = 300;
 
 /// Epoch atual (s). A partir da 005 delega ao relogio em duas fases: hora real depois
-/// do 1o sync, uptime antes dele — o boot nunca espera por internet (FR-001).
+/// do 1o sync, uptime antes dele - o boot nunca espera por internet (FR-001).
 pub fn agora_epoch() -> i64 {
     crate::comunicacao::sntp::agora_epoch()
 }
 
 /// MAC base do efuso como bytes (identidade de hardware; tambem usado como chave de
-/// ordenacao canonica na coordenacao ESP-NOW — ver espnow-protocol.md).
+/// ordenacao canonica na coordenacao ESP-NOW - ver espnow-protocol.md).
 pub fn obter_mac_bytes() -> Result<[u8; 6]> {
     let mut mac = [0u8; 6];
     let err = unsafe { esp_idf_svc::sys::esp_efuse_mac_get_default(mac.as_mut_ptr()) };
@@ -54,8 +54,8 @@ pub fn obter_mac() -> Result<String> {
 }
 
 /// Erro de provisionamento classificado para o loop de boot decidir o que fazer:
-/// claim ruim (reabrir o portal — retry com o mesmo claim e inutil) vs transitorio
-/// (rede/5xx/parse — pode resolver sozinho, vale tentar de novo).
+/// claim ruim (reabrir o portal - retry com o mesmo claim e inutil) vs transitorio
+/// (rede/5xx/parse - pode resolver sozinho, vale tentar de novo).
 pub enum ErroProv {
     /// HTTP 401: claim invalido/expirado/usado.
     ClaimInvalido,
@@ -129,7 +129,7 @@ pub fn provisionar(mac: &str, claim_code: &str) -> Result<CredenciaisLocais, Err
     Ok(creds)
 }
 
-/// T059 (UC25) — 401 em `/renovar` significa credencial revogada ou segredo invalido:
+/// T059 (UC25) - 401 em `/renovar` significa credencial revogada ou segredo invalido:
 /// retentar com o MESMO segredo nunca vai funcionar. Ainda assim nao resetamos no
 /// primeiro erro (um deploy ruim do servidor apagaria a identidade de todas as tomadas
 /// da casa de uma vez); exigimos algumas confirmacoes seguidas antes do reset.
@@ -148,14 +148,14 @@ fn renovar(tomada_id: &str, device_secret: &str) -> Result<RespRenovar> {
     if status == 401 || status == 404 {
         // 404 = a tomada sumiu do servidor (banco recriado): mesma situacao pratica.
         let n = FALHAS_401.fetch_add(1, Ordering::Relaxed) + 1;
-        log::error!("[PROV] renovar {status} — credencial revogada/invalida ({n}/{MAX_401_ANTES_DO_RESET})");
+        log::error!("[PROV] renovar {status} - credencial revogada/invalida ({n}/{MAX_401_ANTES_DO_RESET})");
         if n >= MAX_401_ANTES_DO_RESET {
-            log::error!("[PROV] identidade irrecuperavel — reset de fabrica e Portal AP");
+            log::error!("[PROV] identidade irrecuperavel - reset de fabrica e Portal AP");
             crate::comunicacao::wifi::resetar_identidade_e_reabrir_portal(); // nao retorna
         }
         // Nota: revogacao tambem rotaciona a chave da casa no servidor (FR-011), entao
         // este no ja saiu da coordenacao das irmas antes mesmo do reset.
-        return Err(anyhow!("[PROV] renovar {status} — credencial revogada/invalida"));
+        return Err(anyhow!("[PROV] renovar {status} - credencial revogada/invalida"));
     }
     if !(200..=299).contains(&status) {
         return Err(anyhow!("[PROV] renovar HTTP {status}: {resp}"));
@@ -189,7 +189,7 @@ pub fn renovar_agora() -> Result<String> {
 
 // ============================================================
 // HTTP helper para os endpoints publicos do backend (sem Authorization: o device
-// ainda nao tem JWT — a credencial de entrada vai no corpo).
+// ainda nao tem JWT - a credencial de entrada vai no corpo).
 // ============================================================
 
 fn post_funcao(url: &str, body: &str) -> Result<(u16, String)> {

@@ -1,4 +1,4 @@
-//! Pareamento local entre tomadas (feature 005, US3 —
+//! Pareamento local entre tomadas (feature 005, US3 -
 //! `contracts/pareamento-espnow.md` parte B).
 //!
 //! Resolve o caso que a nuvem nao resolve: uma casa SEM internet e SEM servidor onde o
@@ -24,7 +24,7 @@ use crate::solver::pareamento::{
     self, ErroPareamento, Janela, TAM_CHAVE, TAM_NONCE, DURACAO_JANELA_S,
 };
 
-// Tipos de frame (byte 0). Fora da faixa do heartbeat (que comeca com `versao=5`).
+// Tipos de frame (byte 0). Fora da faixa do heartbeat (que comeca com `versao=7`).
 const PAIR_BEACON: u8 = 0xB0;
 const PAIR_REQ: u8 = 0xB1;
 const PAIR_RESP: u8 = 0xB2;
@@ -43,7 +43,7 @@ const CANAIS: [u8; 13] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
 pub enum FalhaPareamento {
     /// Nenhuma tomada anunciando: janela fechada ou fora de alcance.
     SemBeacon,
-    /// A tag AEAD nao validou — PIN digitado nao confere.
+    /// A tag AEAD nao validou - PIN digitado nao confere.
     PinIncorreto,
     /// A outra tomada parou de responder no meio do handshake.
     Timeout,
@@ -152,7 +152,7 @@ fn garantir_peer(espnow: &EspNow<'static>, mac: &[u8; 6]) -> Result<()> {
 /// Janela de pareamento ativa (aberta pelo botao). `None` = fechada.
 static JANELA: Mutex<Option<Janela>> = Mutex::new(None);
 
-/// Abre (ou reabre) a janela de 60 s — chamada pela task do botao (FR-008).
+/// Abre (ou reabre) a janela de 60 s - chamada pela task do botao (FR-008).
 pub fn abrir_janela() {
     *JANELA.lock().unwrap() = Some(Janela::abrir(uptime_s()));
     log::warn!(
@@ -295,7 +295,7 @@ fn canal_atual() -> u8 {
 /// enquanto a interface esta conectada a um AP ("STA is scanning or connecting, or AP
 /// has connected with external STAs, cannot set channel"): o laco 1-13 virava um no-op
 /// ruidoso que so gastava o timeout inteiro no canal do AP e falhava com `SemBeacon`.
-/// Ficar no canal do AP e, alias, o comportamento CERTO nesse caso — a outra tomada da
+/// Ficar no canal do AP e, alias, o comportamento CERTO nesse caso - a outra tomada da
 /// casa esta na mesma rede, logo no mesmo canal.
 ///
 /// A varredura 1-13 continua valendo para o caso sem rede (standalone), que e o cenario
