@@ -18,7 +18,7 @@ pub const N_AMOSTRAS: usize = 1000;
 pub const INTERVALO_US: u32 = 200;
 
 /// Diagnostico bruto de uma janela, em **mV no ADC** (antes dos fatores de calibracao).
-/// Nao participa da decisao — serve so para caracterizar o piso de ruido no console e
+/// Nao participa da decisao - serve so para caracterizar o piso de ruido no console e
 /// escolher o limiar de gate. `*_dc` = media (bias DC); `*_ac` = RMS centrado (componente AC).
 #[derive(Debug, Clone, Copy)]
 pub struct Diag {
@@ -34,7 +34,7 @@ pub struct Diag {
 /// O **interleaving** (um `v` e um `i` por iteracao, colados) e o que torna a potencia
 /// ATIVA calculavel: `potencia::potencia_ativa` multiplica `v_k * i_k` amostra a amostra
 /// e precisa dos dois praticamente no mesmo instante. Trocar isto por dois lacos
-/// separados destruiria a relacao de fase e o watt viraria ruido — o RMS de cada canal
+/// separados destruiria a relacao de fase e o watt viraria ruido - o RMS de cada canal
 /// sobreviveria (nao depende de fase), entao a quebra passaria SILENCIOSA.
 pub fn medir<FV, FI>(mut ler_v_mv: FV, mut ler_i_mv: FI) -> (Leitura, Diag)
 where

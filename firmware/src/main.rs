@@ -1,4 +1,4 @@
-//! Tomada inteligente — orquestracao do ciclo medir -> decidir -> atuar -> sincronizar.
+//! Tomada inteligente - orquestracao do ciclo medir -> decidir -> atuar -> sincronizar.
 //!
 //! Boot (005): LittleFS -> identidade/PIN -> Wi-Fi (portal AP se preciso) -> SNTP
 //! NAO-BLOQUEANTE -> ADC/rele/ESP-NOW. NADA no boot espera por internet: sem hora
@@ -11,7 +11,7 @@
 //! A cada ~60 s (cloud tick, so no modo nuvem): bufferiza medicao, `GET /config`
 //! (config + rele manual + P_max + chave da casa) e `POST /telemetria` em lote.
 //!
-//! Modo standalone: identidade local, sem claim-code e sem I/O de nuvem — a tomada
+//! Modo standalone: identidade local, sem claim-code e sem I/O de nuvem - a tomada
 //! coordena com as irmas por ESP-NOW usando a chave recebida no pareamento local.
 
 use anyhow::Result;
@@ -49,11 +49,11 @@ use crate::solver::relogio;
 use crate::solver::sync::deve_adotar_config;
 use crate::solver::uso_agora;
 
-/// Cadencia do ciclo de decisao (s) — SC-008 (decisao em <=10 s).
+/// Cadencia do ciclo de decisao (s) - SC-008 (decisao em <=10 s).
 const CICLO_S: u64 = 10;
 /// A cada quantos ciclos fazemos I/O de nuvem (~60 s => medicao 1/min).
 const CICLOS_POR_NUVEM: u64 = 6;
-/// TTL de um peer ESP-NOW, em UPTIME local (nao epoch) — 3x a cadencia.
+/// TTL de um peer ESP-NOW, em UPTIME local (nao epoch) - 3x a cadencia.
 const TTL_PEER_S: i64 = (CICLO_S as i64) * 3;
 /// Janela de frescor do fallback de coordenacao pela nuvem (003).
 const JANELA_FRESCOR_S: i64 = 300;
@@ -106,7 +106,7 @@ fn main() -> Result<()> {
         }
     };
 
-    // 4. SNTP em segundo plano — NUNCA bloqueia nem falha o boot (FR-001).
+    // 4. SNTP em segundo plano - NUNCA bloqueia nem falha o boot (FR-001).
     //    Ate a hora chegar, `sntp::agora_epoch()` devolve uptime e as regras horarias
     //    ficam neutras (FR-001b).
     let sntp_handle = sntp::iniciar();
@@ -143,7 +143,7 @@ fn main() -> Result<()> {
     let mut ch_v = AdcChannelDriver::new(&adc1, peripherals.pins.gpio32, &ch_cfg)?;
     let mut ch_i = AdcChannelDriver::new(&adc1, peripherals.pins.gpio35, &ch_cfg)?;
 
-    // 7. Rele (GPIO26, Opcao A). Comeca aberto (OFF) — mesmo estado do portal (FR-003a).
+    // 7. Rele (GPIO26, Opcao A). Comeca aberto (OFF) - mesmo estado do portal (FR-003a).
     let mut atuador = Atuador::novo(peripherals.pins.gpio26)?;
 
     // 8. Botao BOOT (GPIO0): abre a janela de pareamento de 60 s (FR-008).
@@ -151,12 +151,12 @@ fn main() -> Result<()> {
     let botao = PinDriver::input(peripherals.pins.gpio0, Pull::Up)?;
 
     // 8b. Botao "USAR AGORA" (GPIO27, dedicado): religa a tomada que o MILP cortou.
-    //     Botao SEPARADO do BOOT de proposito — nada de toque curto/longo para o dono
+    //     Botao SEPARADO do BOOT de proposito - nada de toque curto/longo para o dono
     //     decorar. E a UNICA porta de religar no modo standalone, onde nao ha dashboard.
     //     Mesmo esquema eletrico do BOOT: pull-up interno, botao para o GND.
     let botao_usar = PinDriver::input(peripherals.pins.gpio27, Pull::Up)?;
 
-    // 9. ESP-NOW (best-effort; exige a chave da casa — Principio VIII, fail-closed).
+    // 9. ESP-NOW (best-effort; exige a chave da casa - Principio VIII, fail-closed).
     let espnow = match parse_chave_hex(&creds.residencia_key) {
         Some(key) => match espnow::iniciar(key) {
             Ok(e) => Some(e),
@@ -234,14 +234,14 @@ fn main() -> Result<()> {
         // --- RELOGIO: na transicao para hora certa, corrige os carimbos pendentes ---
         // PRECISA vir antes de ler `agora`/`hora`: na iteracao em que a hora chega,
         // `relogio_ok()` passa a valer true mas `agora_epoch()` lido ANTES daqui ainda
-        // devolve o uptime (~38 s) — e a medicao do tick era carimbada em 1970-01-01,
+        // devolve o uptime (~38 s) - e a medicao do tick era carimbada em 1970-01-01,
         // ia para o balde do dia 0 e, por nao ser a sentinela SEM_HORA, ainda subia
         // para o backend como um ponto valido.
         if let Some(off) = sntp::checar_sync(&sntp_handle) {
             aplicar_hora_certa(off, "sntp");
         }
 
-        // Leituras de tempo do ciclo — todas DEPOIS do `checar_sync` acima.
+        // Leituras de tempo do ciclo - todas DEPOIS do `checar_sync` acima.
         let agora = provisionamento::agora_epoch();
         let uptime = sntp::uptime_s();
         let hora = Local::now().hour() as u8;
@@ -275,7 +275,7 @@ fn main() -> Result<()> {
             liberar_manual = !creds.eh_standalone();
             // `usar_agora_consumido` NAO e limpo aqui de proposito: o servidor ainda
             // devolve `Some(false)` ate o POST de liberacao passar, e limpar agora
-            // faria o proximo GET reabrir a janela que acabou de fechar — de novo, e
+            // faria o proximo GET reabrir a janela que acabou de fechar - de novo, e
             // de novo, se o POST estiver falhando. Quem limpa e o proprio GET, quando
             // enfim trouxer outro valor.
             backend::registrar_evento(
@@ -356,10 +356,9 @@ fn main() -> Result<()> {
         };
 
         // --- REGRAS HORARIAS: neutras enquanto nao ha hora certa (FR-001b) ---
-        let rh = relogio::regras_horarias(sntp::relogio_ok(), config.schedule[h], config.pi_historico[h]);
+        let rh = relogio::regras_horarias(sntp::relogio_ok(), config.schedule[h]);
         let mut config_ciclo = config.clone();
         config_ciclo.schedule[h] = rh.a_it;
-        config_ciclo.pi_historico[h] = rh.pi;
 
         // --- DECIDIR (MILP) ---
         let decisao = ciclo.decidir(
@@ -384,8 +383,16 @@ fn main() -> Result<()> {
             decisao.rele_aberto, peers_vivos.len(), carga_fixa, sntp::relogio_ok(),
             janela_uso.map(|j| j.restante_s(uptime)).unwrap_or(0),
         );
+        // Memoria na configuracao de producao (Wi-Fi, ESP-NOW e HTTP ativos): os minimos
+        // sao desde o boot, e a pilha e a desta tarefa (40 KB no sdkconfig.defaults).
+        log::info!(
+            "[MEM] heap_livre={} heap_min={} pilha_livre_min={}",
+            unsafe { esp_idf_svc::sys::esp_get_free_heap_size() },
+            unsafe { esp_idf_svc::sys::esp_get_minimum_free_heap_size() },
+            unsafe { esp_idf_svc::sys::uxTaskGetStackHighWaterMark(std::ptr::null_mut()) },
+        );
 
-        // --- DIFUNDIR HEARTBEAT (v5: boot_id + contador) ---
+        // --- DIFUNDIR HEARTBEAT (v7: boot_id persistido + contador) ---
         if let Some(en) = &espnow {
             let hb = Heartbeat::novo(
                 short_id,
@@ -397,7 +404,6 @@ fn main() -> Result<()> {
                 rh.a_it,
                 decisao.cstd,
                 decisao.con,
-                rh.pi,
                 config.w_efetivo(),
             );
             let _ = espnow::difundir(en, &hb, &proprio_mac);
@@ -407,7 +413,7 @@ fn main() -> Result<()> {
             backend::registrar_evento(e.tipo, e.severidade, &e.titulo, &e.detalhes);
         }
 
-        // --- NUVEM (a cada ~60 s; nada disso no modo standalone — FR-006) ---
+        // --- NUVEM (a cada ~60 s; nada disso no modo standalone - FR-006) ---
         if cloud_tick {
             // Sem hora certa, o carimbo fica com a sentinela e e corrigido depois.
             let ts = if sntp::relogio_ok() { agora } else { relogio::SEM_HORA };
@@ -427,7 +433,7 @@ fn main() -> Result<()> {
             aplicar_retencao(agora);
 
             // Persiste o buffer de RAM. No modo nuvem o sync tambem faria isso, mas no
-            // standalone ninguem faria — a medicao morreria no reboot.
+            // standalone ninguem faria - a medicao morreria no reboot.
             if let Err(e) = medicao::flush_para_disco() {
                 log::error!("[MED] flush falhou: {e:?}");
             }
@@ -441,7 +447,7 @@ fn main() -> Result<()> {
                     &mut liberar_manual,
                 );
                 // "Usar agora" pedido pelo dashboard: o servidor manda `Some(false)` e
-                // o firmware o transforma numa janela igual a do botao fisico — as duas
+                // o firmware o transforma numa janela igual a do botao fisico - as duas
                 // portas, um comportamento so.
                 if uso_agora::deve_abrir_do_dashboard(rele_manual, usar_agora_consumido) {
                     usar_agora_consumido = true;
@@ -539,7 +545,7 @@ fn aplicar_retencao(agora: i64) {
 
 /// Correcao dos carimbos pendentes na transicao para hora certa (FR-001a).
 ///
-/// Extraida porque agora ha DUAS fontes de relogio — o SNTP publico e, para a casa
+/// Extraida porque agora ha DUAS fontes de relogio - o SNTP publico e, para a casa
 /// sem internet, a hora do backend da LAN. Ambas entregam o mesmo `offset` e devem
 /// disparar exatamente a mesma correcao; duplicar isso seria a forma obvia de as duas
 /// divergirem com o tempo.
@@ -570,7 +576,7 @@ fn sincronizar_nuvem(
 ) {
     match backend::buscar_desired_state() {
         Ok(ds) => {
-            // Fonte de relogio da LAN — so age se o SNTP ainda nao sincronizou
+            // Fonte de relogio da LAN - so age se o SNTP ainda nao sincronizou
             // (`adotar_hora_do_servidor` e no-op depois disso). E o que mantem as
             // regras horarias do MILP vivas numa casa sem internet.
             if let Some(ts) = ds.agora_servidor {
@@ -666,7 +672,7 @@ fn aplicar_formulario(creds: CredsRecebidas, pin: &str) -> Result<()> {
             // seguinte acha `cred.json`, devolve as credenciais standalone e NUNCA
             // chama `obter_identidade()` (main.rs: `Some(c) => c`): o claim ficaria
             // parado na NVS para sempre e a tomada jamais apareceria no dashboard.
-            // As medicoes vao junto — foram gravadas com o `tomada_id` local e nunca
+            // As medicoes vao junto - foram gravadas com o `tomada_id` local e nunca
             // confirmariam sob a identidade nova, travando o sync (mesmo motivo
             // documentado em `medicao::limpar_tudo`).
             if credenciais::load()?.map(|c| c.eh_standalone()).unwrap_or(false) {

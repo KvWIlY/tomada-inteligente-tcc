@@ -10,7 +10,7 @@
 
 use crate::sensores::potencia::rms_centrado;
 
-/// Amperes por mV-RMS-no-ADC. Nominal 20 A / 1000 mV = 0.02. PLACEHOLDER — calibrar.
+/// Amperes por mV-RMS-no-ADC. Nominal 20 A / 1000 mV = 0.02. PLACEHOLDER - calibrar.
 pub const FATOR_CORRENTE: f32 = 0.02;
 
 /// Irms (A) a partir das amostras em mV do ADC.

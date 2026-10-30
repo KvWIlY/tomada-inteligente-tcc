@@ -1,5 +1,5 @@
 // =============================================
-// Pecas reutilizaveis (string builders) — Basecoat + tokens do projeto
+// Pecas reutilizaveis (string builders) - Basecoat + tokens do projeto
 // =============================================
 
 import { icon } from '../icons';
@@ -78,7 +78,7 @@ function feedClass(sev: Evento['severidade']): string {
  *
  * GATE DO PRINCIPIO VII: este e o unico lugar onde o dono ve POR QUE o solver
  * decidiu o que decidiu. O campo `detalhes` carrega essa justificativa e nao
- * pode sumir na migracao — nem quando vem vazio, caso em que a linha
+ * pode sumir na migracao - nem quando vem vazio, caso em que a linha
  * simplesmente nao e emitida (antes saia uma `<div>` vazia ocupando altura).
  */
 export function eventsFeed(eventos: Evento[]): string {
@@ -89,7 +89,7 @@ export function eventsFeed(eventos: Evento[]): string {
           <figure class="mb-4 grid size-14 place-items-center rounded-2xl bg-lav text-ink-faint">${icon('cpu', 24)}</figure>
           <h3 class="text-lg font-bold tracking-tight">Sem atividade do otimizador ainda</h3>
           <p class="mt-2 text-sm text-ink-soft">As decisões do MILP aparecem aqui assim que a primeira tomada
-             reportar um ciclo — inclusive o motivo de cada chaveamento.</p>
+             reportar um ciclo, inclusive o motivo de cada chaveamento.</p>
         </header>
       </div>`;
   }

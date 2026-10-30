@@ -1,4 +1,4 @@
-//! Atuacao do rele (GPIO 26) — **Opcao A** (data-model §1):
+//! Atuacao do rele (GPIO 26) - **Opcao A** (data-model §1):
 //!   OFF -> rele ABERTO  -> GPIO LOW  (energia cortada)
 //!   STD -> rele FECHADO -> GPIO HIGH (energizado, standby)
 //!   ON  -> rele FECHADO -> GPIO HIGH (energizado, uso ativo)
@@ -11,7 +11,7 @@ use esp_idf_svc::hal::gpio::{Gpio26, Output, PinDriver};
 use crate::solver::Estado;
 
 /// Driver do rele. Mantem o pino de saida vivo enquanto existir.
-/// (esp-idf-hal 0.46: `PinDriver<'d, MODE>` — sem parametro de pino; pinos tem lifetime.)
+/// (esp-idf-hal 0.46: `PinDriver<'d, MODE>` - sem parametro de pino; pinos tem lifetime.)
 pub struct Atuador<'d> {
     pino: PinDriver<'d, Output>,
 }

@@ -1,18 +1,18 @@
 // =============================================
-// Detalhe da Tomada — cartoes e abas do Basecoat
+// Detalhe da Tomada - cartoes e abas do Basecoat
 // =============================================
 //
 // Saiu daqui na feature 007 (FR-009, FR-009a):
-//   * o cartao "Agendamento Operacional" com as 24 horas pintaveis — o
+//   * o cartao "Agendamento Operacional" com as 24 horas pintaveis - o
 //     agendamento deixou de fazer parte do produto;
-//   * o cartao "Probabilidade de Uso" — exibia `pi_historico`, que NADA no
-//     sistema calcula (o firmware nunca o preenche);
+//   * o cartao "Probabilidade de Uso" - exibia `pi_historico`, que nada no
+//     sistema calculava. O campo saiu do codigo inteiro em 2026-09-14;
 //   * a funcao `build7d`, que colapsava 7 dias reais numa media por hora e
 //     multiplicava por um fator de variacao inventado. O seletor "7 dias"
 //     agora plota a serie que o backend devolve (FR-018).
 //
-// Os campos `schedule` e `pi_historico` continuam INTACTOS no contrato e no
-// banco (FR-009b, FR-010a): saiu a tela, nao o dado.
+// O campo `schedule` continua INTACTO no contrato e no banco (FR-009b,
+// FR-010a): saiu a tela, nao o dado.
 
 import { icon } from '../icons';
 import { energiaKWh, fatorPotenciaAgregado, fmt2, seriesFromMedicoes } from '../derive';
@@ -27,7 +27,7 @@ const PONTOS: Record<'24h' | '7d', number> = { '24h': 60, '7d': 168 };
 export interface DetailProps {
   tomada: Tomada;
   residencia: Residencia | null;
-  /** Sempre as 24 h reais — base de kWh e fator de potência. */
+  /** Sempre as 24 h reais - base de kWh e fator de potência. */
   medicoes: Medicao[];
   /** A série da janela escolhida (igual a `medicoes` quando o seletor está em 24 h). */
   medicoesJanela: Medicao[];
@@ -47,14 +47,19 @@ export interface DetailProps {
 }
 
 /** Rótulo do modo vigente. "Usar agora" é temporário: o ESP32 devolve o controle
- *  ao otimizador ao fim da janela e o campo volta a `null` sozinho. */
+ *  ao otimizador ao fim da janela e o campo volta a `null` sozinho.
+ *
+ *  Os tres textos sao curtos e de comprimento parecido de proposito: o antigo
+ *  "Ligada por você · volta ao automático em até 30 min" quebrava em duas linhas
+ *  enquanto "Cortada manualmente" cabia em uma, e o painel inteiro pulava de altura
+ *  a cada clique no switch. O `min-h` do proprio elemento fecha o resto. */
 function modoRotulo(rele: boolean | null): string {
-  if (rele === null) return 'Automático · o otimizador decide';
-  return rele ? 'Cortada manualmente' : 'Ligada por você · volta ao automático em até 30 min';
+  if (rele === null) return 'O otimizador decide';
+  return rele ? 'Cortada por você' : 'Ligada por 30 min';
 }
 
 /** Cor do fator de potência. Abaixo de 0,6 é o território das fontes chaveadas
- *  em standby — a carga que o trabalho existe para cortar. `null` = medição
+ *  em standby - a carga que o trabalho existe para cortar. `null` = medição
  *  antiga, sem fase gravada: cinza, nunca vermelho (ausência não é problema).
  *  Sempre a variante `-ink`: isto é TEXTO (FR-002f). */
 function fpClasse(fp: number | null): string {
@@ -90,7 +95,7 @@ export function renderDetail(el: HTMLElement, p: DetailProps): void {
             <header>
               <figure class="mb-4 grid size-14 place-items-center rounded-2xl bg-lav text-ink-faint">${icon('plug', 26)}</figure>
               <h3 class="text-xl font-bold tracking-tight">Tomada pareada, sem dados ainda</h3>
-              <p class="mt-2 text-sm text-ink-soft">Assim que o aparelho for usado, as medições começam a aparecer aqui —
+              <p class="mt-2 text-sm text-ink-soft">Assim que o aparelho for usado, as medições começam a aparecer aqui:
                  potência ativa, energia acumulada e fator de potência.</p>
             </header>
           </section>
@@ -109,9 +114,12 @@ export function renderDetail(el: HTMLElement, p: DetailProps): void {
   // é a que o dono está olhando no cabeçalho.
   const kwh = energiaKWh(p.medicoes);
   const fp = fatorPotenciaAgregado(p.medicoes);
-  const syncLabel = p.online ? 'Sincronização ESP32 ao vivo' : 'Offline — decidindo localmente';
+  const syncLabel = p.online ? 'Sincronização ESP32 ao vivo' : 'Offline, decidindo localmente';
   const pNum = t.estado === 'OFF' ? '0' : Math.round(t.p_medida_atual).toLocaleString('pt-BR');
   const identity = t.mac ?? t.id;
+  // O botao de power reflete o estado FISICO do rele, nao a intencao: em automatico
+  // quem manda e o MILP, e `t.estado` e o que a placa reportou no ultimo ciclo.
+  const ligada = t.rele_aberto === null ? t.estado !== 'OFF' : t.rele_aberto === false;
 
   el.innerHTML = `
     <div class="mx-auto max-w-[1080px] px-5 pt-6 pb-20 md:px-12 md:pt-9">
@@ -131,16 +139,24 @@ export function renderDetail(el: HTMLElement, p: DetailProps): void {
               </div>
               <span class="inline-flex items-center gap-2 text-[13.5px] font-semibold text-ink-soft">${stateDot(p.online ? 'ON' : 'STD', p.online)}${syncLabel}</span>
             </div>
-            <div class="flex flex-col justify-center gap-2.5 rounded-2xl bg-surface p-4 md:min-w-[260px]">
-              <span class="text-[11px] font-extrabold tracking-[0.1em] text-ink-soft uppercase">Controle Manual</span>
-              <div class="tabs">
-                <div role="tablist" aria-label="Controle manual do relé" class="w-full">
-                  ${aba('Automático', t.rele_aberto === null, 'data-cmd="auto"', 'O otimizador decide')}
-                  ${aba('Usar agora', t.rele_aberto === false, 'data-cmd="usar_agora"', 'Religa por 30 min e volta sozinha ao automático')}
-                  ${aba('Cortar', t.rele_aberto === true, 'data-cmd="cortar"', 'Mantém desligada até você desfazer')}
-                </div>
+            <div class="flex items-center gap-4">
+              <!-- Liga/desliga fica FORA do painel: e a acao imediata sobre a tomada,
+                   nao um ajuste do modo de operacao (que e o que o painel guarda). -->
+              <button type="button" data-cmd="${ligada ? 'cortar' : 'usar_agora'}"
+                class="grid size-14 shrink-0 cursor-pointer place-items-center rounded-full transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${ligada ? 'bg-green text-primary-foreground hover:bg-green-deep' : 'bg-muted text-ink-faint hover:bg-line-soft'}"
+                aria-pressed="${ligada}"
+                title="${ligada ? 'Desligar a tomada agora' : 'Ligar a tomada por 30 min'}"
+                aria-label="${ligada ? 'Desligar a tomada' : 'Ligar a tomada'}">${icon('power', 26)}</button>
+              <div class="flex flex-col justify-center gap-2.5 rounded-2xl bg-surface p-4 md:min-w-[228px]">
+                <span class="text-[11px] font-extrabold tracking-[0.1em] text-ink-soft uppercase">Controle Manual</span>
+                <label class="flex items-center justify-between gap-3 text-[13px] font-bold">
+                  <span>Automático</span>
+                  ${toggle(t.rele_aberto === null, 'data-role="auto"', 'Deixar o otimizador decidir')}
+                </label>
+                <!-- min-h de uma linha: o texto muda com o modo e sem isto o painel
+                     (e o cartao inteiro) pulava de altura a cada clique. -->
+                <span class="flex min-h-5 items-center text-[13px] font-bold ${modoClasse(t.rele_aberto)}">${modoRotulo(t.rele_aberto)}</span>
               </div>
-              <span class="text-[13px] font-bold ${modoClasse(t.rele_aberto)}">${modoRotulo(t.rele_aberto)}</span>
             </div>
           </section>
         </div>
@@ -153,7 +169,7 @@ export function renderDetail(el: HTMLElement, p: DetailProps): void {
               <p data-description>${p.seg === '24h' ? 'Últimas 24 horas' : 'Últimos 7 dias'} · média ${media} W · pico ${pico} W</p>
               <p class="mt-1.5 flex flex-wrap gap-4 text-[13px] font-medium text-ink-faint">
                 <span title="Energia integrada sobre os timestamps reais das últimas 24 h"><strong class="tnum text-ink">${fmt2(kwh)}</strong> kWh em 24 h</span>
-                <span title="${fp === null ? 'Medições anteriores a 2026-08-24 não gravaram fase' : 'Razão entre potência ativa e aparente (ΣP/ΣS)'}">fator de potência <strong class="tnum ${fpClasse(fp)}">${fp === null ? '—' : fmt2(fp)}</strong></span>
+                <span title="${fp === null ? 'Medições anteriores a 2026-08-24 não gravaram fase' : 'Razão entre potência ativa e aparente (ΣP/ΣS)'}">fator de potência <strong class="tnum ${fpClasse(fp)}">${fp === null ? '-' : fmt2(fp)}</strong></span>
               </p>
             </div>
             <div class="tabs">
@@ -223,6 +239,12 @@ export function renderDetail(el: HTMLElement, p: DetailProps): void {
       p.onComandoRele(btn.dataset.cmd as 'auto' | 'usar_agora' | 'cortar'),
     ),
   );
+  // Marcar devolve a decisao ao MILP; desmarcar assume o controle no estado fisico
+  // atual, para o clique nao acender nem apagar a tomada por efeito colateral.
+  el.querySelector<HTMLInputElement>('[data-role="auto"]')?.addEventListener('change', (e) => {
+    const auto = (e.target as HTMLInputElement).checked;
+    p.onComandoRele(auto ? 'auto' : ligada ? 'usar_agora' : 'cortar');
+  });
   el.querySelector('[data-role="critical"]')?.addEventListener('change', () => p.onToggleCritical());
   el.querySelector('[data-role="save"]')?.addEventListener('click', () => p.onSaveConfig());
   el.querySelector('[data-role="revogar"]')?.addEventListener('click', () => p.onRevogar());
@@ -232,7 +254,7 @@ export function renderDetail(el: HTMLElement, p: DetailProps): void {
   );
 
   // Slider de P_max: atualiza rótulo e trilha ao vivo; persiste só no 'change'
-  // (FR-005e item 3) — persistir a cada 'input' mandaria um PATCH por pixel.
+  // (FR-005e item 3) - persistir a cada 'input' mandaria um PATCH por pixel.
   const slider = el.querySelector<HTMLInputElement>('[data-role="power-slider"]');
   const valEl = el.querySelector<HTMLElement>('[data-role="power-val"]');
   if (slider) {

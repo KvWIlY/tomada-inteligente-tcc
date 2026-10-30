@@ -1,0 +1,8 @@
+# `core.autocrlf = true` nesta maquina: por padrao o git grava CRLF no checkout.
+#
+# As MIGRATIONS nao podem sofrer isso. O `sqlx::migrate!` guarda um SHA-384 do arquivo
+# INTEIRO em `_sqlx_migrations` quando aplica; na proxima subida ele recalcula e compara.
+# Trocar LF por CRLF muda todos os bytes de fim de linha, o checksum deixa de bater e o
+# boot morre com `VersionMismatch(1)` - sem que uma linha de SQL tenha mudado.
+# Aconteceu em 2026-08-30.
+backend/migrations/*.sql text eol=lf

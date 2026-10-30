@@ -1,4 +1,4 @@
-//! T038–T040 [US3] — rotas de tomada usadas pelo dashboard. Todas exigem JWT de
+//! T038–T040 [US3] - rotas de tomada usadas pelo dashboard. Todas exigem JWT de
 //! **usuário** e checam a cadeia `tomada → residência → owner_id`: um JWT de
 //! device aqui é 401 (typ errado) e um dono alheio é 403 (default-deny).
 use crate::auth::UsuarioAutenticado;
@@ -11,7 +11,7 @@ use serde::Deserialize;
 use serde_json::json;
 use sqlx::MySqlPool;
 
-/// Últimos eventos devolvidos em `/eventos` — o feed do dashboard é recente.
+/// Últimos eventos devolvidos em `/eventos` - o feed do dashboard é recente.
 const LIMITE_EVENTOS: i64 = 200;
 
 #[derive(Deserialize)]
@@ -29,7 +29,7 @@ pub struct PatchReq {
     pub rele_aberto: Option<Option<bool>>,
 }
 
-/// Distingue "campo ausente" de `"campo": null` — `#[serde(default)]` sozinho
+/// Distingue "campo ausente" de `"campo": null` - `#[serde(default)]` sozinho
 /// colapsa os dois em `None`.
 fn campo_presente<'de, D>(d: D) -> Result<Option<Option<bool>>, D::Error>
 where
@@ -62,14 +62,6 @@ pub async fn autorizar_dono(
     Ok(tomada)
 }
 
-pub async fn obter(
-    pool: web::Data<MySqlPool>,
-    user: UsuarioAutenticado,
-    path: web::Path<String>,
-) -> Result<HttpResponse, ApiErro> {
-    let t = autorizar_dono(&pool, &path.into_inner(), &user.user_id).await?;
-    Ok(HttpResponse::Ok().json(t))
-}
 
 pub async fn medicoes(
     pool: web::Data<MySqlPool>,
@@ -102,7 +94,7 @@ pub async fn eventos(
     Ok(HttpResponse::Ok().json(evs))
 }
 
-/// T039 — rename (UC08), config (UC06) e relé manual (UC09). Escrever `config`
+/// T039 - rename (UC08), config (UC06) e relé manual (UC09). Escrever `config`
 /// bumpa `config_version` server-side; o nó só reaplica se a versão subiu (UC28).
 pub async fn atualizar(
     pool: web::Data<MySqlPool>,
@@ -139,10 +131,10 @@ pub async fn atualizar(
     Ok(HttpResponse::Ok().json(atual))
 }
 
-/// T040 — revoga o dispositivo (UC26): `/renovar` passa a falhar, o `GET /config`
+/// T040 - revoga o dispositivo (UC26): `/renovar` passa a falhar, o `GET /config`
 /// recusa o JWT vigente (checagem por requisição) e a **chave da residência é
 /// rotacionada** (005/FR-011), tirando o hardware revogado também da coordenação
-/// local. A tomada e o histórico permanecem — o que se desassocia é o hardware.
+/// local. A tomada e o histórico permanecem - o que se desassocia é o hardware.
 /// Re-provisionar o mesmo MAC religa.
 ///
 /// Idempotente: revogar uma tomada já revogada NÃO gera chave nova (dois cliques no

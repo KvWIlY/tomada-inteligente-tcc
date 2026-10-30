@@ -1,5 +1,5 @@
 // =============================================
-// Icones — Material Symbols (Google, Apache-2.0), inlinados
+// Icones - Material Symbols (Google, Apache-2.0), inlinados
 // =============================================
 //
 // Set: **Material Symbols** (https://fonts.google.com/icons), navegado pelo
@@ -9,7 +9,7 @@
 //
 // Estilo **outlined**, que e o padrao do proprio Google e o que se parece com o
 // traco que a interface ja tinha. Onde a coleção nao oferece variante
-// `-outline` — `check`, `logout`, `add`, `swap-horiz` — e porque o glifo nao tem
+// `-outline` - `check`, `logout`, `add`, `swap-horiz` - e porque o glifo nao tem
 // interior a vazar: preenchido e contornado sao o mesmo desenho.
 //
 // Por que INLINE e nao `<img src="/icons/x.svg">`: as views montam marcacao como
@@ -21,11 +21,12 @@
 // desenhado como preenchimento. O Lucide, usado ate 2026-08-26, era
 // `fill="none"` + `stroke="currentColor"` + `stroke-width`; aqui e
 // `fill="currentColor"` e espessura de traco nao existe. Por isso o terceiro
-// parametro de `icon()` — a espessura — foi REMOVIDO: manter um argumento que
+// parametro de `icon()` - a espessura - foi REMOVIDO: manter um argumento que
 // nao faz nada seria convidar o proximo a acreditar nele.
 //
-// Apenas os icones efetivamente usados sao trazidos (FR-004d). Sao **15**: os 13
-// de antes, mais `sun`/`moon`, do seletor de tema.
+// Apenas os icones efetivamente usados sao trazidos (FR-004d). Sao **16**: os 13
+// de antes, mais `sun`/`moon` (seletor de tema) e `power` (o botao de ligar/desligar
+// da tela de detalhe).
 
 const PATHS: Record<string, string> = {
   bolt: "<path fill=\"currentColor\" d=\"m10.55 18.2l5.175-6.2h-4l.725-5.675L7.825 13H11.3zM8 22l1-7H4l9-13h2l-1 8h6L10 22zm3.775-9.75\"/>", // material-symbols:bolt-outline
@@ -37,6 +38,7 @@ const PATHS: Record<string, string> = {
   grid: "<path fill=\"currentColor\" d=\"M3 11V3h8v8zm0 10v-8h8v8zm10-10V3h8v8zm0 10v-8h8v8zM5 9h4V5H5zm10 0h4V5h-4zm0 10h4v-4h-4zM5 19h4v-4H5zM9 9\"/>", // material-symbols:grid-view-outline
   info: "<path fill=\"currentColor\" d=\"M11 17h2v-6h-2zm1.713-8.287Q13 8.425 13 8t-.288-.712T12 7t-.712.288T11 8t.288.713T12 9t.713-.288M12 22q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22m0-2q3.35 0 5.675-2.325T20 12t-2.325-5.675T12 4T6.325 6.325T4 12t2.325 5.675T12 20m0-8\"/>", // material-symbols:info-outline
   logout: "<path fill=\"currentColor\" d=\"M5 21q-.825 0-1.412-.587T3 19V5q0-.825.588-1.412T5 3h7v2H5v14h7v2zm11-4l-1.375-1.45l2.55-2.55H9v-2h8.175l-2.55-2.55L16 7l5 5z\"/>", // material-symbols:logout
+  power: "<path fill=\"currentColor\" d=\"M12 22q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12q0-2.1.788-3.912t2.137-3.163l1.4 1.4q-1.1 1.1-1.712 2.55T4 12q0 3.35 2.325 5.675T12 20t5.675-2.325T20 12q0-1.675-.612-3.125t-1.713-2.55l1.4-1.4q1.35 1.35 2.138 3.163T22 12q0 2.075-.788 3.9t-2.137 3.175t-3.175 2.138T12 22m-1-9V2h2v11z\"/>", // material-symbols:power-settings-new
   plug: "<path fill=\"currentColor\" d=\"M11.5 19h1v-1.85l3.5-3.5V9H8v4.65l3.5 3.5zm-2 2v-3L6 14.5V9q0-.825.588-1.412T8 7h1L8 8V3h2v4h4V3h2v5l-1-1h1q.825 0 1.413.588T18 9v5.5L14.5 18v3zm2.5-7\"/>", // material-symbols:power-plug-outline
   plus: "<path fill=\"currentColor\" d=\"M11 13H5v-2h6V5h2v6h6v2h-6v6h-2z\"/>", // material-symbols:add
   swap: "<path fill=\"currentColor\" d=\"m7 20l-5-5l5-5l1.4 1.425L5.825 14H13v2H5.825L8.4 18.575zm10-6l-1.4-1.425L18.175 10H11V8h7.175L15.6 5.425L17 4l5 5z\"/>", // material-symbols:swap-horiz

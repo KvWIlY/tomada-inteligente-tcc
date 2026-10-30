@@ -1,4 +1,4 @@
-//! US1 — residências (dono único, isolamento por owner). Cada handler exige
+//! US1 - residências (dono único, isolamento por owner). Cada handler exige
 //! `UsuarioAutenticado`; sem token → 401; residência de outro dono → 403.
 use crate::auth::{senha, UsuarioAutenticado};
 use crate::db;
@@ -13,7 +13,7 @@ use uuid::Uuid;
 
 /// Minutos de validade do claim-code (contrato: ~10 min).
 const CLAIM_TTL_MIN: i64 = 10;
-/// Alfabeto sem caracteres ambíguos (I/1, O/0) — o código é digitado à mão no
+/// Alfabeto sem caracteres ambíguos (I/1, O/0) - o código é digitado à mão no
 /// portal AP da tomada.
 const ALFABETO_CLAIM: &[u8] = b"ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
@@ -56,7 +56,7 @@ pub async fn criar(
     Ok(HttpResponse::Created().json(r))
 }
 
-/// T041 [US3] — detalhe + visão geral (UC04): junta os campos da residência com
+/// T041 [US3] - detalhe + visão geral (UC04): junta os campos da residência com
 /// o consumo instantâneo e o score de eficiência das últimas 24h.
 pub async fn obter(
     pool: web::Data<MySqlPool>,
@@ -84,7 +84,7 @@ pub async fn obter(
     })))
 }
 
-/// Lista as tomadas da residência (UC04) — a grade do dashboard.
+/// Lista as tomadas da residência (UC04) - a grade do dashboard.
 pub async fn listar_tomadas(
     pool: web::Data<MySqlPool>,
     user: UsuarioAutenticado,
@@ -126,7 +126,7 @@ pub async fn atualizar(
     Ok(HttpResponse::Ok().json(atual))
 }
 
-/// T027 [US2] — gera um claim-code de pareamento (UC03). O código em claro sai
+/// T027 [US2] - gera um claim-code de pareamento (UC03). O código em claro sai
 /// só nesta resposta; o banco guarda apenas `sha256(código)`.
 pub async fn criar_claim_code(
     pool: web::Data<MySqlPool>,

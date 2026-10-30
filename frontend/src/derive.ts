@@ -68,7 +68,7 @@ export function energiaKWh(medicoes: Medicao[], capSeg = 15 * 60): number {
  * agregado correto é `ΣP / ΣS`, e como só guardamos P e FP, `S = P/FP`.
  *
  * Medições anteriores a 2026-08-24 têm `fator_potencia` nulo (o firmware ainda
- * gravava potência aparente e a fase nunca foi registrada). Elas são puladas —
+ * gravava potência aparente e a fase nunca foi registrada). Elas são puladas -
  * tratar null como 0 afundaria o agregado com dado que simplesmente não existe.
  */
 export function fatorPotenciaAgregado(medicoes: Medicao[]): number | null {

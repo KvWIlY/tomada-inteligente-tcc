@@ -1,10 +1,10 @@
 /* =============================================================
-   Folha raiz da aplicacao — feature 007
+   Folha raiz da aplicacao - feature 007
    =============================================================
    ORDEM IMPORTA. O Tailwind traz preflight e utilitarios; o
    Basecoat traz os componentes. Ambos entram em @layer, e por
    isso as poucas regras proprias de `tokens.css` (fora de
-   camada) vencem os dois — que e como o que o Basecoat nao
+   camada) vencem os dois - que e como o que o Basecoat nao
    cobre (ponto de estado, marcador do P_max, trilho do range)
    convive com ele sem virar um segundo sistema visual.
 
@@ -19,23 +19,23 @@
 @import "./tokens.css";
 
 /* -------------------------------------------------------------
-   Tema escuro POR CLASSE (`html.dark`) — 2026-08-26.
+   Tema escuro POR CLASSE (`html.dark`) - 2026-08-26.
    Ate esta data o tema seguia `prefers-color-scheme`, conforme o
    FR-002a original. O dono pediu um seletor explicito com sol e
    lua, e claro como padrao; o `@custom-variant` do Basecoat, que
    ja e por classe, volta a valer sem redefinicao nossa. A escolha
    e persistida em `localStorage` e aplicada por um script inline
-   no `<head>`, antes da primeira pintura — sem isso, quem escolhe
+   no `<head>`, antes da primeira pintura - sem isso, quem escolhe
    escuro ve um lampejo branco a cada carregamento.
    ------------------------------------------------------------- */
 
 /* =============================================================
-   Tipografia — Open Sans LOCAL (FR-001, FR-001a)
+   Tipografia - Open Sans LOCAL (FR-001, FR-001a)
    =============================================================
    Ate a feature 007 o index.html carregava DM Sans de
    fonts.googleapis.com. O sistema e offline-first por principio
    constitucional (VI): numa casa sem WAN a fonte nao carregava.
-   So os subsets `latin` e `latin-ext` — cobrem o portugues e
+   So os subsets `latin` e `latin-ext` - cobrem o portugues e
    evitam cirilico, grego, hebraico e simbolos que esta interface
    nunca usa. 6 arquivos (~243 kB) em vez de 30.
    ============================================================= */

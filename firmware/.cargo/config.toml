@@ -1,7 +1,6 @@
 # Config de build do firmware ESP32 (esp-idf-svc, std).
-# Fica em firmware/ (NAO na raiz) de proposito:
-#   - `cd firmware && cargo build/run`  -> compila p/ o ESP32 (Xtensa)
-#   - `cargo test -p tomada-solver` (na raiz) -> roda no host (solver testavel)
+# Fica em firmware/ (NAO na raiz) de proposito: `cd firmware && cargo build/run` compila
+# p/ o ESP32 (Xtensa), e da raiz o cargo usa o alvo do host e falha com "Unsupported target".
 # Ajuste ESP_IDF_VERSION conforme o ambiente esp instalado (esp-idf-svc 0.52 ~ v5.2).
 
 [build]

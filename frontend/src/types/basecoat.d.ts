@@ -2,7 +2,7 @@
 // Tipos para o JavaScript do Basecoat (FR-005b)
 // =============================================
 //
-// O pacote `basecoat-css` NAO publica `.d.ts` — verificado abrindo o tarball:
+// O pacote `basecoat-css` NAO publica `.d.ts` - verificado abrindo o tarball:
 // zero arquivos de declaracao, sem campo `types`/`typings`, e `main` apontando
 // para um `.css`. Sem esta declaracao, tocar em qualquer componente interativo
 // de um `.ts` falha com TS7016.
@@ -12,13 +12,13 @@
 // perderia a tipagem justamente onde a chamada e dinamica.
 //
 // RISCO ASSUMIDO E REGISTRADO: mudanca de assinatura no Basecoat nao gera erro
-// de compilacao aqui — gera erro em runtime. Por isso o shim e pequeno,
+// de compilacao aqui - gera erro em runtime. Por isso o shim e pequeno,
 // localizado, e a versao do pacote esta pinada em 1.0.2 (FR-023).
 //
 // O suporte a graficos do Basecoat esta em BETA e a documentacao avisa que a
 // API JavaScript pode mudar antes do 1.0. FR-024 define o gatilho de saida:
 // falhar FR-012 ou FR-013 manda voltar aos graficos SVG proprios. Ate aqui os
-// dois passaram — escala adaptativa e valores identicos —, entao `chart.js`
+// dois passaram - escala adaptativa e valores identicos -, entao `chart.js`
 // segue em uso de verdade (FR-016).
 
 import type { ChartOptions } from 'chart.js';
@@ -53,7 +53,7 @@ declare global {
        * Basecoat (cores tematizadas via `--chart-1..5`, tooltip externo e
        * legenda opcional gerada).
        *
-       * O wrapper consome `window.Chart` — que `main.ts` expoe — em vez de
+       * O wrapper consome `window.Chart` - que `main.ts` expoe - em vez de
        * importar Chart.js por conta propria, e LANCA se o global faltar. Quem
        * chama trata (FR-020).
        */

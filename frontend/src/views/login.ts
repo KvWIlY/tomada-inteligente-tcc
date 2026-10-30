@@ -2,11 +2,15 @@
 // Tela de login do dono (auth propria do backend)
 // =============================================
 //
-// FR-006: o emblema de raio sobre quadrado verde saiu. Ele repetia, em forma de
-// selo, o que o titulo ja diz — e era o unico lugar da interface com um bloco
-// de cor solida desse tamanho.
-// FR-007: titulo, subtitulo, rotulos e mensagens ficam centralizados.
-// FR-008: o fluxo de autenticacao nao foi tocado.
+// A MARCA (raio branco sobre quadrado verde + "SmartHome") abre a tela, no lugar do
+// antigo titulo "Entrar"/"Criar conta": e a mesma marca do cabecalho da barra lateral
+// (`sidebar.ts`), entao a primeira tela ja mostra a identidade que o app usa depois do
+// login. Qual dos dois modos esta ativo continua legivel pelo botao de acao e pelo link
+// do rodape, que trocam de texto juntos.
+//
+// Marca e subtitulo ficam CENTRALIZADOS; o formulario fica alinhado a ESQUERDA. Rotulo
+// centralizado sobre campo de largura total solta o texto do campo que ele nomeia.
+// O fluxo de autenticacao nao foi tocado.
 
 import { icon } from '../icons';
 import { escapeHtml } from './components';
@@ -24,7 +28,6 @@ export interface LoginProps {
 }
 
 export function renderLogin(el: HTMLElement, p: LoginProps): void {
-  const titulo = p.mode === 'login' ? 'Entrar' : 'Criar conta';
   const acao = p.mode === 'login' ? 'Entrar' : 'Cadastrar';
   const alt = p.mode === 'login' ? 'Não tem conta? Criar uma' : 'Já tem conta? Entrar';
 
@@ -37,15 +40,14 @@ export function renderLogin(el: HTMLElement, p: LoginProps): void {
   el.innerHTML = `
     <div class="grid min-h-full place-items-center p-8">
       <div class="card w-full max-w-[380px] text-center">
-        <header class="items-center">
-          <div class="text-lg font-bold tracking-tight">SmartHome</div>
-          <p class="text-xs font-medium text-ink-faint">Gerenciador de Energia</p>
-        </header>
         <section>
-          <h1 class="text-2xl font-bold tracking-tight">${titulo}</h1>
-          <p class="mt-1.5 mb-6 text-sm font-medium text-ink-soft">Acesse o painel da sua casa com sua conta.</p>
+          <div class="flex items-center justify-center gap-3">
+            <span class="grid size-10 shrink-0 place-items-center rounded-md bg-green text-primary-foreground">${icon('bolt', 20)}</span>
+            <span class="text-2xl leading-none font-bold tracking-tight">SmartHome</span>
+          </div>
+          <p class="mt-3 mb-6 text-sm font-medium text-ink-soft">Acesse o painel da sua casa com sua conta.</p>
 
-          <form class="fieldset [&_.field]:items-center" novalidate>
+          <form class="fieldset text-left" novalidate>
             <div class="field">
               <label class="label" for="email">E-mail</label>
               <input class="input" id="email" type="email" name="email" autocomplete="email"

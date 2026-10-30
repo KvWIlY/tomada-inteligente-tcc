@@ -1,6 +1,6 @@
 //! Relogio: uptime sempre, hora certa quando der (feature 005, D1 / FR-001).
 //!
-//! O v1 BLOQUEAVA o boot por ate 30 s e devolvia `Err` no timeout — e o `main` fazia
+//! O v1 BLOQUEAVA o boot por ate 30 s e devolvia `Err` no timeout - e o `main` fazia
 //! `?` nisso. Resultado: numa casa sem internet a tomada entrava em boot-loop eterno,
 //! mesmo com Wi-Fi local perfeito. Era a contradicao mais direta com o offline-first
 //! (Principio VI).
@@ -47,7 +47,7 @@ pub fn offset() -> i64 {
 
 /// Epoch em segundos: hora real apos o 1o sync, uptime antes dele.
 ///
-/// Antes do sync os valores sao pequenos (segundos desde o boot) — nunca uma data
+/// Antes do sync os valores sao pequenos (segundos desde o boot) - nunca uma data
 /// plausivel de 1970 mascarada de agora. Quem persiste medicao usa
 /// `crate::solver::relogio::SEM_HORA` como sentinela, nao este valor.
 pub fn agora_epoch() -> i64 {
@@ -82,8 +82,8 @@ pub fn iniciar() -> SntpHandle {
 ///
 /// Por que existe: `EspSntp::new_default()` aponta para a rede publica e exige WAN.
 /// Numa casa com roteador e servidor local mas SEM internet, o sync nunca completava
-/// — e sem hora certa o firmware neutraliza as regras horarias do MILP (`a_it=true`,
-/// `pi=0.5`, ver `relogio::regras_horarias`) e `descartar_incorrigiveis` joga fora o
+/// - e sem hora certa o firmware neutraliza as regras horarias do MILP (`a_it=true`,
+/// ver `relogio::regras_horarias`) e `descartar_incorrigiveis` joga fora o
 /// buffer pendente a cada reboot. Metade do modelo ficava inerte nesse cenario.
 ///
 /// Precedencia: o SNTP GANHA. O `main` chama `checar_sync` no topo de cada iteracao,
@@ -93,8 +93,8 @@ pub fn iniciar() -> SntpHandle {
 /// Confianca: o mesmo canal autenticado por JWT ja entrega config, `P_max`, comando
 /// de rele e a chave da casa. Aceitar a hora nao amplia a fronteira de confianca.
 ///
-/// Contrato identico ao do `checar_sync` — devolve `Some(offset)` UMA vez, na
-/// transicao — para o `main` cair na MESMA correcao de carimbos, sem duplicar nada.
+/// Contrato identico ao do `checar_sync` - devolve `Some(offset)` UMA vez, na
+/// transicao - para o `main` cair na MESMA correcao de carimbos, sem duplicar nada.
 pub fn adotar_hora_do_servidor(epoch_servidor: i64) -> Option<i64> {
     if relogio_ok() || epoch_servidor <= 0 {
         return None;
@@ -111,7 +111,7 @@ pub fn adotar_hora_do_servidor(epoch_servidor: i64) -> Option<i64> {
 }
 
 /// Chamada periodicamente (cloud tick). Devolve `Some(offset)` UMA vez: no instante em
-/// que a hora certa chega — e o gatilho para corrigir os carimbos pendentes.
+/// que a hora certa chega - e o gatilho para corrigir os carimbos pendentes.
 pub fn checar_sync(h: &SntpHandle) -> Option<i64> {
     if relogio_ok() {
         return None;

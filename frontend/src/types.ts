@@ -13,7 +13,6 @@ export interface Config {
   is_critical: boolean;
   schedule: boolean[];    // length 24, indice = hora (0-23)
   w_i: number;            // peso de criticidade ILP (roteador=1000, TV=10, lampada=1)
-  pi_historico: number[]; // [24] probabilidade historica de uso por hora [0,1]
 }
 
 export interface Tomada {
@@ -28,9 +27,9 @@ export interface Tomada {
   cstd: number;           // W (consumo standby calibrado)
   con: number;            // W (consumo on calibrado / nominal)
   /** Comando manual, TRI-ESTADO (migration 0002 do backend):
-   *  `null`  = automatico — o MILP decide (padrao de uma tomada nova);
-   *  `true`  = cortar — trava do dono ate ele desfazer;
-   *  `false` = "usar agora" — o ESP32 religa por 30 min e volta sozinho ao automatico.
+   *  `null`  = automatico - o MILP decide (padrao de uma tomada nova);
+   *  `true`  = cortar - trava do dono ate ele desfazer;
+   *  `false` = "usar agora" - o ESP32 religa por 30 min e volta sozinho ao automatico.
    *  "Sempre ligada" (geladeira) NAO e isto: e `config.is_critical`. */
   rele_aberto: boolean | null;
   estado: Estado;
@@ -42,9 +41,9 @@ export interface Medicao {
   id: number;
   tomada_id: string;      // UUID
   timestamp: number;      // unix epoch (segundos), bigint no Postgres
-  p_medida: number;       // W — potencia ATIVA (media de v*i), nao Vrms*Irms
+  p_medida: number;       // W - potencia ATIVA (media de v*i), nao Vrms*Irms
   /** Fator de potencia P/S em [0,1] da mesma janela. `null` nas medicoes anteriores
-   *  a 2026-08-24, gravadas quando `p_medida` ainda era potencia aparente (VA) —
+   *  a 2026-08-24, gravadas quando `p_medida` ainda era potencia aparente (VA) -
    *  tratar como "sem informacao", nunca como zero. */
   fator_potencia: number | null;
   estado: Estado;
@@ -70,14 +69,14 @@ export interface Residencia {
   created_at: string;
 }
 
+import type { ToastData, ModalData } from './views/toast';
+
 /** Agregados da residência calculados no servidor (evita recalcular no cliente). */
 export interface VisaoResidencia {
   consumo_total_atual: number;
-  /** `null` = nenhuma tomada com standby calibrado; a UI mostra "—". */
+  /** `null` = nenhuma tomada com standby calibrado; a UI mostra "-". */
   efficiency_score: number | null;
 }
-
-import type { ToastData, ModalData } from './views/toast';
 
 // Estado global da app
 export interface AppState {
@@ -89,7 +88,7 @@ export interface AppState {
   semResidencia: boolean;      // logado mas sem residência própria
 
   residencia: Residencia | null;
-  /** Agregados calculados pelo BACKEND (`GET /residencias/{id}`) — fonte única do
+  /** Agregados calculados pelo BACKEND (`GET /residencias/{id}`) - fonte única do
    *  efficiency score. `null` enquanto não carregou. */
   visao: VisaoResidencia | null;
   tomadas: Tomada[];

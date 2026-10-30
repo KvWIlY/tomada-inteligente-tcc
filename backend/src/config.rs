@@ -8,7 +8,7 @@ pub struct Config {
     pub jwt_secret: String,
     pub bind_addr: String,
     pub jwt_ttl_secs: i64,
-    /// Origens permitidas no CORS — só o **dashboard** precisa disso. O firmware
+    /// Origens permitidas no CORS - só o **dashboard** precisa disso. O firmware
     /// não manda `Origin` (CORS é uma política de navegador), então esta lista não
     /// afeta o plano de dados do device.
     pub cors_origins: Vec<String>,

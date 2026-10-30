@@ -31,7 +31,7 @@ pub fn base() -> &'static str {
 }
 
 /// `(total, usado)` em bytes da particao LittleFS. E a UNICA fonte de espaco livre do
-/// dispositivo — a purga por espaco (`persistencia::retencao`) depende dela, entao
+/// dispositivo - a purga por espaco (`persistencia::retencao`) depende dela, entao
 /// precisa ser consultavel a qualquer momento, nao so no `mount()`.
 pub fn espaco() -> Result<(usize, usize)> {
     let label = CString::new(PARTITION_LABEL)?;

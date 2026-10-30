@@ -9,7 +9,7 @@ import './styles/app.css';
 // tres que esta interface usa, e nao o `all.min`, que carregaria acordeao,
 // combobox, popover, drawer e select sem nenhum deles aparecer na tela.
 //
-// O JS do `sidebar` foi DELIBERADAMENTE deixado de fora — ver "Barra lateral".
+// O JS do `sidebar` foi DELIBERADAMENTE deixado de fora - ver "Barra lateral".
 import 'basecoat-css/basecoat.min';
 import 'basecoat-css/toast.min';
 import 'basecoat-css/chart.min';
@@ -17,7 +17,7 @@ import 'basecoat-css/chart.min';
 // O wrapper de graficos do Basecoat NAO importa Chart.js: ele consome
 // `window.Chart` (dist/js/chart.js e uma IIFE que faz `new Chart` a partir do
 // global). Entao o global precisa existir antes de qualquer `basecoat.chart`.
-// `chart.js/auto` ja registra controllers/escalas — sem ele seria preciso
+// `chart.js/auto` ja registra controllers/escalas - sem ele seria preciso
 // chamar `Chart.register(...registerables)` a mao.
 import Chart from 'chart.js/auto';
 declare global {
@@ -61,7 +61,7 @@ const store = createStore<AppState>({
 // === Estado de UI local (não reativo) ===
 let detailSeg: '24h' | '7d' = '24h';
 /** Série da janela de 7 dias, buscada do backend sob demanda (FR-018).
- *  Vazia enquanto o seletor está em 24 h — nunca preenchida com zeros. */
+ *  Vazia enquanto o seletor está em 24 h - nunca preenchida com zeros. */
 let medicoes7d: Medicao[] = [];
 let cfgDraftId: string | null = null;
 let draftCritical = false;
@@ -144,7 +144,7 @@ async function atualizarResidencia(residenciaId: string): Promise<void> {
     const tomadas = await api.fetchTomadas(residenciaId);
     const cur = store.get();
 
-    // FR-021: `services/api` engole o erro de rede e devolve LISTA VAZIA — e ele
+    // FR-021: `services/api` engole o erro de rede e devolve LISTA VAZIA - e ele
     // esta fora do contrato desta feature, entao a guarda vem para ca. Sem ela,
     // uma queda de Wi-Fi durante o polling escrevia `tomadas: []` no estado e a
     // tela pulava para "Nenhuma tomada nesta residencia", apagando dados que
@@ -152,7 +152,7 @@ async function atualizarResidencia(residenciaId: string): Promise<void> {
     // causa de um GET que falhou; quem remove tomada e a revogacao, que
     // recarrega por outro caminho.
     if (tomadas.length === 0 && cur.tomadas.length > 0) {
-      console.warn('[main] polling devolveu lista vazia — mantendo o estado anterior');
+      console.warn('[main] polling devolveu lista vazia - mantendo o estado anterior');
       return;
     }
 
@@ -164,7 +164,7 @@ async function atualizarResidencia(residenciaId: string): Promise<void> {
       const [meds, evs] = await Promise.all([api.fetchMedicoes(alvo, 24), api.fetchEventos(alvo, 100)]);
       // Mesma guarda da lista de tomadas: serie vazia so substitui serie vazia.
       // Trocar 288 medicoes por `[]` mandaria o detalhe para o estado "tomada
-      // pareada, sem dados ainda" — que e uma afirmacao falsa sobre a tomada.
+      // pareada, sem dados ainda" - que e uma afirmacao falsa sobre a tomada.
       if (meds.length > 0 || (medicoesPorTomada[alvo] ?? []).length === 0) medicoesPorTomada[alvo] = meds;
       if (evs.length > 0 || (eventosPorTomada[alvo] ?? []).length === 0) eventosPorTomada[alvo] = evs;
       if (detailSeg === '7d') {
@@ -178,7 +178,7 @@ async function atualizarResidencia(residenciaId: string): Promise<void> {
   } catch (err) {
     // FR-021: falha de rede no polling NAO limpa o que ja esta na tela. O erro
     // vai para o console e o indicador de conexao cai sozinho, porque
-    // `temConexaoRecente` olha a idade da ultima medicao — nao um flag.
+    // `temConexaoRecente` olha a idade da ultima medicao - nao um flag.
     console.error('[main] polling:', err);
   }
 }
@@ -240,6 +240,15 @@ async function iniciar(): Promise<void> {
     } else {
       pararPolling();
       medicoes7d = [];
+      // Sem isto a tela de login volta com `authBusy` ainda true (o submit que
+      // deu certo nunca o zera - quem assume dali e o `onAuth`), e os campos
+      // renascem `disabled`: nao da para digitar nada e nao ha como reentrar.
+      authMode = 'login';
+      authEmail = '';
+      authSenha = '';
+      authBusy = false;
+      authError = null;
+      authInfo = null;
       store.set({
         phase: 'login', userEmail: null, residencia: null, visao: null, tomadas: [],
         medicoesPorTomada: {}, eventosPorTomada: {}, selectedId: null, semResidencia: false,
@@ -320,9 +329,9 @@ async function saveConfig(t: Tomada): Promise<void> {
   savingConfig = true;
   store.set({});
   const novaVersao = t.config_version + 1;
-  // `schedule` e `pi_historico` entram pelo espalhamento da config VIGENTE e
-  // saem iguais (FR-011): as telas que os editavam morreram na 007, e o campo
-  // permanece intacto no contrato por FR-009b/FR-010a.
+  // `schedule` entra pelo espalhamento da config VIGENTE e sai igual (FR-011): a
+  // tela que o editava morreu na 007, e o campo permanece intacto no contrato por
+  // FR-009b/FR-010a.
   const novaConfig: Config = { ...t.config, is_critical: draftCritical };
   try {
     if (api.hasBackend) await api.saveConfig(t.id, novaConfig, novaVersao);
@@ -368,7 +377,7 @@ async function revogar(tomada: Tomada): Promise<void> {
  *
  * Ate a 007 isto era um `window.prompt` pedindo o nome digitado. O dialogo do
  * Basecoat diz o mesmo com o texto todo visivel, e o botao destrutivo nomeia a
- * consequencia — o `prompt` do navegador nao aceita formatacao, nao respeita o
+ * consequencia - o `prompt` do navegador nao aceita formatacao, nao respeita o
  * tema e, no celular, aparece descolado do resto da interface.
  */
 function confirmarRevogacao(t: Tomada): void {
@@ -465,7 +474,7 @@ async function criarResidenciaDemo(): Promise<void> {
 
 // === Adicionar dispositivo (claim-code de pareamento, UC03) ===
 //
-// O código é cunhado pelo SERVIDOR (`POST /residencias/{id}/claim-codes`) — o
+// O código é cunhado pelo SERVIDOR (`POST /residencias/{id}/claim-codes`) - o
 // navegador não gera nem calcula hash. Não há mais "adoção": o backend só provisiona
 // contra um claim válido, então o código é o único caminho.
 async function abrirNovoDispositivo(): Promise<void> {
@@ -541,16 +550,26 @@ async function submitAuth(): Promise<void> {
       // signUp com sessão imediata → onAuth cuida.
     }
   } catch (err) {
-    const m = err instanceof Error ? err.message : 'Falha na autenticação';
-    setAuth({ busy: false, error: traduzErroAuth(m) });
+    setAuth({ busy: false, error: traduzErroAuth(err) });
   }
 }
 
-function traduzErroAuth(m: string): string {
-  if (/invalid login credentials/i.test(m)) return 'E-mail ou senha incorretos.';
-  if (/already registered/i.test(m)) return 'E-mail já cadastrado. Tente entrar.';
-  if (/password should be at least/i.test(m)) return 'Senha muito curta (mínimo 6 caracteres).';
-  return m;
+/**
+ * As mensagens que chegam aqui vêm do backend próprio, não mais do Supabase - os
+ * padrões antigos ("invalid login credentials", "already registered") nunca
+ * casavam, e a tela mostrava o cru "não autorizado".
+ *
+ * O backend responde de propósito o MESMO 401 para e-mail sem conta e para senha
+ * errada, e um 201 para cadastro repetido: nada ali conta a um anônimo quais
+ * e-mails existem. Por isso o cadastro com e-mail já usado cai no login seguinte
+ * e chega nesta função como 401 - a mensagem genérica é a correta.
+ */
+function traduzErroAuth(err: unknown): string {
+  const e = err instanceof api.ErroApi ? err : null;
+  if (e?.codigo === 'nao_autorizado') return 'E-mail ou senha incorretos.';
+  if (e?.codigo === 'validacao') return e.message;
+  if (e?.codigo === 'muitas_tentativas') return 'Muitas tentativas. Espere um minuto e tente de novo.';
+  return err instanceof Error ? err.message : 'Falha na autenticação';
 }
 
 // === Render ===
@@ -565,12 +584,12 @@ const elTema = document.getElementById('tema')!;
 // === Seletor de tema (claro/escuro) ===
 //
 // Ate 2026-08-26 o tema seguia `prefers-color-scheme` e nao havia seletor
-// (FR-002a). O dono pediu o botao com sol e lua, e **claro como padrao** — o
+// (FR-002a). O dono pediu o botao com sol e lua, e **claro como padrao** - o
 // que significa que a ausencia de escolha NAO consulta mais o sistema
 // operacional. A divergencia esta registrada no `RETOMAR.md`.
 //
 // A troca em si e do `basecoat.theme`: ele poe/tira `dark` no `<html>`, grava
-// em `localStorage` sob `themeMode` e dispara `basecoat:themechange` — evento
+// em `localStorage` sob `themeMode` e dispara `basecoat:themechange` - evento
 // que o wrapper de graficos escuta para repintar as cores do Chart.js, que sao
 // lidas do CSS uma vez na montagem e nao acompanhariam a troca sozinhas.
 //
@@ -595,13 +614,13 @@ renderTema();
 // === Barra lateral ===
 //
 // O JS do Basecoat nao e usado aqui, de proposito. O `handleClick` dele fecha a
-// barra quando o alvo do clique nao esta dentro do `<nav>` — e as nossas views
+// barra quando o alvo do clique nao esta dentro do `<nav>` - e as nossas views
 // reescrevem `innerHTML` de forma SINCRONA no proprio handler do clique. Quando
 // o evento borbulha ate o `.sidebar`, o botao clicado ja foi desanexado, o
 // `nav.contains(target)` da `false`, e o componente conclui que o clique foi
 // fora e fecha a barra. Nada a reabria: no desktop ela sumia ate um F5.
 //
-// A CSS do componente continua valendo — o que passa a ser nosso e so o estado.
+// A CSS do componente continua valendo - o que passa a ser nosso e so o estado.
 //
 // No desktop a barra e FIXA: nao ha o que fechar. No celular ela e gaveta, e o
 // `navOpen` do estado global (que existia no tipo desde sempre) volta a mandar.
@@ -632,7 +651,7 @@ elSidebar.addEventListener('click', (e) => {
 // num desktop nem aberta por acidente num celular.
 window.addEventListener('resize', () => aplicarEstadoDaBarra(store.get().navOpen));
 
-/** Envelope das telas de estado — mesmo cartao das demais telas (FR-005d). */
+/** Envelope das telas de estado - mesmo cartao das demais telas (FR-005d). */
 function telaDeEstado(conteudo: string): string {
   return `<div class="grid min-h-full place-items-center p-6"><div class="w-full max-w-lg">${conteudo}</div></div>`;
 }
@@ -729,7 +748,7 @@ store.subscribe((s) => {
         <section>
           <p>Defina <code class="font-mono">VITE_BACKEND_URL</code> em <code class="font-mono">frontend/.env</code> apontando
              para a API (ex.: <code class="font-mono">http://localhost:8080</code>) e recarregue a página.</p>
-          <p>O dashboard lê exclusivamente do backend — não há modo de demonstração com dados fabricados.</p>
+          <p>O dashboard lê exclusivamente do backend, não há modo de demonstração com dados fabricados.</p>
         </section>
       </div>`);
     return;
@@ -804,7 +823,7 @@ store.subscribe((s) => {
     tomada,
     residencia: s.residencia,
     medicoes,
-    // Enquanto os 7 dias não chegam, segue plotando as 24 h já em mãos — nunca
+    // Enquanto os 7 dias não chegam, segue plotando as 24 h já em mãos - nunca
     // uma série de zeros (CHK032).
     medicoesJanela: detailSeg === '7d' && medicoes7d.length > 0 ? medicoes7d : medicoes,
     online,

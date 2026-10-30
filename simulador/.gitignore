@@ -1,0 +1,6 @@
+/target
+/rodadas
+# A base de 100 tomadas por 30 dias passa de 20 MB e e regerada pelo `gerar-base`.
+/casos/cem-tomadas.csv
+# As bases de estresse passam de 30 MB e tambem sao regeradas pelo `gerar-base`.
+/casos-estresse/*.csv

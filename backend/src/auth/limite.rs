@@ -1,11 +1,11 @@
-//! T053 — rate-limiting dos endpoints de credencial (`/auth/*`, `/provisionar`,
+//! T053 - rate-limiting dos endpoints de credencial (`/auth/*`, `/provisionar`,
 //! `/renovar`).
 //!
 //! São as únicas rotas em que um atacante pode adivinhar um segredo por tentativa e
 //! erro: senha de usuário, claim-code e `device_secret`. O resto da API já exige um
 //! JWT válido, então força bruta ali não tem por onde começar.
 //!
-//! Janela deslizante em memória, por IP, **global ao processo** — não é `app_data`
+//! Janela deslizante em memória, por IP, **global ao processo** - não é `app_data`
 //! porque o Actix constrói uma `App` por worker, e uma cota por worker significaria
 //! N× o limite real. Escolha deliberada de não usar Redis: o backend é LAN-only e roda
 //! num processo só (clarify Q2). Se for exposto à internet com mais de uma instância,

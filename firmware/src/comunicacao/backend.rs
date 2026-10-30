@@ -5,14 +5,14 @@
 //!
 //! Regras transversais (todas as operacoes):
 //!   - Header unico de auth: `Authorization: Bearer <jwt device>`. NAO existe mais
-//!     `apikey` — o backend proprio nao tem gateway na frente.
+//!     `apikey` - o backend proprio nao tem gateway na frente.
 //!   - JWT vem de `provisionamento::obter_jwt_valido()` (renova por margem); em
 //!     `401/403` renova UMA vez e repete; nova falha => evento + erro (modo offline),
 //!     sem travar o ciclo decisorio (Principio III).
 //!   - O escopo (`tomada_id`/`residencia_id`) vive no claim do JWT: o backend ignora
 //!     qualquer id que venha no corpo. Nao ha como este cliente tocar outra tomada.
 //!   - TLS: cert bundle global (LAN-only hoje, HTTPS pronto p/ depois); timeout 10 s.
-//!   - `f32`: serializacao manual (`{:.2}`) — bug LLVM Xtensa com `[2 x float]`.
+//!   - `f32`: serializacao manual (`{:.2}`) - bug LLVM Xtensa com `[2 x float]`.
 //!
 //! Sao apenas 2 requisicoes por ciclo de nuvem: um `POST /telemetria` que carrega o
 //! lote de medicoes + eventos + snapshot, e um `GET /config` que ja traz o `p_max` da
@@ -94,7 +94,7 @@ fn requisicao(metodo: Method, url: &str, body: Option<&str>) -> Result<(u16, Str
     if status != 401 && status != 403 {
         return Ok((status, corpo));
     }
-    log::warn!("[BACKEND] {status} em {url} — renovando JWT e repetindo");
+    log::warn!("[BACKEND] {status} em {url} - renovando JWT e repetindo");
     let jwt2 = match provisionamento::renovar_agora() {
         Ok(j) => j,
         Err(e) => {
@@ -143,7 +143,7 @@ fn snapshot_atual() -> &'static Mutex<Option<Snapshot>> {
 /// `POST /telemetria`, numa requisicao so.
 ///
 /// `ultimo_uso_ativo_ts` e decidido AQUI (avanca so quando `U_i` e verdadeiro, ver
-/// `decisao::ciclo`) — o backend apenas persiste, nunca infere. E o que as irmas
+/// `decisao::ciclo`) - o backend apenas persiste, nunca infere. E o que as irmas
 /// leem no fallback de particao (UC22).
 pub fn registrar_snapshot(
     p_medida_atual: f32,
@@ -168,12 +168,12 @@ pub fn registrar_snapshot(
 // ============================================================
 
 struct EventoPendente {
-    /// Epoch real, ou `relogio::SEM_HORA` (0) enquanto nao houve sincronizacao —
+    /// Epoch real, ou `relogio::SEM_HORA` (0) enquanto nao houve sincronizacao -
     /// corrigido por deslocamento quando a hora chega, igual as medicoes (FR-001a).
     timestamp: i64,
     /// Segundos desde o boot no momento do registro: e o que permite datar o evento
     /// retroativamente. A fila e so RAM, entao todo evento aqui e DESTE boot e sempre
-    /// corrigivel — nao existe o caso "incorrigivel de boot anterior" das medicoes.
+    /// corrigivel - nao existe o caso "incorrigivel de boot anterior" das medicoes.
     uptime_s: i64,
     tipo: String,
     severidade: String,
@@ -203,7 +203,7 @@ fn fila_eventos() -> &'static Mutex<Vec<EventoPendente>> {
 /// fila NAO pode crescer sem limite (OOM). Cheia => descarta o mais ANTIGO.
 const MAX_FILA_EVENTOS: usize = 200;
 
-/// Enfileira um evento (NUNCA inclui segredo/jwt/claims — Principio VII/VIII).
+/// Enfileira um evento (NUNCA inclui segredo/jwt/claims - Principio VII/VIII).
 pub fn registrar_evento(tipo: &str, severidade: &str, titulo: &str, detalhes: &str) {
     let mut fila = fila_eventos().lock().unwrap();
     if fila.len() >= MAX_FILA_EVENTOS {
@@ -241,7 +241,7 @@ pub fn corrigir_carimbos_eventos(offset: i64) -> usize {
 /// Idempotencia (FR-009): reenviar o mesmo lote nao duplica nada no servidor
 /// (`UNIQUE(tomada_id, timestamp)` + dedup de eventos). Em 2xx o servidor devolve
 /// `confirmado_ate_ts` e so ai marcamos as medicoes como confirmadas e drenamos a
-/// fila de eventos (FR-011/UC18) — falha de rede nunca perde dado, so adia.
+/// fila de eventos (FR-011/UC18) - falha de rede nunca perde dado, so adia.
 /// Retorna quantas medicoes foram confirmadas.
 pub fn sincronizar() -> Result<usize> {
     let pendentes = medicao::carregar_pendentes()?;
@@ -255,7 +255,7 @@ pub fn sincronizar() -> Result<usize> {
         let fila = fila_eventos().lock().unwrap();
         // Sobrou evento sem hora certa? Nao manda NENHUM nesta rodada. Eles estao no
         // inicio da fila (a hora so passa a existir uma vez), e o `drain` la embaixo
-        // assume que os N enviados sao exatamente os N primeiros — filtrar no meio
+        // assume que os N enviados sao exatamente os N primeiros - filtrar no meio
         // drenaria os errados. Sobem no proximo tick, ja datados. E a mesma regra das
         // medicoes, que tambem nunca sobem com a sentinela (FR-001a).
         if fila.iter().any(|e| e.timestamp == relogio::SEM_HORA) {
@@ -335,14 +335,14 @@ pub struct DesiredState {
     /// `crate::solver::sync::deve_adotar_config` (so se versao remota > local).
     pub config: Option<Tomada>,
     /// Comando manual do dashboard, TRI-ESTADO (migration 0002):
-    ///   `None`        = automatico — o MILP manda (default de uma tomada nova);
+    ///   `None`        = automatico - o MILP manda (default de uma tomada nova);
     ///   `Some(true)`  = cortar, trava explicita do dono ate ele desfazer;
-    ///   `Some(false)` = "usar agora" — a `main` converte numa janela temporaria.
+    ///   `Some(false)` = "usar agora" - a `main` converte numa janela temporaria.
     /// Antes da 0002 a coluna era NOT NULL DEFAULT 1: toda tomada recem-provisionada
     /// nascia com `Some(true)` e ficava travada em OFF, descartando o MILP em todo
     /// ciclo. Entregue ao ciclo SUBORDINADO ao P_max (FR-016).
     pub rele_aberto: Option<bool>,
-    /// `P_max` canonico da residencia — fonte de verdade do teto eletrico, editavel no
+    /// `P_max` canonico da residencia - fonte de verdade do teto eletrico, editavel no
     /// dashboard. Vem junto no mesmo GET (antes exigia uma 2a requisicao).
     pub p_max: Option<f32>,
     /// Chave de coordenacao corrente da casa (64 hex). E assim que uma tomada legitima
@@ -404,7 +404,7 @@ pub fn buscar_desired_state() -> Result<DesiredState> {
 }
 
 // ============================================================
-// Leitura: carga das irmas (fallback multi-no — 003/UC22).
+// Leitura: carga das irmas (fallback multi-no - 003/UC22).
 // ============================================================
 
 /// Dado remoto de uma tomada-irma. O backend ja exclui a propria tomada e filtra
@@ -415,7 +415,7 @@ pub struct TomadaRemota {
     pub ultimo_uso_ativo_ts: i64,
 }
 
-/// GET `/residencias/{id}/tomadas/consumo` — fallback de coordenacao quando o
+/// GET `/residencias/{id}/tomadas/consumo` - fallback de coordenacao quando o
 /// ESP-NOW nao trouxe nenhum peer vivo.
 pub fn buscar_consumo_irmas() -> Result<Vec<TomadaRemota>> {
     let rid = residencia_id()?;

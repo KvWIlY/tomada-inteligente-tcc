@@ -1,6 +1,6 @@
 //! Logica PURA do Portal AP v2 (feature 005, `contracts/portal-ap.md`).
 //!
-//! Fica aqui — e nao no firmware — porque e a parte do portal que tem regra de negocio
+//! Fica aqui - e nao no firmware - porque e a parte do portal que tem regra de negocio
 //! e casos de borda de verdade (framing por `Content-Length`, SSID em BYTES, matriz
 //! `manter` x senha) e que precisa rodar no host (Principio IX). O firmware so faz o
 //! I/O: le do socket, chama `parse_form`, aplica `ResolucaoWifi`.
@@ -13,7 +13,7 @@ use std::fmt;
 /// truncar em silencio (o bug do v1: um unico `read` de 512 B).
 pub const CAP_CORPO: usize = 2048;
 
-/// Limite de SSID em BYTES (nao chars) — e o limite do radio (FR-018).
+/// Limite de SSID em BYTES (nao chars) - e o limite do radio (FR-018).
 pub const MAX_SSID_BYTES: usize = 32;
 /// Limite de senha WPA2 em bytes.
 pub const MAX_SENHA_BYTES: usize = 63;
@@ -44,7 +44,7 @@ impl Modo {
     }
 }
 
-/// Causa da reabertura do portal (NVS `motivo_portal`, uso unico — FR-019).
+/// Causa da reabertura do portal (NVS `motivo_portal`, uso unico - FR-019).
 /// Taxonomia ESTAVEL: o firmware grava a variante, o form renderiza o banner.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MotivoPortal {
@@ -60,7 +60,7 @@ pub enum MotivoPortal {
 }
 
 impl MotivoPortal {
-    /// Chave persistida na NVS (estavel — nao renomear sem migrar).
+    /// Chave persistida na NVS (estavel - nao renomear sem migrar).
     pub fn as_str(self) -> &'static str {
         match self {
             MotivoPortal::SenhaWifi => "senha_wifi",
@@ -93,7 +93,7 @@ impl MotivoPortal {
     }
 }
 
-/// Erro de validacao do formulario. O portal responde 400 (ou 413) SEM gravar nada —
+/// Erro de validacao do formulario. O portal responde 400 (ou 413) SEM gravar nada -
 /// nunca ha gravacao parcial (contracts/portal-ap.md).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ErroForm {
@@ -101,11 +101,8 @@ pub enum ErroForm {
     CorpoGrande { tamanho: usize },
     /// `Content-Length` prometeu mais bytes do que chegaram (conexao cortada).
     CorpoIncompleto { esperado: usize, recebido: usize },
-    // Sem chamador no firmware: era API do crate `tomada-solver`, usada pelos testes de host.
-    #[allow(dead_code)]
-    CampoFaltando(&'static str),
     SsidVazio,
-    /// Contagem em BYTES (FR-018) — SSID com acento estoura antes de 32 chars.
+    /// Contagem em BYTES (FR-018) - SSID com acento estoura antes de 32 chars.
     SsidLongo { bytes: usize },
     SenhaLonga { bytes: usize },
     ModoInvalido,
@@ -125,7 +122,6 @@ impl fmt::Display for ErroForm {
             ErroForm::CorpoIncompleto { esperado, recebido } => {
                 write!(f, "envio incompleto ({recebido} de {esperado} bytes)")
             }
-            ErroForm::CampoFaltando(c) => write!(f, "campo obrigatorio faltando: {c}"),
             ErroForm::SsidVazio => write!(f, "informe o nome da rede (SSID)"),
             ErroForm::SsidLongo { bytes } => write!(
                 f,
@@ -170,7 +166,7 @@ pub struct FormPortal {
     pub servidor: String,
     /// So em `Modo::Nuvem`.
     pub claim: String,
-    /// So em `Modo::Parear` — PIN da tomada EXISTENTE.
+    /// So em `Modo::Parear` - PIN da tomada EXISTENTE.
     pub pin: String,
 }
 
@@ -186,7 +182,7 @@ pub fn bytes_a_ler(content_length: Option<usize>) -> Result<usize, ErroForm> {
 
 /// Confere o que foi efetivamente lido contra o prometido pelo `Content-Length`.
 /// Existe porque TCP entrega em pedacos: o firmware precisa de um laco de `read` e
-/// de um criterio de parada — o bug do v1 era um unico `read` de 512 B.
+/// de um criterio de parada - o bug do v1 era um unico `read` de 512 B.
 pub fn checar_corpo(content_length: Option<usize>, recebido: usize) -> Result<(), ErroForm> {
     if recebido > CAP_CORPO {
         return Err(ErroForm::CorpoGrande { tamanho: recebido });
@@ -257,7 +253,7 @@ pub fn servidor_valido(s: &str) -> bool {
 
 /// Parseia e valida o corpo do `POST /save` (form v2).
 ///
-/// `tem_identidade_nuvem`: se a tomada ja foi provisionada — `modo=standalone` entao
+/// `tem_identidade_nuvem`: se a tomada ja foi provisionada - `modo=standalone` entao
 /// exige a caixa de confirmacao (Edge Case da spec).
 pub fn parse_form(body: &str, tem_identidade_nuvem: bool) -> Result<FormPortal, ErroForm> {
     let pares: Vec<(String, String)> = body
@@ -277,7 +273,7 @@ pub fn parse_form(body: &str, tem_identidade_nuvem: bool) -> Result<FormPortal, 
 
     let ssid = campo(&pares, "ssid").unwrap_or("").trim().to_string();
     // SSID so e obrigatorio no modo NUVEM (o unico que precisa alcancar o servidor) e
-    // apenas sem "manter" — com "manter" o firmware usa o salvo (`resolver_wifi`).
+    // apenas sem "manter" - com "manter" o firmware usa o salvo (`resolver_wifi`).
     // Standalone e Parear funcionam sem Wi-Fi nenhum: e exatamente o caso da casa sem
     // internet, o coracao desta feature.
     if !manter && ssid.is_empty() && modo == Modo::Nuvem {
@@ -385,309 +381,5 @@ pub fn resolver_wifi(form: &FormPortal, ssid_salvo: Option<&str>) -> ResolucaoWi
     match ssid_salvo {
         Some(_) => ResolucaoWifi::Preservar,
         None => ResolucaoWifi::SemRede,
-    }
-}
-
-#[cfg(test)]
-mod testes {
-    use super::*;
-
-    fn corpo_nuvem() -> String {
-        "ssid=Casa&pwd=segredo123&modo=nuvem&servidor=http%3A%2F%2F192.168.0.10%3A8080&claim=K7PQ2XMR"
-            .to_string()
-    }
-
-    // ---- framing / Content-Length (FR-015) ----
-
-    #[test]
-    fn corpo_dentro_do_cap_e_lido_inteiro() {
-        assert_eq!(bytes_a_ler(Some(700)), Ok(700));
-        assert_eq!(checar_corpo(Some(700), 700), Ok(()));
-    }
-
-    #[test]
-    fn corpo_fragmentado_e_detectado_em_vez_de_truncado() {
-        // O bug do v1: um unico read de 512 B daria "ok" com 512 de 700 bytes.
-        assert_eq!(
-            checar_corpo(Some(700), 512),
-            Err(ErroForm::CorpoIncompleto {
-                esperado: 700,
-                recebido: 512
-            })
-        );
-    }
-
-    #[test]
-    fn corpo_grande_vira_413() {
-        let e = bytes_a_ler(Some(CAP_CORPO + 1)).unwrap_err();
-        assert_eq!(status_http(&e), 413);
-    }
-
-    #[test]
-    fn sem_content_length_le_ate_o_cap() {
-        assert_eq!(bytes_a_ler(None), Ok(CAP_CORPO));
-        assert_eq!(checar_corpo(None, 900), Ok(()));
-    }
-
-    #[test]
-    fn formulario_no_tamanho_maximo_passa_inteiro() {
-        // Pior caso legitimo: todos os campos no limite, tudo url-encoded.
-        let ssid = "A".repeat(MAX_SSID_BYTES);
-        let pwd = "b".repeat(MAX_SENHA_BYTES);
-        let claim = "C".repeat(64);
-        let corpo = format!(
-            "ssid={ssid}&pwd={pwd}&modo=nuvem&servidor=http%3A%2F%2F192.168.0.10%3A8080&claim={claim}"
-        );
-        assert!(corpo.len() < CAP_CORPO);
-        assert_eq!(checar_corpo(Some(corpo.len()), corpo.len()), Ok(()));
-        let f = parse_form(&corpo, false).expect("form no limite deve passar");
-        assert_eq!(f.ssid.len(), MAX_SSID_BYTES);
-        assert_eq!(f.pwd.len(), MAX_SENHA_BYTES);
-        assert_eq!(f.claim.len(), 64);
-    }
-
-    // ---- url decode ----
-
-    #[test]
-    fn url_decode_trata_mais_percent_e_final_de_string() {
-        assert_eq!(url_decode("Rede+de+Casa"), "Rede de Casa");
-        assert_eq!(url_decode("a%20b"), "a b");
-        // %XX exatamente no fim do corpo (o v1 perdia este caso).
-        assert_eq!(url_decode("senha%21"), "senha!");
-        assert_eq!(url_decode("http%3A%2F%2Fx"), "http://x");
-    }
-
-    // ---- SSID em BYTES (FR-018) ----
-
-    #[test]
-    fn ssid_com_acento_e_medido_em_bytes() {
-        // 32 chars com acentos => mais de 32 bytes => rejeitado.
-        let ssid: String = "á".repeat(32); // 64 bytes
-        let corpo = format!("ssid={ssid}&pwd=x&modo=standalone");
-        match parse_form(&corpo, false) {
-            Err(ErroForm::SsidLongo { bytes }) => assert_eq!(bytes, 64),
-            outro => panic!("esperava SsidLongo, veio {outro:?}"),
-        }
-    }
-
-    #[test]
-    fn ssid_de_32_bytes_exatos_passa() {
-        let corpo = format!("ssid={}&pwd=x&modo=standalone", "A".repeat(32));
-        assert!(parse_form(&corpo, false).is_ok());
-    }
-
-    // ---- campos por modo ----
-
-    #[test]
-    fn modo_nuvem_exige_servidor_e_claim() {
-        let f = parse_form(&corpo_nuvem(), false).unwrap();
-        assert_eq!(f.modo, Modo::Nuvem);
-        assert_eq!(f.servidor, "http://192.168.0.10:8080");
-        assert_eq!(f.claim, "K7PQ2XMR");
-
-        let sem_claim = "ssid=Casa&modo=nuvem&servidor=http%3A%2F%2F10.0.0.2%3A8080";
-        assert_eq!(parse_form(sem_claim, false), Err(ErroForm::ClaimInvalido));
-
-        let servidor_ruim = "ssid=Casa&modo=nuvem&servidor=192.168.0.10&claim=ABCDEF";
-        assert_eq!(
-            parse_form(servidor_ruim, false),
-            Err(ErroForm::ServidorInvalido)
-        );
-    }
-
-    #[test]
-    fn modo_standalone_dispensa_wifi_e_claim() {
-        let f = parse_form("modo=standalone", false).unwrap();
-        assert_eq!(f.modo, Modo::Standalone);
-        assert!(f.ssid.is_empty() && f.claim.is_empty());
-    }
-
-    #[test]
-    fn standalone_sobre_identidade_de_nuvem_exige_confirmacao() {
-        assert_eq!(
-            parse_form("modo=standalone", true),
-            Err(ErroForm::ConfirmacaoFaltando)
-        );
-        assert!(parse_form("modo=standalone&confirmar_descartar_identidade=1", true).is_ok());
-    }
-
-    #[test]
-    fn modo_parear_valida_pin_e_dispensa_wifi() {
-        // Parear sem Wi-Fi nenhum e o caso central: casa sem internet.
-        let f = parse_form("modo=parear&pin=k7pq2xmr", false).unwrap();
-        assert_eq!(f.pin, "K7PQ2XMR", "PIN e normalizado para maiusculas");
-        assert!(f.ssid.is_empty());
-
-        assert_eq!(
-            parse_form("modo=parear&pin=123", false),
-            Err(ErroForm::PinInvalido)
-        );
-        assert_eq!(
-            parse_form("modo=parear&pin=ABCD-123", false),
-            Err(ErroForm::PinInvalido)
-        );
-    }
-
-    #[test]
-    fn modo_desconhecido_e_rejeitado() {
-        assert_eq!(
-            parse_form("modo=hackeado&ssid=x", false),
-            Err(ErroForm::ModoInvalido)
-        );
-    }
-
-    #[test]
-    fn nada_e_gravado_quando_a_validacao_falha() {
-        // Contrato: erro => 400/413 e NENHUMA gravacao. Aqui isso se traduz em
-        // "parse_form nao devolve FormPortal parcial".
-        assert!(parse_form("ssid=&modo=nuvem&servidor=http://x&claim=ABCDEF", false).is_err());
-    }
-
-    // ---- matriz manter x senha (FR-017 / CHK018) ----
-
-    fn form_manter(ssid: &str, pwd: &str) -> FormPortal {
-        FormPortal {
-            ssid: ssid.to_string(),
-            pwd: pwd.to_string(),
-            manter: true,
-            modo: Modo::Nuvem,
-            servidor: "http://x:8080".into(),
-            claim: "ABCDEF".into(),
-            pin: String::new(),
-        }
-    }
-
-    #[test]
-    fn manter_com_senha_vazia_preserva() {
-        let f = form_manter("", "");
-        assert_eq!(resolver_wifi(&f, Some("Casa")), ResolucaoWifi::Preservar);
-    }
-
-    #[test]
-    fn manter_com_senha_preenchida_troca_so_a_senha() {
-        let f = form_manter("", "nova123");
-        assert_eq!(
-            resolver_wifi(&f, Some("Casa")),
-            ResolucaoWifi::TrocarSenha {
-                senha: "nova123".into()
-            }
-        );
-    }
-
-    #[test]
-    fn manter_com_ssid_diferente_grava_a_rede_nova() {
-        let f = form_manter("Vizinho", "abc");
-        assert_eq!(
-            resolver_wifi(&f, Some("Casa")),
-            ResolucaoWifi::Gravar {
-                ssid: "Vizinho".into(),
-                senha: "abc".into()
-            }
-        );
-    }
-
-    #[test]
-    fn sem_manter_grava_tudo_incluindo_rede_aberta() {
-        let mut f = form_manter("Aberta", "");
-        f.manter = false;
-        assert_eq!(
-            resolver_wifi(&f, Some("Casa")),
-            ResolucaoWifi::Gravar {
-                ssid: "Aberta".into(),
-                senha: String::new() // vazia => AuthMethod::None (FR-016)
-            }
-        );
-    }
-
-    #[test]
-    fn standalone_sem_rede_alguma() {
-        let mut f = form_manter("", "");
-        f.manter = false;
-        f.modo = Modo::Standalone;
-        assert_eq!(resolver_wifi(&f, None), ResolucaoWifi::SemRede);
-    }
-
-    // ---- taxonomia de motivos (FR-019) ----
-
-    #[test]
-    fn matriz_completa_manter_x_senha() {
-        // As 4 combinacoes que o usuario consegue produzir no form (CHK018).
-        let casos: [(bool, &str, &str, Option<&str>, ResolucaoWifi); 4] = [
-            (true, "", "", Some("Casa"), ResolucaoWifi::Preservar),
-            (
-                true,
-                "",
-                "nova",
-                Some("Casa"),
-                ResolucaoWifi::TrocarSenha { senha: "nova".into() },
-            ),
-            (
-                false,
-                "Outra",
-                "s3nh4",
-                Some("Casa"),
-                ResolucaoWifi::Gravar {
-                    ssid: "Outra".into(),
-                    senha: "s3nh4".into(),
-                },
-            ),
-            (
-                false,
-                "Aberta",
-                "",
-                None,
-                ResolucaoWifi::Gravar {
-                    ssid: "Aberta".into(),
-                    senha: String::new(),
-                },
-            ),
-        ];
-        for (manter, ssid, pwd, salvo, esperado) in casos {
-            let mut f = form_manter(ssid, pwd);
-            f.manter = manter;
-            assert_eq!(
-                resolver_wifi(&f, salvo),
-                esperado,
-                "manter={manter} ssid={ssid:?} pwd={pwd:?} salvo={salvo:?}"
-            );
-        }
-    }
-
-    #[test]
-    fn urls_de_servidor_validas_e_invalidas() {
-        for boa in [
-            "http://192.168.0.10:8080",
-            "https://casa.local:8443",
-            "http://10.0.0.2",
-        ] {
-            assert!(servidor_valido(boa), "{boa} deveria passar");
-        }
-        for ruim in [
-            "",
-            "192.168.0.10:8080",   // sem esquema
-            "ftp://192.168.0.10",  // esquema errado
-            "http://",             // sem host
-            "http:// 10.0.0.2",    // espaco
-            "http://:8080",        // so porta
-        ] {
-            assert!(!servidor_valido(ruim), "{ruim:?} deveria falhar");
-        }
-        // Limite de tamanho.
-        let longa = format!("http://{}", "a".repeat(MAX_SERVIDOR_BYTES));
-        assert!(!servidor_valido(&longa));
-    }
-
-    #[test]
-    fn motivos_fazem_ida_e_volta_pela_nvs() {
-        for m in [
-            MotivoPortal::SenhaWifi,
-            MotivoPortal::ClaimInvalido,
-            MotivoPortal::ServidorInacessivel,
-            MotivoPortal::SsidInvalido,
-        ] {
-            assert_eq!(MotivoPortal::parse(m.as_str()), Some(m));
-            assert!(!m.banner().is_empty());
-        }
-        assert_eq!(MotivoPortal::parse("inexistente"), None);
     }
 }

@@ -18,13 +18,13 @@ let ultimoToast: ToastData | null = null;
 /**
  * Empurra o aviso para o `#toaster`.
  *
- * O sumico sozinho (FR-005e item 7) passou a ser do Basecoat — 3 s para aviso
+ * O sumico sozinho (FR-005e item 7) passou a ser do Basecoat - 3 s para aviso
  * comum, 5 s para erro, com o relogio pausado enquanto o ponteiro esta em cima.
  * Por isso `main.ts` nao tem mais `setTimeout` proprio: o estado guarda o ultimo
  * aviso e este comparador de identidade evita reempurrar o mesmo objeto a cada
  * re-render (o polling redesenha a tela a cada 15 s).
  *
- * `title` e `description` entram como HTML cru no componente — escapar aqui nao
+ * `title` e `description` entram como HTML cru no componente - escapar aqui nao
  * e zelo, e a unica barreira: o texto inclui nome de tomada digitado pelo dono.
  */
 export function renderToast(el: HTMLElement, toast: ToastData | null): void {
@@ -119,7 +119,7 @@ export function renderModal(el: HTMLElement, modal: ModalData | null): void {
   });
 
   // Dialogo com campo (renomear): foca, seleciona o texto e deixa o Enter
-  // confirmar — o `<dialog>` nativo nao submete nada sozinho.
+  // confirmar - o `<dialog>` nativo nao submete nada sozinho.
   const campo = dlg.querySelector<HTMLInputElement>('input[data-autofocus]');
   if (campo) {
     campo.focus();

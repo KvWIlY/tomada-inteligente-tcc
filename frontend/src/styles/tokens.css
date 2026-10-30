@@ -2,9 +2,9 @@
    Tokens (FR-002, FR-002b, FR-002e)
    =============================================================
    Duas familias convivem de proposito:
-     * `--bg`, `--ink`, `--green`... — vocabulario do projeto,
+     * `--bg`, `--ink`, `--green`... - vocabulario do projeto,
        fonte da verdade da paleta portada do handoff hi-fi;
-     * `--background`, `--foreground`, `--primary`... —
+     * `--background`, `--foreground`, `--primary`... -
        vocabulario do shadcn, que o Basecoat consome.
    A segunda e definida EM TERMOS da primeira. Ha uma fonte de
    verdade para cada cor, e trocar um valor muda os dois lados.
@@ -42,12 +42,12 @@
      `--amber-ink` desceu de #97670f para #8a5e0d na T036: o tom
      antigo rendia 4,27:1 sobre `--amber-bg`, e o rotulo "Standby"
      do badge e texto pequeno (12 px), que a AA cobra em 4,5:1. O
-     novo mede 4,93:1 sobre o badge e 5,69:1 sobre o cartao — os
+     novo mede 4,93:1 sobre o badge e 5,69:1 sobre o cartao - os
      dois papeis que ele tem. Medido, nao estimado. */
   --amber:     #e3a72e;  --amber-bg: #f8eed6;  --amber-ink: #8a5e0d;
   --red:       #d8453f;  --red-bg:   #fbe9e8;  --red-ink:   #b5332e;
 
-  /* Ambar que CARREGA SIGNIFICADO num grafico — a linha do
+  /* Ambar que CARREGA SIGNIFICADO num grafico - a linha do
      historico de uma tomada em standby, o marcador de 85% do
      P_max. `--amber` mede 2,14:1 sobre o cartao claro e reprova
      o 3:1 que a WCAG 1.4.11 cobra de elemento grafico
@@ -62,12 +62,8 @@
      funcional, e `--line` (1,19:1 sobre o cartao) reprovava.
      Mede 3,35:1 sobre o cartao e 3,18:1 sobre `--card-2`, as
      duas superficies onde um campo aparece. So e usada onde a
-     borda DELIMITA um controle — nao em separador decorativo. */
+     borda DELIMITA um controle - nao em separador decorativo. */
   --line-strong: #868c9f;
-
-  --shadow:      0 1px 2px rgba(20,23,31,.05), 0 12px 32px -16px rgba(20,23,31,.2);
-  --shadow-soft: 0 1px 2px rgba(20,23,31,.045), 0 6px 20px -12px rgba(20,23,31,.16);
-  --shadow-pop:  0 24px 70px -22px rgba(20,30,50,.42);
 
   /* Ponte projeto -> Basecoat/shadcn */
   --radius: 0.875rem;
@@ -96,7 +92,7 @@
   --sidebar-accent-foreground: var(--green-ink);
   --sidebar-border: var(--line);
   --sidebar-ring: var(--green);
-  --sidebar-width: 16.5rem;          /* 264 px — a largura do handoff */
+  --sidebar-width: 16.5rem;          /* 264 px - a largura do handoff */
   --sidebar-mobile-width: 18rem;
   --chart-1: var(--green);
   --chart-2: var(--green-line);
@@ -106,7 +102,7 @@
 }
 
 /* -------------------------------------------------------------
-   Tema escuro (FR-002c) — ativado pela classe `dark` no <html>
+   Tema escuro (FR-002c) - ativado pela classe `dark` no <html>
    -------------------------------------------------------------
    Redefine a paleta do PROJETO; a ponte acima segue por
    referencia e nao precisa ser repetida.
@@ -143,15 +139,11 @@
   --lav-bar:   #2c3244;
 
   --amber:     #f0b849;  --amber-bg: #3a2c10;  --amber-ink: #f5c96b;
-  --amber-line: #f0b849;   /* 9,57:1 sobre o cartao escuro — o base ja passa */
+  --amber-line: #f0b849;   /* 9,57:1 sobre o cartao escuro - o base ja passa */
   --red:       #e4635d;  --red-bg:   #3a1c1b;  --red-ink:   #f28e89;
 
   --primary-foreground: #0b0e14;
   --sidebar-primary-foreground: #0b0e14;
-
-  --shadow:      0 1px 2px rgba(0,0,0,.5), 0 12px 32px -16px rgba(0,0,0,.7);
-  --shadow-soft: 0 1px 2px rgba(0,0,0,.45), 0 6px 20px -12px rgba(0,0,0,.6);
-  --shadow-pop:  0 24px 70px -22px rgba(0,0,0,.8);
 }
 
 /* -------------------------------------------------------------
@@ -167,7 +159,6 @@
 
   --color-surface:     var(--card-2);
   --color-line-soft:   var(--line-2);
-  --color-line-strong: var(--line-strong);
 
   --color-ink:        var(--ink);
   --color-ink-soft:   var(--ink-soft);
@@ -176,16 +167,12 @@
   --color-green:      var(--green);
   --color-green-deep: var(--green-deep);
   --color-green-num:  var(--green-num);
-  --color-green-line: var(--green-line);
   --color-green-bg:   var(--green-bg);
   --color-green-ink:  var(--green-ink);
 
   --color-lav:        var(--lav);
-  --color-lav-track:  var(--lav-track);
-  --color-lav-bar:    var(--lav-bar);
 
   --color-amber:      var(--amber);
-  --color-amber-line: var(--amber-line);
   --color-amber-bg:   var(--amber-bg);
   --color-amber-ink:  var(--amber-ink);
   --color-red:        var(--red);
@@ -208,7 +195,7 @@
    O que o Basecoat NAO cobre (FR-003a)
    =============================================================
    Cada regra abaixo existe porque nao ha componente equivalente
-   na biblioteca — nao por gosto. Todas consomem os tokens acima.
+   na biblioteca - nao por gosto. Todas consomem os tokens acima.
    ============================================================= */
 
 /* Fase de login: sem barra lateral. O `.sidebar` do Basecoat empurra o irmao
@@ -251,7 +238,7 @@
 
 /* Preenchimento do range: nenhum navegador estiliza o trecho
    percorrido de um `input[type=range]` sozinho, e o Basecoat
-   pinta a trilha inteira de `--muted` num pseudo-elemento — que
+   pinta a trilha inteira de `--muted` num pseudo-elemento - que
    cobre qualquer `background` posto no proprio input. Dai o
    gradiente ir na TRILHA, dirigido por `--rng-pct`, que o JS
    reescreve a cada `input`. */

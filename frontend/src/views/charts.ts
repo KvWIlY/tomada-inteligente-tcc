@@ -1,10 +1,10 @@
 // =============================================
-// Graficos — Chart.js pelo wrapper do Basecoat + SVG onde ele nao cabe
+// Graficos - Chart.js pelo wrapper do Basecoat + SVG onde ele nao cabe
 // =============================================
 //
 // `consumptionChart` e o unico que virou Chart.js: e o grafico grande, com
 // eixo, tooltip e leitura de valor. `miniBars` e `efficiencyRing` seguem SVG
-// por decisao registrada (T051/CHK001) — sao 24 barras estaticas por cartao e
+// por decisao registrada (T051/CHK001) - sao 24 barras estaticas por cartao e
 // um anel de um numero; instanciar um Chart.js para cada um custaria um canvas
 // e um ciclo de vida por tomada para desenhar o que uma string ja desenha.
 //
@@ -30,7 +30,7 @@ const STATE_LINE: Record<Estado, string> = {
  * Teto "redondo" do eixo e o passo entre as marcas.
  *
  * O piso fixo de 500 W que existia antes de 2026-08-24 achatava toda carga de
- * standby contra o eixo: uma tomada de 3 W virava linha reta no zero —
+ * standby contra o eixo: uma tomada de 3 W virava linha reta no zero -
  * exatamente o consumo que este trabalho existe para tornar visivel (SC-005).
  */
 export function escala(valores: number[]): { max: number; passo: number; emKW: boolean } {
@@ -55,7 +55,7 @@ function rotuloEixo(w: number, emKW: boolean): string {
  * A reamostragem vive em `derive.ts`, que esta FORA do contrato desta feature e
  * nao pode ser alterada. Como o eixo horizontal precisa dos timestamps dos
  * MESMOS baldes (FR-019), o indice de cada balde e recalculado aqui com a
- * mesma aritmetica. Se a de la mudar, esta precisa mudar junto — e o motivo de
+ * mesma aritmetica. Se a de la mudar, esta precisa mudar junto - e o motivo de
  * as duas estarem descritas em comentario nos dois arquivos.
  */
 export function carimbosDaSerie(medicoes: Medicao[], n: number): number[] {
@@ -186,7 +186,7 @@ export function montarConsumo(
 }
 
 // =============================================
-// Sparkline do cartao de tomada (SVG — T051)
+// Sparkline do cartao de tomada (SVG - T051)
 // =============================================
 
 /** Mini barras verticais nos cards de tomada (78x38). */
@@ -210,10 +210,10 @@ export function miniBars(data: number[], estado: Estado): string {
 }
 
 // =============================================
-// Anel de eficiencia (SVG — o valor e um numero so)
+// Anel de eficiencia (SVG - o valor e um numero so)
 // =============================================
 
-/** Anel de eficiência (0–100). `null` = sem dados → anel vazio com "—". */
+/** Anel de eficiência (0–100). `null` = sem dados → anel vazio com "-". */
 export function efficiencyRing(value: number | null): string {
   const size = 150;
   const sw = 13;          // espessura do anel principal
@@ -223,7 +223,7 @@ export function efficiencyRing(value: number | null): string {
   // Os raios saem do CENTRO para fora, cada um descontando a propria espessura.
   // Ate 2026-08-26 o aro tinha raio `r + sw/2 + 2` = 77 num `viewBox` de 150 com
   // centro em 75: ele estourava 2 px para fora nos quatro lados e o SVG cortava.
-  // A conta certa e a inversa — o traco mais externo nao pode passar da metade
+  // A conta certa e a inversa - o traco mais externo nao pode passar da metade
   // do lado.
   const raioAro = size / 2 - swAro / 2;              // 74
   const r = raioAro - swAro / 2 - folga - sw / 2;    // 64,5
@@ -242,7 +242,7 @@ export function efficiencyRing(value: number | null): string {
           stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}"
           transform="rotate(-90 ${size / 2} ${size / 2})" style="transition:stroke-dashoffset .8s cubic-bezier(.2,.7,.2,1)"/>
       </svg>
-      <div class="tnum absolute inset-0 grid place-items-center text-[40px] font-extrabold tracking-tighter">${semDados ? '—' : Math.round(value)}</div>
+      <div class="tnum absolute inset-0 grid place-items-center text-[40px] font-extrabold tracking-tighter">${semDados ? '-' : Math.round(value)}</div>
     </div>`;
 }
 
@@ -260,7 +260,7 @@ export function capacityBar(total: number, pMax: number): string {
   const alert = over
     ? `<div class="alert mt-4" data-variant="destructive" role="status">
          ${icon('warn', 15)}
-         <section><p>Perto do teto elétrico — novos comandos manuais podem ser recusados para manter a casa segura.</p></section>
+         <section><p>Perto do teto elétrico: novos comandos manuais podem ser recusados para manter a casa segura.</p></section>
        </div>`
     : '';
   return `
@@ -293,7 +293,7 @@ export function capacityBar(total: number, pMax: number): string {
 export function powerSlider(value: number, maxPadrao: number, label = 'Consumo máximo (Watts)'): string {
   // O teto do controle acompanha o valor gravado, arredondado para cima em
   // passos de 500 W. Com o maximo fixo em 3000 W, uma casa com P_max de 3500 W
-  // — o do banco de demonstracao — via o polegar encalhado na ponta direita
+  // - o do banco de demonstracao - via o polegar encalhado na ponta direita
   // mostrando um numero maior que o proprio fim da escala.
   const max = Math.max(maxPadrao, Math.ceil(value / 500) * 500);
   const pct = max > 0 ? (value / max) * 100 : 0;

@@ -9,7 +9,7 @@
       // Tema ANTES da primeira pintura. `main.ts` e um modulo (deferido): se a
       // classe so fosse aplicada la, quem escolheu escuro veria um lampejo
       // branco a cada carregamento. `themeMode` e a chave que o
-      // `basecoat.theme.set()` ja usa — nao inventamos outra.
+      // `basecoat.theme.set()` ja usa - nao inventamos outra.
       // PADRAO: claro. Ausencia de escolha nao consulta o sistema operacional.
       try {
         if (localStorage.getItem('themeMode') === 'dark') {
@@ -23,7 +23,7 @@
       Casca do Basecoat `sidebar`: o elemento `.sidebar` fica com largura zero no
       desktop (o `<nav>` dentro dele e `position: fixed`) e vira o veu escuro no
       celular. O irmao seguinte recebe `ml-(--sidebar-width)` da propria
-      biblioteca — por isso o `<main>` PRECISA ser o irmao imediato.
+      biblioteca - por isso o `<main>` PRECISA ser o irmao imediato.
 
       `data-sidebar-initialized` e `aria-hidden` sao escritos AQUI, e nao pelo JS
       do Basecoat: usamos o CSS dele, mas o estado e nosso (ver `main.ts`,

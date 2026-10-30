@@ -49,7 +49,7 @@ pub struct Medicao {
     pub tomada_id: String,
     pub timestamp: i64,
     /// Potência **ATIVA** (W). Medições anteriores a 2026-08-24 gravaram aqui a
-    /// potência aparente (VA) — são justamente as que têm `fator_potencia` nulo.
+    /// potência aparente (VA) - são justamente as que têm `fator_potencia` nulo.
     pub p_medida: f32,
     /// `P/S` em [0, 1] da mesma janela, ou `None` para as medições antigas
     /// (migration 0002): a fase não foi gravada, então não há backfill possível.
@@ -87,12 +87,5 @@ pub struct ProvisioningClaim {
     pub code_hash: String,
     pub expira_em: NaiveDateTime,
     pub usado_em: Option<NaiveDateTime>,
-    pub criado_em: NaiveDateTime,
-}
-
-#[derive(Debug, Clone, FromRow)]
-pub struct ResidenciaSecret {
-    pub residencia_id: String,
-    pub residencia_key: String,
     pub criado_em: NaiveDateTime,
 }
