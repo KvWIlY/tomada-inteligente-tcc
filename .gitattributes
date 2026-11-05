@@ -6,3 +6,6 @@
 # boot morre com `VersionMismatch(1)` - sem que uma linha de SQL tenha mudado.
 # Aconteceu em 2026-08-30.
 backend/migrations/*.sql text eol=lf
+
+# As bases sao comparadas por hash (avaliacao/bases.sha256): nada de converter o fim de linha.
+avaliacao/**/*.csv -text

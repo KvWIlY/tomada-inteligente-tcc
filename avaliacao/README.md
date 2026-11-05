@@ -3,15 +3,30 @@
 Scripts, casos e resultados da avaliação do TCC. Os nomes das pastas são os usados nos scripts:
 eles encontram o simulador em `../simulador` e as outras pastas por caminho relativo.
 
+## Bases de consumo
+
+As bases estão nesta pasta, junto dos casos que as usam, e `bases.sha256` traz o hash de cada uma.
+
+| Bases | Origem |
+|---|---|
+| `avaliacao-busca-exata/*.csv`, `avaliacao-perda/*.csv` e `avaliacao-revisao-3110/*.csv` | Sintéticas, geradas pelo simulador (`gerar-base --forcar <caso>.toml`) |
+| `avaliacao-refit/refit-casa*.csv` | Derivadas de 30 dias da base REFIT |
+
+A REFIT foi publicada por Murray, Stankovic e Stankovic (*Scientific Data* 4, 160122, 2017,
+[doi:10.1038/sdata.2016.122](https://doi.org/10.1038/sdata.2016.122)), sob licença CC BY 4.0, e os
+dados originais estão em <https://zenodo.org/records/5063428>. `avaliacao-refit/refit.py` explica como
+baixar o trecho de cada casa e faz a conversão.
+
+**Exceção:** as 150 bases da análise de rotinas (5 grupos de cenários, 30 sementes) ocupam cerca de
+1,5 GB e não estão aqui. `avaliacao-busca-exata/sorteio/sorteio.py` gera cada uma pela sua semente,
+roda o caso e apaga a base; `sorteio/resultados.csv` guarda o resultado das 150 execuções.
+
 ## O que não está aqui
 
-- **Bases de consumo (`.csv`) e pastas `rodadas/`:** somam dezenas de GB. As bases sintéticas são
-  refeitas por `simulador gerar-base --forcar <caso>.toml` e as rodadas, por
-  `simulador rodar --realimentar --rastro <caso>.toml`. O `digest` de cada rodada permite comparar
-  as decisões com as registradas nos logs.
-- **Base REFIT:** vem do registro Zenodo 5063428 (CC BY 4.0); `avaliacao-refit/refit.py` explica como
-  baixar o trecho e gera os casos.
-- **Logs do ensaio com ventilador e monitor:** trazem dados da rede local e ficam fora do repositório.
+- **Pastas `rodadas/`:** somam dezenas de GB e são refeitas por
+  `simulador rodar --realimentar --rastro <caso>.toml`. O `digest` de cada rodada permite comparar as
+  decisões com as registradas nos logs.
+- **Logs do ensaio com ventilador e monitor:** trazem dados da rede local.
 
 ## Pastas
 
@@ -35,8 +50,7 @@ cd simulador && cargo build --release
 cd ../avaliacao/reverificacao-2026-10-29 && sh rodar.sh
 ```
 
-Antes da etapa da REFIT, baixe os trechos e rode `python refit.py PASTA_DOS_TRECHOS` em
-`avaliacao-refit/`. O `rodar.sh` completo não foi executado a partir desta pasta; os scripts são os
+O `rodar.sh` completo não foi executado a partir desta pasta; os scripts são os
 mesmos das rodadas originais, com os ajustes de caminho e de nome indicados no próprio código.
 
 A rodada completa leva horas e ocupa dezenas de GB em `rodadas/`. Sem as rodadas dos experimentos

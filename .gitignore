@@ -98,9 +98,7 @@ reports/
 research_notes/
 ok/
 
-# Experimentos do artigo: sobem scripts, casos e resultados. Bases e rodadas sao regeraveis.
+# Experimentos do artigo: sobem scripts, casos, bases e resultados. As rodadas sao regeraveis.
 !avaliacao/**
 avaliacao/**/rodadas/
 avaliacao/**/__pycache__/
-avaliacao/**/*.csv
-!avaliacao/**/sorteio/resultados.csv
