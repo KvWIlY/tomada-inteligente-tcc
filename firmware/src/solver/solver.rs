@@ -27,7 +27,9 @@ const EPS: f64 = 1e-6;
 
 /// Teto de nos visitados pela busca. Com teto folgado a busca nem roda (caminho rapido);
 /// com teto ativo, a poda deixa o numero de nos muito abaixo de `2^n` nos casos medidos.
-/// ponytail: limite fixo de nos, trocar por prazo em us se o ESP32 medir acima do ciclo.
+/// Limite em nos, e nao em tempo, de proposito: um prazo faria placas com cargas diferentes
+/// pararem em pontos diferentes e quebraria o acordo sem lider. Medido no ESP32 em 2026-11-04:
+/// no maximo 955 ms com 30 tomadas, bem abaixo do ciclo de 10 s.
 pub const LIMITE_NOS: u32 = 200_000;
 
 /// As duas opcoes de uma tomada ja traduzidas para custo na funcao objetivo.
