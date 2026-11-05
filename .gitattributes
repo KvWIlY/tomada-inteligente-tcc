@@ -9,3 +9,5 @@ backend/migrations/*.sql text eol=lf
 
 # As bases sao comparadas por hash (avaliacao/bases.sha256): nada de converter o fim de linha.
 avaliacao/**/*.csv -text
+avaliacao/bases.sha256 text eol=lf
+avaliacao/**/*.sh text eol=lf
