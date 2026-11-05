@@ -361,6 +361,7 @@ fn main() -> Result<()> {
         config_ciclo.schedule[h] = rh.a_it;
 
         // --- DECIDIR (MILP) ---
+        let t0_decisao = unsafe { esp_idf_svc::sys::esp_timer_get_time() };
         let decisao = ciclo.decidir(
             &config_ciclo,
             leitura,
@@ -372,6 +373,8 @@ fn main() -> Result<()> {
             hora,
             agora,
         );
+
+        log::info!("[TEMPO] decidir_us={}", unsafe { esp_idf_svc::sys::esp_timer_get_time() } - t0_decisao);
 
         // --- ATUAR ---
         if let Err(e) = atuador.aplicar(decisao.estado) {
