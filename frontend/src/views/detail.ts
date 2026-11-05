@@ -117,9 +117,9 @@ export function renderDetail(el: HTMLElement, p: DetailProps): void {
   const syncLabel = p.online ? 'Sincronização ESP32 ao vivo' : 'Offline, decidindo localmente';
   const pNum = t.estado === 'OFF' ? '0' : Math.round(t.p_medida_atual).toLocaleString('pt-BR');
   const identity = t.mac ?? t.id;
-  // O botao de power reflete o estado FISICO do rele, nao a intencao: em automatico
-  // quem manda e o MILP, e `t.estado` e o que a placa reportou no ultimo ciclo.
-  const ligada = t.rele_aberto === null ? t.estado !== 'OFF' : t.rele_aberto === false;
+  // O botao de power reflete o estado FISICO do rele, nao a intencao: mesmo com um comando
+  // ativo o P_max pode manter o rele aberto, e `t.estado` e o que a placa reportou por ultimo.
+  const ligada = t.estado !== 'OFF';
 
   el.innerHTML = `
     <div class="mx-auto max-w-[1080px] px-5 pt-6 pb-20 md:px-12 md:pt-9">
