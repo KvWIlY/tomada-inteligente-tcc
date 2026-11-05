@@ -19,6 +19,10 @@ use esp_idf_svc::hal::adc::oneshot::{AdcChannelDriver, AdcDriver};
 use esp_idf_svc::hal::gpio::PinDriver;
 use esp_idf_svc::hal::peripherals::Peripherals;
 
+/// Piso de ruido do SCT sem carga (mV-RMS no ADC): 6,3-7,4 mV medidos em 2026-11-01, com o rele
+/// aberto e fechado (ja foi 3,8-4,9 mV em 2026-10-31, depende da montagem).
+const RUIDO_I_MV: f32 = 7.0;
+
 fn main() -> anyhow::Result<()> {
     esp_idf_svc::sys::link_patches();
     esp_idf_svc::log::EspLogger::initialize_default();
@@ -45,10 +49,20 @@ fn main() -> anyhow::Result<()> {
             || ch_v.read().unwrap_or(0) as f32,
             || ch_i.read().unwrap_or(0) as f32,
         );
+        // Abaixo de ~20 mV AC no ADC e so ruido (o piso medido fica em 4-6 mV).
+        let sinal = |ac: f32| if ac < 20.0 { "SEM SINAL" } else { "lendo" };
+        // So neste teste: desconta o piso de ruido do SCT (ruido e sinal somam em quadratura).
+        let i_ac = (d.i_ac_mv * d.i_ac_mv - RUIDO_I_MV * RUIDO_I_MV).max(0.0).sqrt();
+        println!("----------------------------------------------");
         println!(
-            "[CAL] V_dc={:.0}mV V_ac={:.1}mV I_dc={:.0}mV I_ac={:.2}mV | V={:.1} I={:.3} P={:.1} S={:.1} FP={:.2}",
-            d.v_dc_mv, d.v_ac_mv, d.i_dc_mv, d.i_ac_mv, l.vrms, l.irms, l.p, l.s, l.fp
+            "SCT-013 (corrente, D35) = {:.3} A    | ADC: {:.2} mV AC (bruto {:.2}), bias {:.0} mV  [{}]",
+            i_ac * sensores::sct013::FATOR_CORRENTE, i_ac, d.i_ac_mv, d.i_dc_mv, sinal(d.i_ac_mv)
         );
+        println!(
+            "ZMPT101B (tensao, D32)  = {:.1} V     | ADC: {:.1} mV AC, bias {:.0} mV  [{}]",
+            l.vrms, d.v_ac_mv, d.v_dc_mv, sinal(d.v_ac_mv)
+        );
+        println!("Potencia = {:.1} W   aparente = {:.1} VA   FP = {:.2}", l.p, l.s, l.fp);
         std::thread::sleep(Duration::from_secs(2));
     }
 }

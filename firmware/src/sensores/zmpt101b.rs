@@ -9,9 +9,9 @@
 
 use crate::sensores::potencia::rms_centrado;
 
-/// Volts-de-rede por mV-RMS-no-ADC. PLACEHOLDER - calibrar no hardware real.
-/// Ex.: se 220 V reais dao ~700 mV RMS no ADC, FATOR ~ 220/700 ≈ 0.314.
-pub const FATOR_TENSAO: f32 = 0.314;
+/// Volts-de-rede por mV-RMS-no-ADC. Aproximado (2026-11-01): 127 V NOMINAIS da rede, sem
+/// multimetro, davam 139,2 mV com o trimpot atual. Mexeu no trimpot, recalibre.
+pub const FATOR_TENSAO: f32 = 0.912;
 
 /// Vrms da rede (V) a partir das amostras em mV do ADC.
 pub fn vrms_volts(amostras_mv: &[f32]) -> f32 {
