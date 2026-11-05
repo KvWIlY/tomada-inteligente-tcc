@@ -97,3 +97,10 @@ __pycache__/
 reports/
 research_notes/
 ok/
+
+# Experimentos do artigo: sobem scripts, casos e resultados. Bases e rodadas sao regeraveis.
+!avaliacao/**
+avaliacao/**/rodadas/
+avaliacao/**/__pycache__/
+avaliacao/**/*.csv
+!avaliacao/**/sorteio/resultados.csv

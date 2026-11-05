@@ -1,0 +1,16 @@
+aviso: grupo "geladeira": consumo fora de uso (55.6 W) acima do limiar_uso_w (15 W). O aparelho parece "em uso" o tempo todo, o fantasma nunca é detectado e a rodada tende a sair verde com economia zero
+caso c7-identicos: 4 tomadas, 60.480 passos de 10 s (7 d), 241.920 solves
+Com realimentação: a tomada decidida OFF lê 0 W no passo seguinte, como a placa com o relé aberto. A base é o que o aparelho puxaria se estivesse energizado.
+
+tomada                cortes passos_off religamentos      off_h      std_h       on_h
+geladeira                  0          0            0       0,00       0,00     168,00
+aquecedor-a               15     55.814           14     155,04       2,46      10,50
+aquecedor-b               15     55.814           14     155,04       2,46      10,50
+aquecedor-c               22     58.733           21     163,15       2,48       2,37
+
+casa: base 39911,0 Wh, com o sistema 32697,3 Wh, economia 7213,7 Wh
+cortes 52, passos acima do teto 6 (pior excesso 515,6 W), penalidades: penalidade_uso=5.033
+custo: 12 binárias por solve, decidir mediana 0 us / p90 0 us / max 381 us, 241.920 solves, parede 0,3 s (tempo de PC, não do Xtensa)
+desfecho: completou
+digest: sha256:20211f29c0b93f6f87dc52d7fb91322a6f233fbc747be73dc5f5f83e812731be
+pasta: rodadas\c7-identicos\20261029-223426

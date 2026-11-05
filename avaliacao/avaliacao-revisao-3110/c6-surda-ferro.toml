@@ -1,0 +1,50 @@
+# Cenario 6: teto ativo entre tomadas gerenciadas (cozinha e area de servico num circuito de 20 A).
+# Decisao: milp. Episodios em gerar-cenarios.py.
+nome = "c6-surda-ferro"
+descricao = "Teto apertado entre aparelhos gerenciados; alguem precisa ser cortado"
+duracao = "30d"
+passo_s = 10
+[base]
+arquivo = "c6-cozinha.csv"
+passo_s = 10
+[casa]
+p_max_w = 2540
+perda_semente = 0
+decisao = "milp"
+[[grupo]]
+nome = "geladeira"
+perfil = "constante"
+w = 55.6
+critica = true
+[[grupo]]
+nome = "ferro"
+perfil = "janelas"
+uso_w = 1000
+standby_w = 0
+janelas = ["06:40-07:10", "11:50-12:20"]
+peso = 3
+[[grupo]]
+nome = "cafeteira"
+perfil = "janelas"
+uso_w = 600
+standby_w = 0.5
+janelas = ["06:50-07:05", "11:55-12:15"]
+peso = 3
+[[grupo]]
+nome = "air-fryer"
+perfil = "janelas"
+uso_w = 1500
+standby_w = 0.5
+janelas = ["12:00-12:20", "19:00-19:30"]
+peso = 10
+[[grupo]]
+nome = "microondas"
+perfil = "janelas"
+uso_w = 1400
+standby_w = 0.8
+janelas = ["07:00-07:03", "12:05-12:08", "19:10-19:13"]
+peso = 10
+
+[[casa.perda]]
+recebe = "ferro"
+janela = "11:55-12:30"

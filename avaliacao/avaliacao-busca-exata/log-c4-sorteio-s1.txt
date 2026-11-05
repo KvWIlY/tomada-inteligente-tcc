@@ -1,0 +1,28 @@
+aviso: grupo "geladeira": consumo fora de uso (55.6 W) acima do limiar_uso_w (15 W). O aparelho parece "em uso" o tempo todo, o fantasma nunca é detectado e a rodada tende a sair verde com economia zero
+caso c4-sorteio-s1: 11 tomadas, 259.200 passos de 10 s (30 d), 2.851.200 solves
+Com realimentação: a tomada decidida OFF lê 0 W no passo seguinte, como a placa com o relé aberto. A base é o que o aparelho puxaria se estivesse energizado.
+
+tomada                cortes passos_off religamentos      off_h      std_h       on_h
+geladeira                  0          0            0       0,00       0,00     720,00
+roteador                   0          0            0       0,00     720,00       0,00
+tv                        31    203.697           30     565,83       5,16     149,01
+decodificador             31    202.793           30     563,31       5,08     151,60
+console                   31    224.411           30     623,36       5,08      91,55
+soundbar                  31    205.264           30     570,18       5,08     144,74
+home-theater              31    223.913           30     621,98       5,08      92,94
+computador                31    246.224           30     683,96       5,08      30,96
+microondas                61    248.340           60     689,83      25,15       5,01
+carregador-celular        31    246.425           30     684,51       5,08      30,41
+carregador-celular-2      31    245.682           30     682,45       5,08      32,47
+
+casa: base 108778,8 Wh, com o sistema 98912,1 Wh, economia 9866,7 Wh
+cortes 309, passos acima do teto 0 (pior excesso 0,0 W), penalidades: nenhuma
+custo: 33 binárias por solve, decidir mediana 0 us / p90 0 us / max 425 us, 2.851.200 solves, parede 3,8 s (tempo de PC, não do Xtensa)
+desfecho: completou
+digest: sha256:6e7b28935bc77632b7a50d43cc574ef8320e3138dbba53d95372254add171f01
+pasta: rodadas\c4-sorteio-s1\20261029-223330
+tomadas: base 108.78 kWh, com PL 98.91 kWh, economia 9.07%
+fora do sistema: 315.42 kWh
+casa: normal 424.20 kWh, com PL 414.33 kWh, economia 2.33%
+economia: 9.867 kWh = R$ 9.52 (tarifa 0.965232)
+passos acima do disjuntor (5080 W): sem sistema 0, com sistema 0

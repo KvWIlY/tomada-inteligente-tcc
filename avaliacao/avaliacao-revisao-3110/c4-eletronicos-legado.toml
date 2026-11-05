@@ -1,0 +1,81 @@
+# Cenario 4: casal com sala de entretenimento. Muitos aparelhos em espera, usados poucas horas.
+# Disjuntor 40 A x 127 V = 5080 W: faixa M1 (carga instalada 3.2 kW), Tabela 07 da NT/RRE-002 (Roraima Energia).
+nome = "c4-eletronicos-legado"
+descricao = "Sala cheia de eletronicos; consumo fantasma alto"
+duracao = "30d"
+passo_s = 10
+[base]
+arquivo = "c4-eletronicos-legado.csv"
+passo_s = 10
+[casa]
+p_max_w = 5080
+[[grupo]]
+nome = "geladeira"
+perfil = "constante"
+w = 55.6
+critica = true
+[[grupo]]
+nome = "roteador"
+perfil = "constante"
+w = 10
+critica = true
+[[grupo]]
+nome = "tv"
+perfil = "janelas"
+uso_w = 80
+standby_w = 6.4
+janelas = ["18:00-23:00"]
+peso = 10
+[[grupo]]
+nome = "decodificador"
+perfil = "janelas"
+uso_w = 11
+standby_w = 10.2
+limiar_uso_w = 8
+janelas = ["18:00-23:00"]
+peso = 10
+[[grupo]]
+nome = "console"
+perfil = "janelas"
+uso_w = 150
+standby_w = 2
+janelas = ["19:00-22:00"]
+peso = 10
+[[grupo]]
+nome = "soundbar"
+perfil = "janelas"
+uso_w = 30
+standby_w = 2.8
+limiar_uso_w = 10
+janelas = ["18:00-23:00"]
+peso = 10
+[[grupo]]
+nome = "home-theater"
+perfil = "janelas"
+uso_w = 60
+standby_w = 2.8
+janelas = ["19:00-22:00"]
+peso = 10
+[[grupo]]
+nome = "computador"
+perfil = "janelas"
+uso_w = 200
+standby_w = 5
+janelas = ["19:00-20:00"]
+peso = 10
+[[grupo]]
+nome = "microondas"
+perfil = "janelas"
+uso_w = 1400
+standby_w = 2.8
+janelas = ["07:00-07:05", "19:00-19:05"]
+peso = 10
+[[grupo]]
+nome = "carregador-celular"
+quantidade = 2
+defasagem_min = 30
+perfil = "janelas"
+uso_w = 18
+standby_w = 0.1
+janelas = ["23:30-00:30"]
+peso = 10

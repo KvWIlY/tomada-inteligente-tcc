@@ -1,0 +1,39 @@
+# Experimento de convergencia (revisao do orientador, 3.2): tres aparelhos IDENTICOS
+# (mesma potencia, mesmo W_i) disputando o teto. Otimo degenerado: qualquer um dos tres
+# pode sair. Confere se as tomadas concordam (sem dois cortes, sem oscilacao).
+nome = "c7-identicos"
+descricao = "Tres aquecedores identicos de 1.000 W num circuito de 20 A"
+duracao = "7d"
+passo_s = 10
+[base]
+arquivo = "c7-identicos.csv"
+passo_s = 10
+[casa]
+p_max_w = 2540
+decisao = "milp"
+[[grupo]]
+nome = "geladeira"
+perfil = "constante"
+w = 55.6
+critica = true
+[[grupo]]
+nome = "aquecedor-a"
+perfil = "janelas"
+uso_w = 1000
+standby_w = 0.5
+janelas = ["07:00-07:30", "18:00-19:00"]
+peso = 10
+[[grupo]]
+nome = "aquecedor-b"
+perfil = "janelas"
+uso_w = 1000
+standby_w = 0.5
+janelas = ["07:00-07:30", "18:00-19:00"]
+peso = 10
+[[grupo]]
+nome = "aquecedor-c"
+perfil = "janelas"
+uso_w = 1000
+standby_w = 0.5
+janelas = ["18:00-19:00", "21:00-21:20"]
+peso = 10

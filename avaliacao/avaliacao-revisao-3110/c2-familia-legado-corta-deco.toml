@@ -1,0 +1,75 @@
+# Cenario 2: familia de 4 (2 adultos, 2 criancas). Uso de manha e a noite, casa nunca vazia a noite.
+# Disjuntor 70 A x 127 V = 8890 W: faixa M3 (carga instalada 5.7 kW), Tabela 07 da NT/RRE-002 (Roraima Energia).
+nome = "c2-familia-legado-corta-deco"
+descricao = "Familia de 4 pessoas; uso espalhado de manha e a noite"
+duracao = "30d"
+passo_s = 10
+[base]
+arquivo = "c2-familia-legado-corta-deco.csv"
+passo_s = 10
+[casa]
+p_max_w = 8890
+[[grupo]]
+nome = "geladeira"
+perfil = "constante"
+w = 55.6
+critica = true
+[[grupo]]
+nome = "roteador"
+perfil = "constante"
+w = 10
+critica = true
+[[grupo]]
+nome = "tv-sala"
+perfil = "janelas"
+uso_w = 67
+standby_w = 6.4
+janelas = ["18:00-23:00"]
+peso = 10
+[[grupo]]
+nome = "decodificador"
+perfil = "janelas"
+uso_w = 11
+standby_w = 10.2
+limiar_uso_w = 10.6
+janelas = ["18:00-23:00"]
+peso = 10
+[[grupo]]
+nome = "tv-quarto"
+quantidade = 2
+defasagem_min = 30
+perfil = "janelas"
+uso_w = 29
+standby_w = 6.4
+janelas = ["20:00-22:00"]
+peso = 10
+[[grupo]]
+nome = "microondas"
+perfil = "janelas"
+uso_w = 1400
+standby_w = 2.8
+janelas = ["12:00-12:05", "19:00-19:05"]
+peso = 10
+[[grupo]]
+nome = "cafeteira"
+perfil = "janelas"
+uso_w = 600
+standby_w = 0.5
+janelas = ["06:30-06:40"]
+peso = 10
+[[grupo]]
+nome = "carregador-celular"
+quantidade = 4
+defasagem_min = 20
+perfil = "janelas"
+uso_w = 18
+standby_w = 0.1
+janelas = ["22:00-23:00"]
+peso = 10
+[[grupo]]
+nome = "notebook"
+perfil = "janelas"
+uso_w = 45
+standby_w = 4.5
+janelas = ["19:00-22:00"]
+peso = 10

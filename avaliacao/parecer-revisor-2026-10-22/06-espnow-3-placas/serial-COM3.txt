@@ -1,0 +1,268 @@
+﻿
+21|ets Jul 29 2019 12:21:46
+21|
+21|rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+21|configsip: 0, SPIWP:0xee
+21|clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+21|mode:DIO, clock div:2
+21|load:0x3fff0030,len:6384
+21|load:0x40078000,len:15916
+21|load:0x40080400,len:3920
+21|entry 0x40080644
+21|I (27) boot: ESP-IDF v5.5.1-838-gd66ebb86d2e 2nd stage bootloader
+289|I (27) boot: compile time Nov 26 2025 10:51:37
+289|I (28) boot: Multicore bootloader
+289|I (30) boot: chip revision: v3.1
+289|I (33) boot.esp32: SPI Speed      : 40MHz
+289|I (37) boot.esp32: SPI Mode       : DIO
+289|I (40) boot.esp32: SPI Flash Size : 4MB
+289|I (44) boot: Enabling RNG early entropy source...
+289|I (48) boot: Partition Table:
+289|I (51) boot: ## Label            Usage          Type ST Offset   Length
+289|I (57) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+289|I (64) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+289|I (70) boot:  2 factory          factory app      00 00 00010000 00350000
+289|I (77) boot:  3 storage          Unknown data     01 83 00360000 000a0000
+289|I (83) boot: End of partition table
+289|I (87) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=413b0h (267184) map
+289|I (185) esp_image: segment 1: paddr=000513d8 vaddr=3ffb0000 size=04124h ( 16676) load
+289|I (192) esp_image: segment 2: paddr=00055504 vaddr=40080000 size=0ab14h ( 43796) load
+289|I (209) esp_image: segment 3: paddr=00060020 vaddr=400d0020 size=fca70h (1034864) map
+711|I (563) esp_image: segment 4: paddr=0015ca98 vaddr=4008ab14 size=0a564h ( 42340) load
+711|I (590) boot: Loaded app from partition at offset 0x10000
+711|I (590) boot: Disabling RNG early entropy source...
+711|[0;32mI (600) cpu_start: Multicore app[0m
+711|[0;32mI (609) cpu_start: Pro cpu start user code[0m
+711|[0;32mI (609) cpu_start: cpu freq: 160000000 Hz[0m
+711|[0;32mI (609) cpu_start: Application information:[0m
+711|[0;32mI (612) cpu_start: Project name:     libespidf[0m
+711|[0;32mI (617) cpu_start: App version:      76c8a05-dirty[0m
+711|[0;32mI (622) cpu_start: Compile time:     Aug  5 2026 00:57:47[0m
+711|[0;32mI (628) cpu_start: ELF file SHA256:  000000000...[0m
+711|[0;32mI (634) cpu_start: ESP-IDF:          v5.2.3[0m
+711|[0;32mI (639) cpu_start: Min chip rev:     v0.0[0m
+711|[0;32mI (643) cpu_start: Max chip rev:     v3.99 [0m
+711|[0;32mI (648) cpu_start: Chip rev:         v3.1[0m
+711|[0;32mI (653) heap_init: Initializing. RAM available for dynamic allocation:[0m
+711|[0;32mI (660) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+711|[0;32mI (666) heap_init: At 3FFB82E0 len 00027D20 (159 KiB): DRAM[0m
+711|[0;32mI (672) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+711|[0;32mI (679) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+711|[0;32mI (685) heap_init: At 40095078 len 0000AF88 (43 KiB): IRAM[0m
+711|[0;32mI (693) spi_flash: detected chip: generic[0m
+711|[0;32mI (696) spi_flash: flash io: dio[0m
+711|[0;33mW (700) i2c: This driver is an old driver, please migrate your application code to adapt `driver/i2c_master.h`[0m
+711|[0;32mI (711) main_task: Started on CPU0[0m
+929|[0;32mI (715) main_task: Calling app_main()[0m
+929|I (721) wifi:wifi driver task: 3ffc9380, prio:23, stack:6656, core=0
+929|I (726) wifi:wifi firmware version: 82f54d2
+929|I (728) wifi:wifi certification version: v7.0
+929|I (732) wifi:config NVS flash: disabled
+929|I (736) wifi:config nano formating: disabled
+929|I (740) wifi:Init data frame dynamic rx buffer num: 32
+929|I (745) wifi:Init static rx mgmt buffer num: 5
+929|I (749) wifi:Init management short buffer num: 32
+929|I (753) wifi:Init dynamic tx buffer num: 32
+929|I (758) wifi:Init static rx buffer size: 1600
+929|I (762) wifi:Init static rx buffer num: 10
+929|I (765) wifi:Init dynamic rx buffer num: 32
+929|[0;32mI (770) wifi_init: rx ba win: 6[0m
+929|[0;32mI (773) wifi_init: tcpip mbox: 32[0m
+929|[0;32mI (777) wifi_init: udp mbox: 6[0m
+929|[0;32mI (781) wifi_init: tcp mbox: 6[0m
+929|[0;32mI (784) wifi_init: tcp tx win: 5760[0m
+929|[0;32mI (789) wifi_init: tcp rx win: 5760[0m
+929|[0;32mI (793) wifi_init: tcp mss: 1440[0m
+929|[0;32mI (797) wifi_init: WiFi IRAM OP enabled[0m
+929|[0;32mI (801) wifi_init: WiFi RX IRAM OP enabled[0m
+929|W (811) wifi:Password length is zero, but authmode threshold is 3, making it impossible to connect to an AP with authmode OPEN
+929|[0;32mI (818) phy_init: phy_version 4840,a40f0ac,Aug 16 2024,16:48:06[0m
+929|[0;31mE (824) phy_init: esp_phy_load_cal_data_from_nvs: NVS has not been initialized. Call nvs_flash_init before starting WiFi/BT.[0m
+929|[0;33mW (836) phy_init: failed to load RF calibration data (0x1101), falling back to full calibration[0m
+929|[0;33mW (923) phy_init: saving new calibration data because of checksum failure, mode(2)[0m
+929|I (926) wifi:mode : sta (e8:6b:ea:d0:ad:c0)
+929|I (927) wifi:enable tsf
+929|I (932) wifi:Set ps type: 0, coexist: 0
+929|
+1162|[0;32mI (934) esp_idf_svc::espnow: Initializing ESP NOW[0m
+1162|I (937) ESPNOW: espnow [version: 1.0] init
+1162|I,ferro,e8:6b:ea:d0:ad:c0,inicio
+10990|L,ferro,10,0,0,0,STD,0,0,2,0,140,1
+21302|L,ferro,20,1,1000,1000,ON,1,0,2,0,204,1
+31399|L,ferro,30,2,1000,1000,ON,1,0,2,0,201,1
+41668|L,ferro,40,3,1000,1000,ON,1,0,2,0,201,1
+51795|L,ferro,50,4,1000,1000,ON,1,0,2,0,201,1
+62098|L,ferro,61,5,1000,1000,ON,1,0,2,0,202,1
+72331|L,ferro,71,6,1000,1000,ON,1,0,2,0,234,1
+82591|L,ferro,81,7,1000,1000,ON,1,0,2,0,234,1
+92864|L,ferro,91,8,1000,1000,ON,1,0,2,0,234,1
+103099|L,ferro,102,9,1000,1000,ON,1,0,2,0,235,1
+113403|L,ferro,112,10,1000,1000,ON,1,0,2,0,234,1
+123489|L,ferro,122,11,1000,1000,ON,1,0,2,0,234,1
+134868|L,ferro,132,12,1000,1000,ON,1,0,2,0,1237,1
+145960|L,ferro,144,13,1000,1000,ON,1,0,2,0,1237,1
+157282|L,ferro,155,14,1000,1000,ON,1,0,2,0,1244,1
+167527|L,ferro,166,15,1000,1000,ON,1,0,2,0,219,1
+177791|L,ferro,176,16,1000,1000,ON,1,0,2,0,219,1
+188048|L,ferro,186,17,1000,1000,ON,1,0,2,0,219,1
+198273|L,ferro,197,18,1000,1000,ON,1,0,2,0,219,1
+208375|L,ferro,207,19,0,0,STD,0,0,2,0,192,1
+218605|L,ferro,217,20,0,0,STD,0,0,2,0,190,1
+228791|L,ferro,227,21,0,0,STD,0,0,2,0,190,1
+239091|L,ferro,238,22,0,0,STD,0,0,2,0,191,1
+249300|L,ferro,248,23,0,0,STD,0,0,2,0,190,1
+259371|L,ferro,258,24,0,0,STD,0,0,2,0,139,1
+269546|L,ferro,268,25,0,0,STD,0,0,2,0,139,1
+279608|L,ferro,278,26,0,0,STD,0,0,2,0,139,1
+289832|L,ferro,288,27,0,0,STD,0,0,2,0,139,1
+299896|L,ferro,299,28,0,0,STD,0,0,2,0,139,1
+310130|L,ferro,309,29,0,0,STD,0,0,2,0,139,1
+320159|L,ferro,319,30,0,0,STD,0,0,2,0,139,1
+330406|L,ferro,329,31,0,0,STD,0,0,2,0,139,1
+340479|L,ferro,339,32,0,0,STD,0,0,2,0,139,1
+350695|L,ferro,349,33,0,0,STD,0,0,2,0,139,1
+360815|L,ferro,359,34,0,0,STD,0,0,2,0,139,1
+370933|L,ferro,370,35,0,0,STD,0,0,2,0,140,1
+381231|L,ferro,380,36,1000,1000,ON,1,0,2,0,192,1
+391319|L,ferro,390,37,1000,1000,ON,1,0,2,0,190,1
+401586|L,ferro,400,38,1000,1000,ON,1,0,2,0,190,1
+411844|L,ferro,410,39,1000,1000,ON,1,0,2,0,190,1
+421952|L,ferro,421,40,1000,1000,ON,1,0,2,0,191,1
+432235|L,ferro,431,41,1000,1000,ON,1,0,2,0,219,1
+442367|L,ferro,441,42,1000,1000,ON,1,0,2,0,219,1
+452624|L,ferro,451,43,1000,1000,ON,1,0,2,0,219,1
+462928|L,ferro,461,44,1000,1000,ON,1,0,2,0,219,1
+473161|L,ferro,472,45,1000,1000,ON,1,0,2,0,219,1
+483299|L,ferro,482,46,1000,1000,ON,1,0,2,0,218,1
+494505|L,ferro,492,47,1000,1000,ON,1,0,2,0,1237,1
+505758|L,ferro,503,48,1000,1000,ON,1,0,2,0,1237,1
+517050|L,ferro,515,49,1000,1000,ON,1,0,2,0,1245,1
+527355|L,ferro,526,50,1000,1000,ON,1,0,2,0,219,1
+537603|L,ferro,536,51,1000,1000,ON,1,0,2,0,219,1
+547748|L,ferro,546,52,1000,1000,ON,1,0,2,0,219,1
+558089|L,ferro,557,53,1000,1000,ON,1,0,2,0,219,1
+568222|L,ferro,567,54,0,0,STD,0,0,2,0,192,1
+578361|L,ferro,577,55,0,0,STD,0,0,2,0,190,1
+588680|L,ferro,587,56,0,0,STD,0,0,2,0,190,1
+598735|L,ferro,597,57,0,0,STD,0,0,2,0,190,1
+608943|L,ferro,608,58,0,0,STD,0,0,2,0,191,1
+619191|L,ferro,618,59,0,0,STD,0,0,2,0,139,1
+629372|L,ferro,628,60,0,0,STD,0,0,2,0,139,1
+639408|L,ferro,638,61,0,0,STD,0,0,2,0,139,1
+649630|L,ferro,648,62,0,0,STD,0,0,2,0,139,1
+659832|L,ferro,658,63,0,0,STD,0,0,2,0,139,1
+669853|L,ferro,668,64,0,0,STD,0,0,2,0,139,1
+679981|L,ferro,679,65,0,0,STD,0,0,2,0,139,1
+690245|L,ferro,689,66,0,0,STD,0,0,2,0,139,1
+700313|L,ferro,699,67,0,0,STD,0,0,2,0,139,1
+710429|L,ferro,709,68,0,0,STD,0,0,2,0,139,1
+720556|L,ferro,719,69,0,0,STD,0,0,2,0,139,1
+730815|L,ferro,729,70,0,0,STD,0,0,2,0,139,1
+740866|L,ferro,739,71,0,0,STD,0,0,2,0,139,1
+751044|L,ferro,750,72,1000,1000,ON,1,0,2,0,192,1
+761347|L,ferro,760,73,1000,1000,ON,1,0,2,0,190,1
+771415|L,ferro,770,74,1000,1000,ON,1,0,2,0,190,1
+781643|L,ferro,780,75,1000,1000,ON,1,0,2,0,190,1
+791934|L,ferro,790,76,1000,1000,ON,1,0,2,0,219,1
+802148|L,ferro,801,77,1000,1000,ON,1,0,2,0,219,1
+812365|L,ferro,811,78,1000,1000,ON,1,0,2,0,219,1
+822667|L,ferro,821,79,1000,1000,ON,1,0,2,0,219,1
+832943|L,ferro,831,80,1000,1000,ON,1,0,2,0,219,1
+843146|L,ferro,842,81,1000,1000,ON,1,0,2,0,219,1
+854264|L,ferro,852,82,1000,1000,ON,1,0,2,0,1237,1
+865501|L,ferro,863,83,1000,1000,ON,1,0,2,0,1237,1
+876838|L,ferro,874,84,1000,1000,ON,1,0,2,0,1244,1
+887090|L,ferro,886,85,1000,1000,ON,1,0,2,0,219,1
+897328|L,ferro,896,86,1000,1000,ON,1,0,2,0,219,1
+907446|L,ferro,906,87,1000,1000,ON,1,0,2,0,219,1
+917695|L,ferro,916,88,1000,1000,ON,1,0,2,0,219,1
+927934|L,ferro,926,89,0,0,STD,0,0,2,0,192,1
+938059|L,ferro,937,90,0,0,STD,0,0,2,0,190,1
+948242|L,ferro,947,91,0,0,STD,0,0,2,0,190,1
+958472|L,ferro,957,92,0,0,STD,0,0,2,0,190,1
+968719|L,ferro,967,93,0,0,STD,0,0,2,0,190,1
+978869|L,ferro,977,94,0,0,STD,0,0,2,0,139,1
+988982|L,ferro,988,95,0,0,STD,0,0,2,0,139,1
+999225|L,ferro,998,96,0,0,STD,0,0,2,0,139,1
+1009361|L,ferro,1008,97,0,0,STD,0,0,2,0,139,1
+1019443|L,ferro,1018,98,0,0,STD,0,0,2,0,139,1
+1029704|L,ferro,1028,99,0,0,STD,0,0,2,0,139,1
+1039759|L,ferro,1038,100,0,0,STD,0,0,2,0,139,1
+1049999|L,ferro,1048,101,0,0,STD,0,0,2,0,139,1
+1060000|L,ferro,1059,102,0,0,STD,0,0,2,0,139,1
+1070262|L,ferro,1069,103,0,0,STD,0,0,2,0,139,1
+1080343|L,ferro,1079,104,0,0,STD,0,0,2,0,139,1
+1090547|L,ferro,1089,105,0,0,STD,0,0,2,0,139,1
+1100679|L,ferro,1099,106,0,0,STD,0,0,2,0,139,1
+1110750|L,ferro,1109,107,1000,1000,ON,1,0,2,0,192,1
+1121081|L,ferro,1120,108,1000,1000,ON,1,0,2,0,191,1
+1131198|L,ferro,1130,109,1000,1000,ON,1,0,2,0,190,1
+1141559|L,ferro,1140,110,1000,1000,ON,1,0,2,0,190,1
+1151737|L,ferro,1150,111,1000,1000,ON,1,0,2,0,219,1
+1161890|L,ferro,1160,112,1000,1000,ON,1,0,2,0,219,1
+1172078|L,ferro,1171,113,1000,1000,ON,1,0,2,0,219,1
+1182384|L,ferro,1181,114,1000,1000,ON,1,0,2,0,219,1
+1192581|L,ferro,1191,115,1000,1000,ON,1,0,2,0,219,1
+1202885|L,ferro,1201,116,1000,1000,ON,1,0,2,0,218,0
+1214108|L,ferro,1212,117,1000,1000,ON,1,0,2,0,1237,0
+1225224|L,ferro,1223,118,1000,1000,ON,1,0,2,0,1244,0
+1235466|L,ferro,1234,119,1000,1000,ON,1,0,2,0,226,0
+1245811|L,ferro,1244,120,1000,1000,ON,1,0,2,0,226,0
+1255905|L,ferro,1254,121,1000,1000,ON,1,0,2,0,226,0
+1266152|L,ferro,1265,122,1000,1000,ON,1,0,2,0,219,0
+1276392|L,ferro,1275,123,1000,1000,ON,1,0,2,0,219,0
+1286712|L,ferro,1285,124,0,0,STD,0,0,2,0,192,0
+1296780|L,ferro,1295,125,0,0,STD,0,0,2,0,190,1
+1307079|L,ferro,1306,126,0,0,STD,0,0,2,0,191,1
+1317230|L,ferro,1316,127,0,0,STD,0,0,2,0,190,1
+1327473|L,ferro,1326,128,0,0,STD,0,0,2,0,139,1
+1337488|L,ferro,1336,129,0,0,STD,0,0,2,0,139,1
+1347578|L,ferro,1346,130,0,0,STD,0,0,2,0,139,1
+1357805|L,ferro,1356,131,0,0,STD,0,0,2,0,139,1
+1367923|L,ferro,1367,132,0,0,STD,0,0,2,0,139,1
+1378052|L,ferro,1377,133,0,0,STD,0,0,2,0,139,1
+1388331|L,ferro,1387,134,0,0,STD,0,0,2,0,139,1
+1398316|L,ferro,1397,135,0,0,STD,0,0,2,0,139,1
+1408525|L,ferro,1407,136,0,0,STD,0,0,2,0,139,1
+1418754|L,ferro,1417,137,0,0,STD,0,0,2,0,139,1
+1428927|L,ferro,1427,138,0,0,STD,0,0,2,0,139,1
+1438905|L,ferro,1438,139,0,0,STD,0,0,2,0,140,1
+1449128|L,ferro,1448,140,0,0,STD,0,0,2,0,139,1
+1459366|L,ferro,1458,141,0,0,STD,0,0,2,0,139,1
+1469441|L,ferro,1468,142,1000,1000,ON,1,0,2,0,192,1
+1479663|L,ferro,1478,143,1000,1000,ON,1,0,2,0,190,1
+1489911|L,ferro,1488,144,1000,1000,ON,1,0,2,0,190,1
+1500136|L,ferro,1499,145,1000,1000,ON,1,0,2,0,190,1
+1510415|L,ferro,1509,146,1000,1000,ON,1,0,2,0,219,1
+1520633|L,ferro,1519,147,1000,1000,ON,1,0,2,0,219,1
+1530839|L,ferro,1529,148,1000,1000,ON,1,0,2,0,219,1
+1541079|L,ferro,1540,149,1000,1000,ON,1,0,2,0,219,1
+1551136|L,ferro,1550,150,1000,1000,ON,1,0,2,0,219,1
+1561418|L,ferro,1560,151,1000,1000,ON,1,0,2,0,219,1
+1571645|L,ferro,1570,152,1000,1000,ON,1,0,2,0,218,1
+1582989|L,ferro,1580,153,1000,1000,ON,1,0,2,0,1244,1
+1594146|L,ferro,1592,154,1000,1000,ON,1,0,2,0,1251,1
+1604430|L,ferro,1603,155,1000,1000,ON,1,0,2,0,219,1
+1614659|L,ferro,1613,156,1000,1000,ON,1,0,2,0,219,1
+1624962|L,ferro,1623,157,1000,1000,ON,1,0,2,0,219,1
+1635191|L,ferro,1634,158,1000,1000,ON,1,0,2,0,219,1
+1645222|L,ferro,1644,159,0,0,STD,0,0,2,0,192,1
+1655509|L,ferro,1654,160,0,0,STD,0,0,2,0,190,1
+1665670|L,ferro,1664,161,0,0,STD,0,0,2,0,190,1
+1675859|L,ferro,1674,162,0,0,STD,0,0,2,0,191,1
+1686056|L,ferro,1685,163,0,0,STD,0,0,2,0,139,1
+1696109|L,ferro,1695,164,0,0,STD,0,0,2,0,139,1
+1706362|L,ferro,1705,165,0,0,STD,0,0,2,0,139,1
+1716424|L,ferro,1715,166,0,0,STD,0,0,2,0,139,1
+1726675|L,ferro,1725,167,0,0,STD,0,0,2,0,139,1
+1736894|L,ferro,1735,168,0,0,STD,0,0,2,0,139,1
+1746974|L,ferro,1746,169,0,0,STD,0,0,2,0,139,1
+1757026|L,ferro,1756,170,0,0,STD,0,0,2,0,139,1
+1767202|L,ferro,1766,171,0,0,STD,0,0,2,0,139,1
+1777462|L,ferro,1776,172,0,0,STD,0,0,2,0,139,1
+1787514|L,ferro,1786,173,0,0,STD,0,0,2,0,139,1
+1797765|L,ferro,1796,174,0,0,STD,0,0,2,0,139,1
+1807737|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1807737|R,ferro,a0:a3:b3:ab:24:ac,recebidos,175,perdidos,0
+1807737|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1807737|F,ferro

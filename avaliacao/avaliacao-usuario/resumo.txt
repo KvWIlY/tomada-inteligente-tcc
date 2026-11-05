@@ -1,0 +1,21 @@
+caso | morador | espera cortada kWh | uso negado kWh (min) | Usar Agora/dia | tomadas que viraram essenciais (dia)
+c1-solteiro | imediato | 3,501 | 0,000 (0) | 5,0 | 0 de 4: -
+c1-solteiro | atraso-30s | 3,501 | 0,719 (75) | 5,0 | 0 de 4: -
+c1-solteiro | atraso-2min | 3,500 | 2,875 (300) | 5,0 | 0 de 4: -
+c1-solteiro | desiste-3 | 3,501 | 0,000 (0) | 5,0 | 0 de 4: -
+c1-solteiro | desiste-1 | 2,968 | 0,000 (0) | 3,1 | 1 de 4: microondas (1)
+c2-familia | imediato | 6,327 | 0,000 (0) | 12,0 | 0 de 11: -
+c2-familia | atraso-30s | 6,327 | 0,913 (180) | 12,0 | 0 de 11: -
+c2-familia | atraso-2min | 6,325 | 3,653 (720) | 12,0 | 0 de 11: -
+c2-familia | desiste-3 | 6,327 | 0,000 (0) | 12,0 | 0 de 11: -
+c2-familia | desiste-1 | 5,793 | 0,000 (0) | 10,1 | 1 de 11: microondas (1)
+c3-home-office | imediato | 4,878 | 0,000 (0) | 13,1 | 0 de 8: -
+c3-home-office | atraso-30s | 4,877 | 0,971 (195) | 13,0 | 0 de 8: -
+c3-home-office | atraso-2min | 4,872 | 3,882 (780) | 13,0 | 0 de 8: -
+c3-home-office | desiste-3 | 4,878 | 0,000 (0) | 13,1 | 0 de 8: -
+c3-home-office | desiste-1 | 0,391 | 0,000 (0) | 2,4 | 6 de 8: computador (1), monitor (1), monitor-2 (1), impressora (1), microondas (1), carregador-celular-2 (1)
+c4-eletronicos | imediato | 9,874 | 0,000 (0) | 10,1 | 0 de 9: -
+c4-eletronicos | atraso-30s | 9,874 | 0,842 (150) | 10,0 | 0 de 9: -
+c4-eletronicos | atraso-2min | 9,873 | 3,366 (598) | 10,0 | 0 de 9: -
+c4-eletronicos | desiste-3 | 9,874 | 0,000 (0) | 10,1 | 0 de 9: -
+c4-eletronicos | desiste-1 | 9,274 | 0,000 (0) | 7,2 | 2 de 9: microondas (1), carregador-celular (1)

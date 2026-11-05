@@ -1,0 +1,12 @@
+c1-solteiro-orig
+c1-solteiro-legado
+c1-solteiro-legado-corta-deco
+c2-familia-orig
+c2-familia-legado
+c2-familia-legado-corta-deco
+c3-home-office-orig
+c3-home-office-legado
+c3-home-office-legado-corta-deco
+c4-eletronicos-orig
+c4-eletronicos-legado
+c4-eletronicos-legado-corta-deco

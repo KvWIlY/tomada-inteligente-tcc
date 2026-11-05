@@ -1,0 +1,392 @@
+235|ets Jul 29 2019 12:21:46
+235|
+235|rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+235|configsip: 0, SPIWP:0xee
+235|clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+235|mode:DIO, clock div:2
+235|load:0x3fff0030,len:6384
+235|load:0x40078000,len:15916
+235|load:0x40080400,len:3920
+235|entry 0x40080644
+235|I (27) boot: ESP-IDF v5.5.1-838-gd66ebb86d2e 2nd stage bootloader
+235|I (27) boot: compile time Nov 26 2025 10:51:37
+235|I (28) boot: Multicore bootloader
+235|I (30) boot: chip revision: v3.1
+235|I (33) boot.esp32: SPI Speed      : 40MHz
+235|I (37) boot.esp32: SPI Mode       : DIO
+235|I (40) boot.esp32: SPI Flash Size : 4MB
+235|I (44) boot: Enabling RNG early entropy source...
+235|I (48) boot: Partition Table:
+235|I (51) boot: ## Label            Usage          Type ST Offset   Length
+235|I (57) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+235|I (64) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+235|I (70) boot:  2 factory          factory app      00 00 00010000 00350000
+235|I (77) boot:  3 storage          Unknown data     01 83 00360000 000a0000
+235|I (83) boot: End of partition table
+235|I (87) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=3bb10h (244496) map
+235|I (178) esp_image: segment 1: paddr=0004bb38 vaddr=3ffb0000 size=04114h ( 16660) load
+235|I (184) esp_image: segment 2: paddr=0004fc54 vaddr=40080000 size=003c4h (   964) load
+235|I (185) esp_image: segment 3: paddr=00050020 vaddr=400d0020 size=e6ab0h (944816) map
+697|I (512) esp_image: segment 4: paddr=00136ad8 vaddr=400803c4 size=14dd0h ( 85456) load
+697|I (556) boot: Loaded app from partition at offset 0x10000
+697|I (556) boot: Disabling RNG early entropy source...
+697|[0;32mI (565) cpu_start: Multicore app[0m
+697|[0;32mI (574) cpu_start: Pro cpu start user code[0m
+697|[0;32mI (574) cpu_start: cpu freq: 160000000 Hz[0m
+697|[0;32mI (575) cpu_start: Application information:[0m
+697|[0;32mI (578) cpu_start: Project name:     libespidf[0m
+697|[0;32mI (583) cpu_start: App version:      76c8a05-dirty[0m
+697|[0;32mI (588) cpu_start: Compile time:     Aug  5 2026 00:57:47[0m
+697|[0;32mI (594) cpu_start: ELF file SHA256:  000000000...[0m
+697|[0;32mI (600) cpu_start: ESP-IDF:          v5.2.3[0m
+697|[0;32mI (604) cpu_start: Min chip rev:     v0.0[0m
+697|[0;32mI (609) cpu_start: Max chip rev:     v3.99 [0m
+697|[0;32mI (614) cpu_start: Chip rev:         v3.1[0m
+697|[0;32mI (619) heap_init: Initializing. RAM available for dynamic allocation:[0m
+697|[0;32mI (626) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+697|[0;32mI (632) heap_init: At 3FFB82B0 len 00027D50 (159 KiB): DRAM[0m
+697|[0;32mI (638) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+697|[0;32mI (645) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+906|[0;32mI (651) heap_init: At 40095194 len 0000AE6C (43 KiB): IRAM[0m
+906|[0;32mI (659) spi_flash: detected chip: generic[0m
+906|[0;32mI (662) spi_flash: flash io: dio[0m
+906|[0;33mW (666) i2c: This driver is an old driver, please migrate your application code to adapt `driver/i2c_master.h`[0m
+906|[0;32mI (677) main_task: Started on CPU0[0m
+906|[0;32mI (681) main_task: Calling app_main()[0m
+906|=== bancada ampla | placa 08:d1:f9:27:c0:40 | CPU 160 MHz | heap livre antes 235736 B | pilha da thread 65536 B
+906|=== fase radio=false rodada=0
+8600|sem-radio r0 folgado    n= 2 | 1000 decisoes | mediana     4962 us, IQR     4938-4992     us, p99     5045 us, max     7862 us | estado OFF 8fb75941 | pilha usada ate aqui  6872 B | heap livre minimo 159576 B
+16485|sem-radio r0 folgado    n= 4 | 1000 decisoes | mediana     4911 us, IQR     4881-4922     us, p99     5279 us, max     7679 us | estado OFF 8fb75941 | pilha usada ate aqui  6940 B | heap livre minimo 159056 B
+25261|sem-radio r0 folgado    n= 6 | 1000 decisoes | mediana     5549 us, IQR     5531-5711     us, p99     7258 us, max     8454 us | estado OFF 8fb75941 | pilha usada ate aqui  6940 B | heap livre minimo 158604 B
+34015|sem-radio r0 folgado    n= 8 | 1000 decisoes | mediana     5613 us, IQR     5570-5641     us, p99     5993 us, max     8311 us | estado OFF 8fb75941 | pilha usada ate aqui  6940 B | heap livre minimo 158164 B
+43385|sem-radio r0 folgado    n=10 | 1000 decisoes | mediana     6214 us, IQR     6188-6249     us, p99     6418 us, max     9034 us | estado OFF 8fb75941 | pilha usada ate aqui  6956 B | heap livre minimo 157664 B
+53384|sem-radio r0 folgado    n=13 | 1000 decisoes | mediana     6675 us, IQR     6625-6714     us, p99     6786 us, max     9374 us | estado OFF 8fb75941 | pilha usada ate aqui  6956 B | heap livre minimo 157124 B
+63397|sem-radio r0 folgado    n=16 | 1000 decisoes | mediana     6716 us, IQR     6671-6744     us, p99     6830 us, max     9435 us | estado OFF 8fb75941 | pilha usada ate aqui  6956 B | heap livre minimo 156536 B
+73815|sem-radio r0 folgado    n=17 | 1000 decisoes | mediana     7204 us, IQR     7164-7248     us, p99     7338 us, max     9934 us | estado OFF 8fb75941 | pilha usada ate aqui  6956 B | heap livre minimo 156160 B
+84657|sem-radio r0 folgado    n=18 | 1000 decisoes | mediana     7319 us, IQR     7275-7359     us, p99     7504 us, max    10092 us | estado OFF 8fb75941 | pilha usada ate aqui  6956 B | heap livre minimo 155760 B
+95287|sem-radio r0 folgado    n=20 | 1000 decisoes | mediana     7239 us, IQR     7194-7284     us, p99     7435 us, max    10064 us | estado OFF 8fb75941 | pilha usada ate aqui  6956 B | heap livre minimo 155184 B
+108636|sem-radio r0 folgado    n=30 | 1000 decisoes | mediana     9597 us, IQR     9538-9647     us, p99     9770 us, max    12433 us | estado OFF 8fb75941 | pilha usada ate aqui 12828 B | heap livre minimo 153780 B
+118631|sem-radio r0 teto-4     n= 2 | 1000 decisoes | mediana     6907 us, IQR     6902-6913     us, p99     6922 us, max     9533 us | estado ON  88b7a5c5 | pilha usada ate aqui 12828 B | heap livre minimo 153780 B
+128849|sem-radio r0 teto-4     n= 4 | 1000 decisoes | mediana     7087 us, IQR     7080-7093     us, p99     7106 us, max     9780 us | estado ON  88b7a5c5 | pilha usada ate aqui 12828 B | heap livre minimo 153780 B
+140317|sem-radio r0 teto-4     n= 6 | 1000 decisoes | mediana     8075 us, IQR     7975-8145     us, p99    11125 us, max    11196 us | estado ON  b26ff6d7 | pilha usada ate aqui 12828 B | heap livre minimo 153780 B
+152190|sem-radio r0 teto-4     n= 8 | 1000 decisoes | mediana     8019 us, IQR     7915-8165     us, p99    11075 us, max    11519 us | estado ON  edd0e57f | pilha usada ate aqui 12828 B | heap livre minimo 153780 B
+165528|sem-radio r0 teto-4     n=10 | 1000 decisoes | mediana     9233 us, IQR     8797-11303    us, p99    12310 us, max    12483 us | estado ON  0ca81f3d | pilha usada ate aqui 12828 B | heap livre minimo 153780 B
+179487|sem-radio r0 teto-4     n=13 | 1000 decisoes | mediana     9757 us, IQR     9416-11212    us, p99    13355 us, max    14142 us | estado ON  c53028cf | pilha usada ate aqui 12828 B | heap livre minimo 153780 B
+194080|sem-radio r0 teto-4     n=16 | 1000 decisoes | mediana    10312 us, IQR     9568-12234    us, p99    21405 us, max    29419 us | estado ON  b263fd9d | pilha usada ate aqui 12828 B | heap livre minimo 153340 B
+209733|sem-radio r0 teto-4     n=17 | 1000 decisoes | mediana    11326 us, IQR    10259-13004    us, p99    22492 us, max    30440 us | estado ON  d741b61d | pilha usada ate aqui 12828 B | heap livre minimo 152964 B
+225370|sem-radio r0 teto-4     n=18 | 1000 decisoes | mediana    10991 us, IQR    10319-13052    us, p99    22900 us, max    30542 us | estado ON  62135b15 | pilha usada ate aqui 12828 B | heap livre minimo 152616 B
+241424|sem-radio r0 teto-4     n=20 | 1000 decisoes | mediana    12304 us, IQR    10444-13347    us, p99    24083 us, max    27457 us | estado OFF e8f3575d | pilha usada ate aqui 12828 B | heap livre minimo 152120 B
+299347|sem-radio r0 teto-4     n=30 | 1000 decisoes | mediana    16706 us, IQR    14457-34921    us, p99   704953 us, max   946127 us | estado ON  4844527f | pilha usada ate aqui 13708 B | heap livre minimo 150588 B
+309353|sem-radio r0 teto-todas n= 2 | 1000 decisoes | mediana     6915 us, IQR     6911-6918     us, p99     6925 us, max     9676 us | estado ON  88b7a5c5 | pilha usada ate aqui 13708 B | heap livre minimo 150588 B
+321852|sem-radio r0 teto-todas n= 4 | 1000 decisoes | mediana     9439 us, IQR     7580-9944     us, p99    10464 us, max    10470 us | estado ON  d4da8555 | pilha usada ate aqui 13708 B | heap livre minimo 150588 B
+335590|sem-radio r0 teto-todas n= 6 | 1000 decisoes | mediana    10562 us, IQR    10424-10784    us, p99    11626 us, max    11661 us | estado OFF e6e1eff7 | pilha usada ate aqui 13708 B | heap livre minimo 150588 B
+349745|sem-radio r0 teto-todas n= 8 | 1000 decisoes | mediana    10746 us, IQR    10586-10963    us, p99    11804 us, max    11848 us | estado ON  1653a17d | pilha usada ate aqui 13708 B | heap livre minimo 150588 B
+365157|sem-radio r0 teto-todas n=10 | 1000 decisoes | mediana    11884 us, IQR    11727-12081    us, p99    12922 us, max    12942 us | estado ON  ff98272d | pilha usada ate aqui 13708 B | heap livre minimo 150588 B
+382642|sem-radio r0 teto-todas n=13 | 1000 decisoes | mediana    13872 us, IQR    13689-14093    us, p99    18294 us, max    21272 us | estado ON  cbe0aead | pilha usada ate aqui 13708 B | heap livre minimo 150588 B
+413837|sem-radio r0 teto-todas n=16 | 1000 decisoes | mediana    25834 us, IQR    25241-27333    us, p99    49523 us, max    51814 us | estado ON  de54a68d | pilha usada ate aqui 13708 B | heap livre minimo 150588 B
+449083|sem-radio r0 teto-todas n=17 | 1000 decisoes | mediana    27637 us, IQR    26894-29644    us, p99    54338 us, max    57455 us | estado ON  6cb600af | pilha usada ate aqui 13708 B | heap livre minimo 150184 B
+489708|sem-radio r0 teto-todas n=18 | 1000 decisoes | mediana    29543 us, IQR    28081-51889    us, p99    56966 us, max    58426 us | estado ON  d2180b87 | pilha usada ate aqui 13708 B | heap livre minimo 149820 B
+533448|sem-radio r0 teto-todas n=20 | 1000 decisoes | mediana    31297 us, IQR    29043-54489    us, p99    59543 us, max    63062 us | estado ON  deec262d | pilha usada ate aqui 13708 B | heap livre minimo 149320 B
+1437375|sem-radio r0 teto-todas n=30 | 1000 decisoes | mediana   899149 us, IQR   896347-901805   us, p99   926997 us, max   930143 us | estado ON  49e8290d | pilha usada ate aqui 13708 B | heap livre minimo 147808 B
+1447170|sem-radio r0 pior       n= 2 | 1000 decisoes | mediana     6886 us, IQR     6881-6889     us, p99     6896 us, max     9682 us | estado ON  88b7a5c5 | pilha usada ate aqui 13708 B | heap livre minimo 147808 B
+1457385|sem-radio r0 pior       n= 4 | 1000 decisoes | mediana     7043 us, IQR     7032-7053     us, p99     7085 us, max     9713 us | estado ON  88b7a5c5 | pilha usada ate aqui 13708 B | heap livre minimo 147808 B
+1468847|sem-radio r0 pior       n= 6 | 1000 decisoes | mediana     8209 us, IQR     8192-8226     us, p99     8268 us, max    10900 us | estado ON  88b7a5c5 | pilha usada ate aqui 13708 B | heap livre minimo 147808 B
+1480714|sem-radio r0 pior       n= 8 | 1000 decisoes | mediana     8703 us, IQR     8671-8736     us, p99     8818 us, max    11408 us | estado ON  88b7a5c5 | pilha usada ate aqui 13708 B | heap livre minimo 147808 B
+1495515|sem-radio r0 pior       n=10 | 1000 decisoes | mediana    11535 us, IQR    11407-11666    us, p99    11937 us, max    14085 us | estado ON  88b7a5c5 | pilha usada ate aqui 13708 B | heap livre minimo 147808 B
+1530731|sem-radio r0 pior       n=13 | 1000 decisoes | mediana    31847 us, IQR    31802-31894    us, p99    32021 us, max    34532 us | estado ON  88b7a5c5 | pilha usada ate aqui 13708 B | heap livre minimo 147808 B
+1667219|sem-radio r0 pior       n=16 | 1000 decisoes | mediana   132967 us, IQR   126441-139400   us, p99   149602 us, max   155532 us | estado ON  88b7a5c5 | pilha usada ate aqui 13708 B | heap livre minimo 147564 B
+1993517|sem-radio r0 pior       n=17 | 1000 decisoes | mediana   322835 us, IQR   322618-323093   us, p99   323765 us, max   325310 us | estado ON  88b7a5c5 | pilha usada ate aqui 13708 B | heap livre minimo 146980 B
+2474581|sem-radio r0 pior       n=18 | 1000 decisoes | mediana   477932 us, IQR   455487-500822   us, p99   533907 us, max   552214 us | estado ON  88b7a5c5 | pilha usada ate aqui 13708 B | heap livre minimo 146624 B
+3333665|sem-radio r0 pior       n=20 | 1000 decisoes | mediana   855061 us, IQR   851310-859731   us, p99   869773 us, max   873864 us | estado ON  88b7a5c5 | pilha usada ate aqui 13708 B | heap livre minimo 146152 B
+4134132|sem-radio r0 pior       n=30 | 1000 decisoes | mediana   796205 us, IQR   793252-800113   us, p99   810791 us, max   815562 us | estado ON  88b7a5c5 | pilha usada ate aqui 13708 B | heap livre minimo 144728 B
+4146642|sem-radio r0 mochila    n= 2 | 1000 decisoes | mediana     9286 us, IQR     9170-9499     us, p99    10341 us, max    10371 us | estado OFF 2b440ccf | pilha usada ate aqui 13708 B | heap livre minimo 144728 B
+4159356|sem-radio r0 mochila    n= 4 | 1000 decisoes | mediana     9281 us, IQR     9261-9305     us, p99    10441 us, max    10479 us | estado OFF 71c6b22f | pilha usada ate aqui 13708 B | heap livre minimo 144728 B
+4173297|sem-radio r0 mochila    n= 6 | 1000 decisoes | mediana    10449 us, IQR    10404-10506    us, p99    11632 us, max    11650 us | estado OFF 68d783d7 | pilha usada ate aqui 13708 B | heap livre minimo 144728 B
+4187667|sem-radio r0 mochila    n= 8 | 1000 decisoes | mediana    10786 us, IQR    10662-11012    us, p99    12186 us, max    12291 us | estado OFF 2cea4b55 | pilha usada ate aqui 13708 B | heap livre minimo 144728 B
+4203927|sem-radio r0 mochila    n=10 | 1000 decisoes | mediana    12609 us, IQR    12380-12864    us, p99    14123 us, max    15009 us | estado OFF 61dbee4d | pilha usada ate aqui 13708 B | heap livre minimo 144728 B
+4225797|sem-radio r0 mochila    n=13 | 1000 decisoes | mediana    18144 us, IQR    16751-19378    us, p99    25900 us, max    27393 us | estado OFF da0aeafd | pilha usada ate aqui 13708 B | heap livre minimo 144728 B
+4270830|sem-radio r0 mochila    n=16 | 1000 decisoes | mediana    40549 us, IQR    31750-47865    us, p99    83740 us, max    91737 us | estado OFF f81726b5 | pilha usada ate aqui 13708 B | heap livre minimo 144728 B
+4336275|sem-radio r0 mochila    n=17 | 1000 decisoes | mediana    56801 us, IQR    46447-70338    us, p99   123245 us, max   145017 us | estado OFF 44d0d7cd | pilha usada ate aqui 13708 B | heap livre minimo 144416 B
+4440285|sem-radio r0 mochila    n=18 | 1000 decisoes | mediana    89553 us, IQR    66976-131599   us, p99   240160 us, max   315217 us | estado OFF 81ae0177 | pilha usada ate aqui 13708 B | heap livre minimo 144064 B
+4695768|sem-radio r0 mochila    n=20 | 1000 decisoes | mediana   226020 us, IQR   163252-301684   us, p99   580980 us, max   870736 us | estado OFF 3b6e7bf5 | pilha usada ate aqui 13708 B | heap livre minimo 143472 B
+5562476|sem-radio r0 mochila    n=30 | 1000 decisoes | mediana   862340 us, IQR   848143-875675   us, p99   905013 us, max   926302 us | estado OFF c0296edd | pilha usada ate aqui 13708 B | heap livre minimo 142044 B
+5562476|=== fase radio=false rodada=1
+5570173|sem-radio r1 folgado    n= 2 | 1000 decisoes | mediana     4947 us, IQR     4926-4977     us, p99     5030 us, max     7705 us | estado OFF 8fb75941 | pilha usada ate aqui  6916 B | heap livre minimo 142044 B
+5578086|sem-radio r1 folgado    n= 4 | 1000 decisoes | mediana     4918 us, IQR     4894-4931     us, p99     4976 us, max     7916 us | estado OFF 8fb75941 | pilha usada ate aqui  6916 B | heap livre minimo 142044 B
+5586826|sem-radio r1 folgado    n= 6 | 1000 decisoes | mediana     5551 us, IQR     5529-5714     us, p99     7268 us, max     8368 us | estado OFF 8fb75941 | pilha usada ate aqui  6916 B | heap livre minimo 142044 B
+5595582|sem-radio r1 folgado    n= 8 | 1000 decisoes | mediana     5616 us, IQR     5579-5641     us, p99     6930 us, max     8441 us | estado OFF 8fb75941 | pilha usada ate aqui  6916 B | heap livre minimo 142044 B
+5605178|sem-radio r1 folgado    n=10 | 1000 decisoes | mediana     6220 us, IQR     6191-6254     us, p99     6395 us, max     8938 us | estado OFF 8fb75941 | pilha usada ate aqui  6916 B | heap livre minimo 142044 B
+5614988|sem-radio r1 folgado    n=13 | 1000 decisoes | mediana     6675 us, IQR     6633-6715     us, p99     6782 us, max     9354 us | estado OFF 8fb75941 | pilha usada ate aqui  7300 B | heap livre minimo 142044 B
+5624954|sem-radio r1 folgado    n=16 | 1000 decisoes | mediana     6724 us, IQR     6675-6754     us, p99     6835 us, max     9468 us | estado OFF 8fb75941 | pilha usada ate aqui  7300 B | heap livre minimo 142044 B
+5635556|sem-radio r1 folgado    n=17 | 1000 decisoes | mediana     7198 us, IQR     7163-7244     us, p99     7330 us, max     9920 us | estado OFF 8fb75941 | pilha usada ate aqui  7300 B | heap livre minimo 141800 B
+5646151|sem-radio r1 folgado    n=18 | 1000 decisoes | mediana     7333 us, IQR     7291-7372     us, p99     7524 us, max    10090 us | estado OFF 8fb75941 | pilha usada ate aqui  7300 B | heap livre minimo 141480 B
+5656959|sem-radio r1 folgado    n=20 | 1000 decisoes | mediana     7231 us, IQR     7187-7280     us, p99     7437 us, max     9873 us | estado OFF 8fb75941 | pilha usada ate aqui  7300 B | heap livre minimo 140912 B
+5670301|sem-radio r1 folgado    n=30 | 1000 decisoes | mediana     9591 us, IQR     9536-9645     us, p99     9756 us, max    12356 us | estado OFF 8fb75941 | pilha usada ate aqui 12820 B | heap livre minimo 139504 B
+5680085|sem-radio r1 teto-4     n= 2 | 1000 decisoes | mediana     6912 us, IQR     6905-6924     us, p99     6933 us, max     9528 us | estado ON  88b7a5c5 | pilha usada ate aqui 12820 B | heap livre minimo 139504 B
+5690514|sem-radio r1 teto-4     n= 4 | 1000 decisoes | mediana     7100 us, IQR     7092-7109     us, p99     7122 us, max     9786 us | estado ON  88b7a5c5 | pilha usada ate aqui 12820 B | heap livre minimo 139504 B
+5701986|sem-radio r1 teto-4     n= 6 | 1000 decisoes | mediana     8073 us, IQR     7976-8146     us, p99    11102 us, max    11154 us | estado OFF 7580b1c5 | pilha usada ate aqui 12820 B | heap livre minimo 139504 B
+5713646|sem-radio r1 teto-4     n= 8 | 1000 decisoes | mediana     8018 us, IQR     7909-8158     us, p99    11072 us, max    11479 us | estado ON  b60f5acf | pilha usada ate aqui 12820 B | heap livre minimo 139504 B
+5727196|sem-radio r1 teto-4     n=10 | 1000 decisoes | mediana     9247 us, IQR     8795-11278    us, p99    12332 us, max    12471 us | estado ON  64acf59f | pilha usada ate aqui 12820 B | heap livre minimo 139504 B
+5741153|sem-radio r1 teto-4     n=13 | 1000 decisoes | mediana     9972 us, IQR     9447-11680    us, p99    13454 us, max    14999 us | estado ON  6289250d | pilha usada ate aqui 12820 B | heap livre minimo 139504 B
+5755751|sem-radio r1 teto-4     n=16 | 1000 decisoes | mediana    10346 us, IQR     9543-12231    us, p99    20924 us, max    26503 us | estado ON  f687366d | pilha usada ate aqui 12820 B | heap livre minimo 139064 B
+5771187|sem-radio r1 teto-4     n=17 | 1000 decisoes | mediana    11073 us, IQR    10184-13021    us, p99    22061 us, max    30313 us | estado OFF b4bc5425 | pilha usada ate aqui 12820 B | heap livre minimo 138684 B
+5787019|sem-radio r1 teto-4     n=18 | 1000 decisoes | mediana    11181 us, IQR    10346-13150    us, p99    22538 us, max    30470 us | estado ON  2e311405 | pilha usada ate aqui 12820 B | heap livre minimo 138336 B
+5803037|sem-radio r1 teto-4     n=20 | 1000 decisoes | mediana    12256 us, IQR    10365-13338    us, p99    22945 us, max    30722 us | estado ON  065535f7 | pilha usada ate aqui 12820 B | heap livre minimo 137840 B
+5853047|sem-radio r1 teto-4     n=30 | 1000 decisoes | mediana    16528 us, IQR    14385-27251    us, p99   433736 us, max   952024 us | estado OFF b09aa30d | pilha usada ate aqui 13700 B | heap livre minimo 136304 B
+5862839|sem-radio r1 teto-todas n= 2 | 1000 decisoes | mediana     6916 us, IQR     6910-6922     us, p99     6931 us, max     9664 us | estado ON  88b7a5c5 | pilha usada ate aqui 13700 B | heap livre minimo 136304 B
+5875550|sem-radio r1 teto-todas n= 4 | 1000 decisoes | mediana     9457 us, IQR     9272-9968     us, p99    10447 us, max    10456 us | estado OFF 698cc0c5 | pilha usada ate aqui 13700 B | heap livre minimo 136304 B
+5889308|sem-radio r1 teto-todas n= 6 | 1000 decisoes | mediana    10588 us, IQR    10408-10779    us, p99    11615 us, max    11633 us | estado OFF 690b64b7 | pilha usada ate aqui 13700 B | heap livre minimo 136304 B
+5903471|sem-radio r1 teto-todas n= 8 | 1000 decisoes | mediana    10731 us, IQR    10585-10960    us, p99    11806 us, max    11837 us | estado ON  065bedc7 | pilha usada ate aqui 13700 B | heap livre minimo 136304 B
+5918690|sem-radio r1 teto-todas n=10 | 1000 decisoes | mediana    11889 us, IQR    11734-12078    us, p99    12913 us, max    12948 us | estado OFF 81493d77 | pilha usada ate aqui 13700 B | heap livre minimo 136304 B
+5936387|sem-radio r1 teto-todas n=13 | 1000 decisoes | mediana    13863 us, IQR    13692-14086    us, p99    18435 us, max    20933 us | estado ON  247f85bd | pilha usada ate aqui 13700 B | heap livre minimo 136304 B
+5967049|sem-radio r1 teto-todas n=16 | 1000 decisoes | mediana    25745 us, IQR    25222-26793    us, p99    49154 us, max    51079 us | estado ON  158aaaaf | pilha usada ate aqui 13700 B | heap livre minimo 136304 B
+6002304|sem-radio r1 teto-todas n=17 | 1000 decisoes | mediana    27688 us, IQR    26959-29595    us, p99    53951 us, max    56168 us | estado ON  1440ad3d | pilha usada ate aqui 13700 B | heap livre minimo 135904 B
+6042110|sem-radio r1 teto-todas n=18 | 1000 decisoes | mediana    29375 us, IQR    28002-50969    us, p99    57218 us, max    60398 us | estado ON  5217f0d7 | pilha usada ate aqui 13700 B | heap livre minimo 135544 B
+6086262|sem-radio r1 teto-todas n=20 | 1000 decisoes | mediana    31336 us, IQR    29172-54399    us, p99    59868 us, max    61685 us | estado ON  486e82f7 | pilha usada ate aqui 13700 B | heap livre minimo 135048 B
+6990713|sem-radio r1 teto-todas n=30 | 1000 decisoes | mediana   899518 us, IQR   896858-902179   us, p99   927530 us, max   930711 us | estado ON  8c76c367 | pilha usada ate aqui 13700 B | heap livre minimo 133528 B
+7000453|sem-radio r1 pior       n= 2 | 1000 decisoes | mediana     6874 us, IQR     6867-6882     us, p99     6891 us, max     9602 us | estado ON  88b7a5c5 | pilha usada ate aqui 13700 B | heap livre minimo 133528 B
+7010679|sem-radio r1 pior       n= 4 | 1000 decisoes | mediana     7042 us, IQR     7030-7050     us, p99     7084 us, max     9714 us | estado ON  88b7a5c5 | pilha usada ate aqui 13700 B | heap livre minimo 133528 B
+7022127|sem-radio r1 pior       n= 6 | 1000 decisoes | mediana     8205 us, IQR     8191-8221     us, p99     8262 us, max    10864 us | estado ON  88b7a5c5 | pilha usada ate aqui 13700 B | heap livre minimo 133528 B
+7034023|sem-radio r1 pior       n= 8 | 1000 decisoes | mediana     8702 us, IQR     8671-8733     us, p99     8830 us, max    11354 us | estado ON  88b7a5c5 | pilha usada ate aqui 13700 B | heap livre minimo 133528 B
+7048814|sem-radio r1 pior       n=10 | 1000 decisoes | mediana    11551 us, IQR    11418-11678    us, p99    11921 us, max    14457 us | estado ON  88b7a5c5 | pilha usada ate aqui 13700 B | heap livre minimo 133528 B
+7084050|sem-radio r1 pior       n=13 | 1000 decisoes | mediana    31847 us, IQR    31800-31892    us, p99    32016 us, max    34525 us | estado ON  88b7a5c5 | pilha usada ate aqui 13700 B | heap livre minimo 133528 B
+7220153|sem-radio r1 pior       n=16 | 1000 decisoes | mediana   132403 us, IQR   126242-138773   us, p99   149529 us, max   161535 us | estado ON  88b7a5c5 | pilha usada ate aqui 13700 B | heap livre minimo 133288 B
+7546492|sem-radio r1 pior       n=17 | 1000 decisoes | mediana   322836 us, IQR   322608-323076   us, p99   323772 us, max   325802 us | estado ON  88b7a5c5 | pilha usada ate aqui 13700 B | heap livre minimo 132712 B
+8026792|sem-radio r1 pior       n=18 | 1000 decisoes | mediana   476805 us, IQR   454647-499021   us, p99   528187 us, max   541114 us | estado ON  88b7a5c5 | pilha usada ate aqui 13700 B | heap livre minimo 132364 B
+8885510|sem-radio r1 pior       n=20 | 1000 decisoes | mediana   854825 us, IQR   850397-859647   us, p99   869529 us, max   876789 us | estado ON  88b7a5c5 | pilha usada ate aqui 13700 B | heap livre minimo 131880 B
+9686301|sem-radio r1 pior       n=30 | 1000 decisoes | mediana   796682 us, IQR   793540-800344   us, p99   811682 us, max   825680 us | estado ON  88b7a5c5 | pilha usada ate aqui 13700 B | heap livre minimo 130448 B
+9698795|sem-radio r1 mochila    n= 2 | 1000 decisoes | mediana     9283 us, IQR     9176-9484     us, p99    10317 us, max    10328 us | estado OFF ceac1c5d | pilha usada ate aqui 13700 B | heap livre minimo 130448 B
+9711683|sem-radio r1 mochila    n= 4 | 1000 decisoes | mediana     9276 us, IQR     9256-9300     us, p99    10417 us, max    10451 us | estado ON  10cb1987 | pilha usada ate aqui 13700 B | heap livre minimo 130448 B
+9725430|sem-radio r1 mochila    n= 6 | 1000 decisoes | mediana    10428 us, IQR    10379-10490    us, p99    11604 us, max    12076 us | estado OFF 9142b8f7 | pilha usada ate aqui 13700 B | heap livre minimo 130448 B
+9739817|sem-radio r1 mochila    n= 8 | 1000 decisoes | mediana    10785 us, IQR    10655-10990    us, p99    12134 us, max    12256 us | estado OFF 1bce651d | pilha usada ate aqui 13700 B | heap livre minimo 130448 B
+9756081|sem-radio r1 mochila    n=10 | 1000 decisoes | mediana    12621 us, IQR    12381-12902    us, p99    14405 us, max    15113 us | estado OFF 51a29c45 | pilha usada ate aqui 13700 B | heap livre minimo 130448 B
+9777969|sem-radio r1 mochila    n=13 | 1000 decisoes | mediana    18226 us, IQR    16669-19457    us, p99    25951 us, max    26912 us | estado OFF ee790b75 | pilha usada ate aqui 13700 B | heap livre minimo 130448 B
+9823193|sem-radio r1 mochila    n=16 | 1000 decisoes | mediana    41027 us, IQR    31771-47978    us, p99    84928 us, max    89624 us | estado OFF e49dfab7 | pilha usada ate aqui 13700 B | heap livre minimo 130448 B
+9889076|sem-radio r1 mochila    n=17 | 1000 decisoes | mediana    56423 us, IQR    46193-72036    us, p99   125854 us, max   175071 us | estado OFF 7d176255 | pilha usada ate aqui 13700 B | heap livre minimo 130140 B
+9988925|sem-radio r1 mochila    n=18 | 1000 decisoes | mediana    83704 us, IQR    63188-127668   us, p99   243575 us, max   311579 us | estado OFF 313f9777 | pilha usada ate aqui 13700 B | heap livre minimo 129788 B
+10246115|sem-radio r1 mochila    n=20 | 1000 decisoes | mediana   230091 us, IQR   169204-301003   us, p99   604995 us, max   679653 us | estado OFF 8db482e7 | pilha usada ate aqui 13700 B | heap livre minimo 129280 B
+11112699|sem-radio r1 mochila    n=30 | 1000 decisoes | mediana   862408 us, IQR   849195-875731   us, p99   908540 us, max   930434 us | estado OFF b9c65715 | pilha usada ate aqui 13700 B | heap livre minimo 127764 B
+11112699|[0;31mE (11112329) phy_init: esp_phy_load_cal_data_from_nvs: NVS has not been initialized. Call nvs_flash_init before starting WiFi/BT.[0m
+11112908|=== fase radio=true rodada=0
+11120997|com-radio r0 folgado    n= 2 | 1000 decisoes | mediana     4997 us, IQR     4962-5026     us, p99     7416 us, max     7955 us | estado OFF 8fb75941 | pilha usada ate aqui  6924 B | heap livre minimo  62224 B
+11129080|com-radio r0 folgado    n= 4 | 1000 decisoes | mediana     4926 us, IQR     4902-4950     us, p99     7305 us, max     7747 us | estado OFF 8fb75941 | pilha usada ate aqui  6940 B | heap livre minimo  62224 B
+11138049|com-radio r0 folgado    n= 6 | 1000 decisoes | mediana     5590 us, IQR     5546-5735     us, p99     8147 us, max     9948 us | estado OFF 8fb75941 | pilha usada ate aqui  6940 B | heap livre minimo  62224 B
+11147006|com-radio r0 folgado    n= 8 | 1000 decisoes | mediana     5625 us, IQR     5585-5662     us, p99     8048 us, max     9429 us | estado OFF 8fb75941 | pilha usada ate aqui  6940 B | heap livre minimo  62224 B
+11156579|com-radio r0 folgado    n=10 | 1000 decisoes | mediana     6233 us, IQR     6197-6276     us, p99     8665 us, max    10739 us | estado OFF 8fb75941 | pilha usada ate aqui  6956 B | heap livre minimo  62224 B
+11166794|com-radio r0 folgado    n=13 | 1000 decisoes | mediana     6712 us, IQR     6661-6759     us, p99     9262 us, max     9658 us | estado OFF 8fb75941 | pilha usada ate aqui  6956 B | heap livre minimo  62224 B
+11177004|com-radio r0 folgado    n=16 | 1000 decisoes | mediana     6729 us, IQR     6682-6795     us, p99     9263 us, max     9557 us | estado OFF 8fb75941 | pilha usada ate aqui  6956 B | heap livre minimo  62224 B
+11187802|com-radio r0 folgado    n=17 | 1000 decisoes | mediana     7219 us, IQR     7175-7290     us, p99     9701 us, max    12385 us | estado OFF 8fb75941 | pilha usada ate aqui  6956 B | heap livre minimo  62224 B
+11198837|com-radio r0 folgado    n=18 | 1000 decisoes | mediana     7354 us, IQR     7301-7419     us, p99     9839 us, max    10226 us | estado OFF 8fb75941 | pilha usada ate aqui  6956 B | heap livre minimo  62224 B
+11209847|com-radio r0 folgado    n=20 | 1000 decisoes | mediana     7261 us, IQR     7212-7368     us, p99     9833 us, max    10166 us | estado OFF 8fb75941 | pilha usada ate aqui  6956 B | heap livre minimo  62224 B
+11223602|com-radio r0 folgado    n=30 | 1000 decisoes | mediana     9636 us, IQR     9564-9723     us, p99    12326 us, max    12640 us | estado OFF 8fb75941 | pilha usada ate aqui 12828 B | heap livre minimo  62224 B
+11233804|com-radio r0 teto-4     n= 2 | 1000 decisoes | mediana     6934 us, IQR     6921-6953     us, p99     9539 us, max    10049 us | estado ON  88b7a5c5 | pilha usada ate aqui 12828 B | heap livre minimo  62224 B
+11244436|com-radio r0 teto-4     n= 4 | 1000 decisoes | mediana     7113 us, IQR     7102-7133     us, p99     9641 us, max     9890 us | estado ON  88b7a5c5 | pilha usada ate aqui 12828 B | heap livre minimo  62224 B
+11256308|com-radio r0 teto-4     n= 6 | 1000 decisoes | mediana     8123 us, IQR     8012-8328     us, p99    11367 us, max    13711 us | estado ON  b26ff6d7 | pilha usada ate aqui 12828 B | heap livre minimo  62224 B
+11268399|com-radio r0 teto-4     n= 8 | 1000 decisoes | mediana     8065 us, IQR     7949-8476     us, p99    13319 us, max    14211 us | estado ON  edd0e57f | pilha usada ate aqui 12828 B | heap livre minimo  62224 B
+11282151|com-radio r0 teto-4     n=10 | 1000 decisoes | mediana    10834 us, IQR     8838-11509    us, p99    14492 us, max    15254 us | estado ON  0ca81f3d | pilha usada ate aqui 12828 B | heap livre minimo  62224 B
+11296335|com-radio r0 teto-4     n=13 | 1000 decisoes | mediana    10098 us, IQR     9508-11933    us, p99    14973 us, max    15984 us | estado ON  c53028cf | pilha usada ate aqui 12828 B | heap livre minimo  62224 B
+11311545|com-radio r0 teto-4     n=16 | 1000 decisoes | mediana    10786 us, IQR     9670-12545    us, p99    23223 us, max    29550 us | estado ON  b263fd9d | pilha usada ate aqui 12828 B | heap livre minimo  62224 B
+11327796|com-radio r0 teto-4     n=17 | 1000 decisoes | mediana    11722 us, IQR    10404-13383    us, p99    24095 us, max    30685 us | estado ON  d741b61d | pilha usada ate aqui 12828 B | heap livre minimo  62224 B
+11343826|com-radio r0 teto-4     n=18 | 1000 decisoes | mediana    11736 us, IQR    10424-13391    us, p99    22916 us, max    30540 us | estado ON  62135b15 | pilha usada ate aqui 12828 B | heap livre minimo  62224 B
+11360295|com-radio r0 teto-4     n=20 | 1000 decisoes | mediana    12598 us, IQR    10632-13753    us, p99    24960 us, max    29940 us | estado OFF e8f3575d | pilha usada ate aqui 12828 B | heap livre minimo  62224 B
+11419445|com-radio r0 teto-4     n=30 | 1000 decisoes | mediana    17125 us, IQR    15125-35000    us, p99   712817 us, max   955214 us | estado ON  4844527f | pilha usada ate aqui 13708 B | heap livre minimo  62224 B
+11429663|com-radio r0 teto-todas n= 2 | 1000 decisoes | mediana     6928 us, IQR     6912-6945     us, p99     9511 us, max     9952 us | estado ON  88b7a5c5 | pilha usada ate aqui 13708 B | heap livre minimo  62224 B
+11442558|com-radio r0 teto-todas n= 4 | 1000 decisoes | mediana     9516 us, IQR     9266-10040    us, p99    12691 us, max    13030 us | estado ON  d4da8555 | pilha usada ate aqui 13708 B | heap livre minimo  62224 B
+11456727|com-radio r0 teto-todas n= 6 | 1000 decisoes | mediana    10674 us, IQR    10460-11293    us, p99    14218 us, max    14388 us | estado OFF e6e1eff7 | pilha usada ate aqui 13708 B | heap livre minimo  62224 B
+11471315|com-radio r0 teto-todas n= 8 | 1000 decisoes | mediana    10839 us, IQR    10619-11667    us, p99    14321 us, max    14760 us | estado ON  1653a17d | pilha usada ate aqui 13708 B | heap livre minimo  62224 B
+11486947|com-radio r0 teto-todas n=10 | 1000 decisoes | mediana    11986 us, IQR    11759-12744    us, p99    15489 us, max    15672 us | estado ON  ff98272d | pilha usada ate aqui 13708 B | heap livre minimo  62224 B
+11505062|com-radio r0 teto-todas n=13 | 1000 decisoes | mediana    14026 us, IQR    13781-14611    us, p99    19559 us, max    23158 us | estado ON  cbe0aead | pilha usada ate aqui 13708 B | heap livre minimo  62224 B
+11537326|com-radio r0 teto-todas n=16 | 1000 decisoes | mediana    26651 us, IQR    25608-28287    us, p99    51518 us, max    52829 us | estado ON  de54a68d | pilha usada ate aqui 13708 B | heap livre minimo  62224 B
+11573408|com-radio r0 teto-todas n=17 | 1000 decisoes | mediana    28869 us, IQR    27248-30929    us, p99    56285 us, max    58634 us | estado ON  6cb600af | pilha usada ate aqui 13708 B | heap livre minimo  62224 B
+11615290|com-radio r0 teto-todas n=18 | 1000 decisoes | mediana    30714 us, IQR    28540-52913    us, p99    59574 us, max    60919 us | estado ON  d2180b87 | pilha usada ate aqui 13708 B | heap livre minimo  62224 B
+11660300|com-radio r0 teto-todas n=20 | 1000 decisoes | mediana    32426 us, IQR    29768-55954    us, p99    62108 us, max    65084 us | estado ON  deec262d | pilha usada ate aqui 13708 B | heap livre minimo  62224 B
+12573491|com-radio r0 teto-todas n=30 | 1000 decisoes | mediana   908437 us, IQR   905697-911121   us, p99   937094 us, max   939940 us | estado ON  49e8290d | pilha usada ate aqui 13804 B | heap livre minimo  62224 B
+12583687|com-radio r0 pior       n= 2 | 1000 decisoes | mediana     6911 us, IQR     6893-6930     us, p99     9516 us, max    11840 us | estado ON  88b7a5c5 | pilha usada ate aqui 13804 B | heap livre minimo  62224 B
+12594103|com-radio r0 pior       n= 4 | 1000 decisoes | mediana     7069 us, IQR     7053-7096     us, p99     9635 us, max     9840 us | estado ON  88b7a5c5 | pilha usada ate aqui 13804 B | heap livre minimo  62224 B
+12605989|com-radio r0 pior       n= 6 | 1000 decisoes | mediana     8240 us, IQR     8215-8272     us, p99    10858 us, max    11486 us | estado ON  88b7a5c5 | pilha usada ate aqui 13804 B | heap livre minimo  62224 B
+12618262|com-radio r0 pior       n= 8 | 1000 decisoes | mediana     8753 us, IQR     8713-8817     us, p99    11409 us, max    11590 us | estado ON  88b7a5c5 | pilha usada ate aqui 13804 B | heap livre minimo  62224 B
+12633489|com-radio r0 pior       n=10 | 1000 decisoes | mediana    11652 us, IQR    11484-11824    us, p99    14460 us, max    15005 us | estado ON  88b7a5c5 | pilha usada ate aqui 13804 B | heap livre minimo  62224 B
+12669756|com-radio r0 pior       n=13 | 1000 decisoes | mediana    32114 us, IQR    31939-34237    us, p99    34738 us, max    36957 us | estado ON  88b7a5c5 | pilha usada ate aqui 13804 B | heap livre minimo  62224 B
+12809505|com-radio r0 pior       n=16 | 1000 decisoes | mediana   136157 us, IQR   129457-142683   us, p99   153192 us, max   159113 us | estado ON  88b7a5c5 | pilha usada ate aqui 13804 B | heap livre minimo  62224 B
+13140719|com-radio r0 pior       n=17 | 1000 decisoes | mediana   327677 us, IQR   327267-328140   us, p99   329830 us, max   331072 us | estado ON  88b7a5c5 | pilha usada ate aqui 13804 B | heap livre minimo  62224 B
+13628198|com-radio r0 pior       n=18 | 1000 decisoes | mediana   484153 us, IQR   461494-507250   us, p99   540250 us, max   559200 us | estado ON  88b7a5c5 | pilha usada ate aqui 13804 B | heap livre minimo  62224 B
+14497004|com-radio r0 pior       n=20 | 1000 decisoes | mediana   864716 us, IQR   860784-869339   us, p99   879826 us, max   882988 us | estado ON  88b7a5c5 | pilha usada ate aqui 13804 B | heap livre minimo  62224 B
+15306256|com-radio r0 pior       n=30 | 1000 decisoes | mediana   804901 us, IQR   801744-808896   us, p99   820272 us, max   825139 us | estado ON  88b7a5c5 | pilha usada ate aqui 13804 B | heap livre minimo  62104 B
+15318962|com-radio r0 mochila    n= 2 | 1000 decisoes | mediana     9384 us, IQR     9209-9945     us, p99    12839 us, max    13027 us | estado OFF 2b440ccf | pilha usada ate aqui 13804 B | heap livre minimo  62104 B
+15332085|com-radio r0 mochila    n= 4 | 1000 decisoes | mediana     9308 us, IQR     9278-9417     us, p99    11975 us, max    13150 us | estado OFF 71c6b22f | pilha usada ate aqui 13804 B | heap livre minimo  62104 B
+15346468|com-radio r0 mochila    n= 6 | 1000 decisoes | mediana    10487 us, IQR    10430-10705    us, p99    13352 us, max    14403 us | estado OFF 68d783d7 | pilha usada ate aqui 13804 B | heap livre minimo  62104 B
+15361263|com-radio r0 mochila    n= 8 | 1000 decisoes | mediana    10914 us, IQR    10705-11184    us, p99    13746 us, max    14746 us | estado OFF 2cea4b55 | pilha usada ate aqui 13804 B | heap livre minimo  62104 B
+15377932|com-radio r0 mochila    n=10 | 1000 decisoes | mediana    12730 us, IQR    12470-13394    us, p99    16367 us, max    17378 us | estado OFF 61dbee4d | pilha usada ate aqui 13804 B | heap livre minimo  62104 B
+15400433|com-radio r0 mochila    n=13 | 1000 decisoes | mediana    18609 us, IQR    17183-20071    us, p99    26707 us, max    28805 us | estado OFF da0aeafd | pilha usada ate aqui 13804 B | heap livre minimo  62104 B
+15446682|com-radio r0 mochila    n=16 | 1000 decisoes | mediana    41860 us, IQR    32245-49196    us, p99    85593 us, max    94309 us | estado OFF f81726b5 | pilha usada ate aqui 13804 B | heap livre minimo  62104 B
+15513992|com-radio r0 mochila    n=17 | 1000 decisoes | mediana    58399 us, IQR    47899-72473    us, p99   126715 us, max   147744 us | estado OFF 44d0d7cd | pilha usada ate aqui 13804 B | heap livre minimo  61808 B
+15620679|com-radio r0 mochila    n=18 | 1000 decisoes | mediana    92152 us, IQR    68998-134893   us, p99   244465 us, max   321437 us | estado OFF 81ae0177 | pilha usada ate aqui 13804 B | heap livre minimo  61448 B
+15880631|com-radio r0 mochila    n=20 | 1000 decisoes | mediana   230054 us, IQR   166957-306081   us, p99   589248 us, max   882028 us | estado OFF 3b6e7bf5 | pilha usada ate aqui 13804 B | heap livre minimo  60980 B
+16756861|com-radio r0 mochila    n=30 | 1000 decisoes | mediana   871930 us, IQR   857831-885590   us, p99   915131 us, max   935831 us | estado OFF c0296edd | pilha usada ate aqui 13804 B | heap livre minimo  59776 B
+16756861|=== bancada ampla | placa 08:d1:f9:27:c0:40 | CPU 160 MHz | heap livre antes 235736 B | pilha da thread 65536 B
+16756861|sem-radio r0 folgado    n= 2 | 1000 decisoes | mediana     4962 us, IQR     4938-4992     us, p99     5045 us, max     7862 us | estado OFF 8fb75941 | pilha usada ate aqui  6872 B | heap livre minimo 159576 B
+16756861|sem-radio r0 folgado    n= 4 | 1000 decisoes | mediana     4911 us, IQR     4881-4922     us, p99     5279 us, max     7679 us | estado OFF 8fb75941 | pilha usada ate aqui  6940 B | heap livre minimo 159056 B
+16756861|sem-radio r0 folgado    n= 6 | 1000 decisoes | mediana     5549 us, IQR     5531-5711     us, p99     7258 us, max     8454 us | estado OFF 8fb75941 | pilha usada ate aqui  6940 B | heap livre minimo 158604 B
+16756861|sem-radio r0 folgado    n= 8 | 1000 decisoes | mediana     5613 us, IQR     5570-5641     us, p99     5993 us, max     8311 us | estado OFF 8fb75941 | pilha usada ate aqui  6940 B | heap livre minimo 158164 B
+16756861|sem-radio r0 folgado    n=10 | 1000 decisoes | mediana     6214 us, IQR     6188-6249     us, p99     6418 us, max     9034 us | estado OFF 8fb75941 | pilha usada ate aqui  6956 B | heap livre minimo 157664 B
+16756861|sem-radio r0 folgado    n=13 | 1000 decisoes | mediana     6675 us, IQR     6625-6714     us, p99     6786 us, max     9374 us | estado OFF 8fb75941 | pilha usada ate aqui  6956 B | heap livre minimo 157124 B
+16756861|sem-radio r0 folgado    n=16 | 1000 decisoes | mediana     6716 us, IQR     6671-6744     us, p99     6830 us, max     9435 us | estado OFF 8fb75941 | pilha usada ate aqui  6956 B | heap livre minimo 156536 B
+16756861|sem-radio r0 folgado    n=17 | 1000 decisoes | mediana     7204 us, IQR     7164-7248     us, p99     7338 us, max     9934 us | estado OFF 8fb75941 | pilha usada ate aqui  6956 B | heap livre minimo 156160 B
+16757067|sem-radio r0 folgado    n=18 | 1000 decisoes | mediana     7319 us, IQR     7275-7359     us, p99     7504 us, max    10092 us | estado OFF 8fb75941 | pilha usada ate aqui  6956 B | heap livre minimo 155760 B
+16757067|sem-radio r0 folgado    n=20 | 1000 decisoes | mediana     7239 us, IQR     7194-7284     us, p99     7435 us, max    10064 us | estado OFF 8fb75941 | pilha usada ate aqui  6956 B | heap livre minimo 155184 B
+16757067|sem-radio r0 folgado    n=30 | 1000 decisoes | mediana     9597 us, IQR     9538-9647     us, p99     9770 us, max    12433 us | estado OFF 8fb75941 | pilha usada ate aqui 12828 B | heap livre minimo 153780 B
+16757067|sem-radio r0 teto-4     n= 2 | 1000 decisoes | mediana     6907 us, IQR     6902-6913     us, p99     6922 us, max     9533 us | estado ON  88b7a5c5 | pilha usada ate aqui 12828 B | heap livre minimo 153780 B
+16757067|sem-radio r0 teto-4     n= 4 | 1000 decisoes | mediana     7087 us, IQR     7080-7093     us, p99     7106 us, max     9780 us | estado ON  88b7a5c5 | pilha usada ate aqui 12828 B | heap livre minimo 153780 B
+16757067|sem-radio r0 teto-4     n= 6 | 1000 decisoes | mediana     8075 us, IQR     7975-8145     us, p99    11125 us, max    11196 us | estado ON  b26ff6d7 | pilha usada ate aqui 12828 B | heap livre minimo 153780 B
+16757067|sem-radio r0 teto-4     n= 8 | 1000 decisoes | mediana     8019 us, IQR     7915-8165     us, p99    11075 us, max    11519 us | estado ON  edd0e57f | pilha usada ate aqui 12828 B | heap livre minimo 153780 B
+16757067|sem-radio r0 teto-4     n=10 | 1000 decisoes | mediana     9233 us, IQR     8797-11303    us, p99    12310 us, max    12483 us | estado ON  0ca81f3d | pilha usada ate aqui 12828 B | heap livre minimo 153780 B
+16757067|sem-radio r0 teto-4     n=13 | 1000 decisoes | mediana     9757 us, IQR     9416-11212    us, p99    13355 us, max    14142 us | estado ON  c53028cf | pilha usada ate aqui 12828 B | heap livre minimo 153780 B
+16757273|sem-radio r0 teto-4     n=16 | 1000 decisoes | mediana    10312 us, IQR     9568-12234    us, p99    21405 us, max    29419 us | estado ON  b263fd9d | pilha usada ate aqui 12828 B | heap livre minimo 153340 B
+16757273|sem-radio r0 teto-4     n=17 | 1000 decisoes | mediana    11326 us, IQR    10259-13004    us, p99    22492 us, max    30440 us | estado ON  d741b61d | pilha usada ate aqui 12828 B | heap livre minimo 152964 B
+16757273|sem-radio r0 teto-4     n=18 | 1000 decisoes | mediana    10991 us, IQR    10319-13052    us, p99    22900 us, max    30542 us | estado ON  62135b15 | pilha usada ate aqui 12828 B | heap livre minimo 152616 B
+16757273|sem-radio r0 teto-4     n=20 | 1000 decisoes | mediana    12304 us, IQR    10444-13347    us, p99    24083 us, max    27457 us | estado OFF e8f3575d | pilha usada ate aqui 12828 B | heap livre minimo 152120 B
+16757273|sem-radio r0 teto-4     n=30 | 1000 decisoes | mediana    16706 us, IQR    14457-34921    us, p99   704953 us, max   946127 us | estado ON  4844527f | pilha usada ate aqui 13708 B | heap livre minimo 150588 B
+16757273|sem-radio r0 teto-todas n= 2 | 1000 decisoes | mediana     6915 us, IQR     6911-6918     us, p99     6925 us, max     9676 us | estado ON  88b7a5c5 | pilha usada ate aqui 13708 B | heap livre minimo 150588 B
+16757273|sem-radio r0 teto-todas n= 4 | 1000 decisoes | mediana     9439 us, IQR     7580-9944     us, p99    10464 us, max    10470 us | estado ON  d4da8555 | pilha usada ate aqui 13708 B | heap livre minimo 150588 B
+16757273|sem-radio r0 teto-todas n= 6 | 1000 decisoes | mediana    10562 us, IQR    10424-10784    us, p99    11626 us, max    11661 us | estado OFF e6e1eff7 | pilha usada ate aqui 13708 B | heap livre minimo 150588 B
+16757273|sem-radio r0 teto-todas n= 8 | 1000 decisoes | mediana    10746 us, IQR    10586-10963    us, p99    11804 us, max    11848 us | estado ON  1653a17d | pilha usada ate aqui 13708 B | heap livre minimo 150588 B
+16757273|sem-radio r0 teto-todas n=10 | 1000 decisoes | mediana    11884 us, IQR    11727-12081    us, p99    12922 us, max    12942 us | estado ON  ff98272d | pilha usada ate aqui 13708 B | heap livre minimo 150588 B
+16757273|sem-radio r0 teto-todas n=13 | 1000 decisoes | mediana    13872 us, IQR    13689-14093    us, p99    18294 us, max    21272 us | estado ON  cbe0aead | pilha usada ate aqui 13708 B | heap livre minimo 150588 B
+16757273|sem-radio r0 teto-todas n=16 | 1000 decisoes | mediana    25834 us, IQR    25241-27333    us, p99    49523 us, max    51814 us | estado ON  de54a68d | pilha usada ate aqui 13708 B | heap livre minimo 150588 B
+16757273|sem-radio r0 teto-todas n=17 | 1000 decisoes | mediana    27637 us, IQR    26894-29644    us, p99    54338 us, max    57455 us | estado ON  6cb600af | pilha usada ate aqui 13708 B | heap livre minimo 150184 B
+16757479|sem-radio r0 teto-todas n=18 | 1000 decisoes | mediana    29543 us, IQR    28081-51889    us, p99    56966 us, max    58426 us | estado ON  d2180b87 | pilha usada ate aqui 13708 B | heap livre minimo 149820 B
+16757479|sem-radio r0 teto-todas n=20 | 1000 decisoes | mediana    31297 us, IQR    29043-54489    us, p99    59543 us, max    63062 us | estado ON  deec262d | pilha usada ate aqui 13708 B | heap livre minimo 149320 B
+16757479|sem-radio r0 teto-todas n=30 | 1000 decisoes | mediana   899149 us, IQR   896347-901805   us, p99   926997 us, max   930143 us | estado ON  49e8290d | pilha usada ate aqui 13708 B | heap livre minimo 147808 B
+16757479|sem-radio r0 pior       n= 2 | 1000 decisoes | mediana     6886 us, IQR     6881-6889     us, p99     6896 us, max     9682 us | estado ON  88b7a5c5 | pilha usada ate aqui 13708 B | heap livre minimo 147808 B
+16757479|sem-radio r0 pior       n= 4 | 1000 decisoes | mediana     7043 us, IQR     7032-7053     us, p99     7085 us, max     9713 us | estado ON  88b7a5c5 | pilha usada ate aqui 13708 B | heap livre minimo 147808 B
+16757479|sem-radio r0 pior       n= 6 | 1000 decisoes | mediana     8209 us, IQR     8192-8226     us, p99     8268 us, max    10900 us | estado ON  88b7a5c5 | pilha usada ate aqui 13708 B | heap livre minimo 147808 B
+16757479|sem-radio r0 pior       n= 8 | 1000 decisoes | mediana     8703 us, IQR     8671-8736     us, p99     8818 us, max    11408 us | estado ON  88b7a5c5 | pilha usada ate aqui 13708 B | heap livre minimo 147808 B
+16757479|sem-radio r0 pior       n=10 | 1000 decisoes | mediana    11535 us, IQR    11407-11666    us, p99    11937 us, max    14085 us | estado ON  88b7a5c5 | pilha usada ate aqui 13708 B | heap livre minimo 147808 B
+16757479|sem-radio r0 pior       n=13 | 1000 decisoes | mediana    31847 us, IQR    31802-31894    us, p99    32021 us, max    34532 us | estado ON  88b7a5c5 | pilha usada ate aqui 13708 B | heap livre minimo 147808 B
+16757685|sem-radio r0 pior       n=16 | 1000 decisoes | mediana   132967 us, IQR   126441-139400   us, p99   149602 us, max   155532 us | estado ON  88b7a5c5 | pilha usada ate aqui 13708 B | heap livre minimo 147564 B
+16757685|sem-radio r0 pior       n=17 | 1000 decisoes | mediana   322835 us, IQR   322618-323093   us, p99   323765 us, max   325310 us | estado ON  88b7a5c5 | pilha usada ate aqui 13708 B | heap livre minimo 146980 B
+16757685|sem-radio r0 pior       n=18 | 1000 decisoes | mediana   477932 us, IQR   455487-500822   us, p99   533907 us, max   552214 us | estado ON  88b7a5c5 | pilha usada ate aqui 13708 B | heap livre minimo 146624 B
+16757685|sem-radio r0 pior       n=20 | 1000 decisoes | mediana   855061 us, IQR   851310-859731   us, p99   869773 us, max   873864 us | estado ON  88b7a5c5 | pilha usada ate aqui 13708 B | heap livre minimo 146152 B
+16757685|sem-radio r0 pior       n=30 | 1000 decisoes | mediana   796205 us, IQR   793252-800113   us, p99   810791 us, max   815562 us | estado ON  88b7a5c5 | pilha usada ate aqui 13708 B | heap livre minimo 144728 B
+16757685|sem-radio r0 mochila    n= 2 | 1000 decisoes | mediana     9286 us, IQR     9170-9499     us, p99    10341 us, max    10371 us | estado OFF 2b440ccf | pilha usada ate aqui 13708 B | heap livre minimo 144728 B
+16757685|sem-radio r0 mochila    n= 4 | 1000 decisoes | mediana     9281 us, IQR     9261-9305     us, p99    10441 us, max    10479 us | estado OFF 71c6b22f | pilha usada ate aqui 13708 B | heap livre minimo 144728 B
+16757685|sem-radio r0 mochila    n= 6 | 1000 decisoes | mediana    10449 us, IQR    10404-10506    us, p99    11632 us, max    11650 us | estado OFF 68d783d7 | pilha usada ate aqui 13708 B | heap livre minimo 144728 B
+16757685|sem-radio r0 mochila    n= 8 | 1000 decisoes | mediana    10786 us, IQR    10662-11012    us, p99    12186 us, max    12291 us | estado OFF 2cea4b55 | pilha usada ate aqui 13708 B | heap livre minimo 144728 B
+16757685|sem-radio r0 mochila    n=10 | 1000 decisoes | mediana    12609 us, IQR    12380-12864    us, p99    14123 us, max    15009 us | estado OFF 61dbee4d | pilha usada ate aqui 13708 B | heap livre minimo 144728 B
+16757685|sem-radio r0 mochila    n=13 | 1000 decisoes | mediana    18144 us, IQR    16751-19378    us, p99    25900 us, max    27393 us | estado OFF da0aeafd | pilha usada ate aqui 13708 B | heap livre minimo 144728 B
+16757685|sem-radio r0 mochila    n=16 | 1000 decisoes | mediana    40549 us, IQR    31750-47865    us, p99    83740 us, max    91737 us | estado OFF f81726b5 | pilha usada ate aqui 13708 B | heap livre minimo 144728 B
+16757685|sem-radio r0 mochila    n=17 | 1000 decisoes | mediana    56801 us, IQR    46447-70338    us, p99   123245 us, max   145017 us | estado OFF 44d0d7cd | pilha usada ate aqui 13708 B | heap livre minimo 144416 B
+16757891|sem-radio r0 mochila    n=18 | 1000 decisoes | mediana    89553 us, IQR    66976-131599   us, p99   240160 us, max   315217 us | estado OFF 81ae0177 | pilha usada ate aqui 13708 B | heap livre minimo 144064 B
+16757891|sem-radio r0 mochila    n=20 | 1000 decisoes | mediana   226020 us, IQR   163252-301684   us, p99   580980 us, max   870736 us | estado OFF 3b6e7bf5 | pilha usada ate aqui 13708 B | heap livre minimo 143472 B
+16757891|sem-radio r0 mochila    n=30 | 1000 decisoes | mediana   862340 us, IQR   848143-875675   us, p99   905013 us, max   926302 us | estado OFF c0296edd | pilha usada ate aqui 13708 B | heap livre minimo 142044 B
+16757891|sem-radio r1 folgado    n= 2 | 1000 decisoes | mediana     4947 us, IQR     4926-4977     us, p99     5030 us, max     7705 us | estado OFF 8fb75941 | pilha usada ate aqui  6916 B | heap livre minimo 142044 B
+16757891|sem-radio r1 folgado    n= 4 | 1000 decisoes | mediana     4918 us, IQR     4894-4931     us, p99     4976 us, max     7916 us | estado OFF 8fb75941 | pilha usada ate aqui  6916 B | heap livre minimo 142044 B
+16757891|sem-radio r1 folgado    n= 6 | 1000 decisoes | mediana     5551 us, IQR     5529-5714     us, p99     7268 us, max     8368 us | estado OFF 8fb75941 | pilha usada ate aqui  6916 B | heap livre minimo 142044 B
+16757891|sem-radio r1 folgado    n= 8 | 1000 decisoes | mediana     5616 us, IQR     5579-5641     us, p99     6930 us, max     8441 us | estado OFF 8fb75941 | pilha usada ate aqui  6916 B | heap livre minimo 142044 B
+16757891|sem-radio r1 folgado    n=10 | 1000 decisoes | mediana     6220 us, IQR     6191-6254     us, p99     6395 us, max     8938 us | estado OFF 8fb75941 | pilha usada ate aqui  6916 B | heap livre minimo 142044 B
+16757891|sem-radio r1 folgado    n=13 | 1000 decisoes | mediana     6675 us, IQR     6633-6715     us, p99     6782 us, max     9354 us | estado OFF 8fb75941 | pilha usada ate aqui  7300 B | heap livre minimo 142044 B
+16757891|sem-radio r1 folgado    n=16 | 1000 decisoes | mediana     6724 us, IQR     6675-6754     us, p99     6835 us, max     9468 us | estado OFF 8fb75941 | pilha usada ate aqui  7300 B | heap livre minimo 142044 B
+16757891|sem-radio r1 folgado    n=17 | 1000 decisoes | mediana     7198 us, IQR     7163-7244     us, p99     7330 us, max     9920 us | estado OFF 8fb75941 | pilha usada ate aqui  7300 B | heap livre minimo 141800 B
+16757891|sem-radio r1 folgado    n=18 | 1000 decisoes | mediana     7333 us, IQR     7291-7372     us, p99     7524 us, max    10090 us | estado OFF 8fb75941 | pilha usada ate aqui  7300 B | heap livre minimo 141480 B
+16758096|sem-radio r1 folgado    n=20 | 1000 decisoes | mediana     7231 us, IQR     7187-7280     us, p99     7437 us, max     9873 us | estado OFF 8fb75941 | pilha usada ate aqui  7300 B | heap livre minimo 140912 B
+16758096|sem-radio r1 folgado    n=30 | 1000 decisoes | mediana     9591 us, IQR     9536-9645     us, p99     9756 us, max    12356 us | estado OFF 8fb75941 | pilha usada ate aqui 12820 B | heap livre minimo 139504 B
+16758096|sem-radio r1 teto-4     n= 2 | 1000 decisoes | mediana     6912 us, IQR     6905-6924     us, p99     6933 us, max     9528 us | estado ON  88b7a5c5 | pilha usada ate aqui 12820 B | heap livre minimo 139504 B
+16758096|sem-radio r1 teto-4     n= 4 | 1000 decisoes | mediana     7100 us, IQR     7092-7109     us, p99     7122 us, max     9786 us | estado ON  88b7a5c5 | pilha usada ate aqui 12820 B | heap livre minimo 139504 B
+16758096|sem-radio r1 teto-4     n= 6 | 1000 decisoes | mediana     8073 us, IQR     7976-8146     us, p99    11102 us, max    11154 us | estado OFF 7580b1c5 | pilha usada ate aqui 12820 B | heap livre minimo 139504 B
+16758096|sem-radio r1 teto-4     n= 8 | 1000 decisoes | mediana     8018 us, IQR     7909-8158     us, p99    11072 us, max    11479 us | estado ON  b60f5acf | pilha usada ate aqui 12820 B | heap livre minimo 139504 B
+16758096|sem-radio r1 teto-4     n=10 | 1000 decisoes | mediana     9247 us, IQR     8795-11278    us, p99    12332 us, max    12471 us | estado ON  64acf59f | pilha usada ate aqui 12820 B | heap livre minimo 139504 B
+16758096|sem-radio r1 teto-4     n=13 | 1000 decisoes | mediana     9972 us, IQR     9447-11680    us, p99    13454 us, max    14999 us | estado ON  6289250d | pilha usada ate aqui 12820 B | heap livre minimo 139504 B
+16758096|sem-radio r1 teto-4     n=16 | 1000 decisoes | mediana    10346 us, IQR     9543-12231    us, p99    20924 us, max    26503 us | estado ON  f687366d | pilha usada ate aqui 12820 B | heap livre minimo 139064 B
+16758096|sem-radio r1 teto-4     n=17 | 1000 decisoes | mediana    11073 us, IQR    10184-13021    us, p99    22061 us, max    30313 us | estado OFF b4bc5425 | pilha usada ate aqui 12820 B | heap livre minimo 138684 B
+16758303|sem-radio r1 teto-4     n=18 | 1000 decisoes | mediana    11181 us, IQR    10346-13150    us, p99    22538 us, max    30470 us | estado ON  2e311405 | pilha usada ate aqui 12820 B | heap livre minimo 138336 B
+16758303|sem-radio r1 teto-4     n=20 | 1000 decisoes | mediana    12256 us, IQR    10365-13338    us, p99    22945 us, max    30722 us | estado ON  065535f7 | pilha usada ate aqui 12820 B | heap livre minimo 137840 B
+16758303|sem-radio r1 teto-4     n=30 | 1000 decisoes | mediana    16528 us, IQR    14385-27251    us, p99   433736 us, max   952024 us | estado OFF b09aa30d | pilha usada ate aqui 13700 B | heap livre minimo 136304 B
+16758303|sem-radio r1 teto-todas n= 2 | 1000 decisoes | mediana     6916 us, IQR     6910-6922     us, p99     6931 us, max     9664 us | estado ON  88b7a5c5 | pilha usada ate aqui 13700 B | heap livre minimo 136304 B
+16758303|sem-radio r1 teto-todas n= 4 | 1000 decisoes | mediana     9457 us, IQR     9272-9968     us, p99    10447 us, max    10456 us | estado OFF 698cc0c5 | pilha usada ate aqui 13700 B | heap livre minimo 136304 B
+16758303|sem-radio r1 teto-todas n= 6 | 1000 decisoes | mediana    10588 us, IQR    10408-10779    us, p99    11615 us, max    11633 us | estado OFF 690b64b7 | pilha usada ate aqui 13700 B | heap livre minimo 136304 B
+16758303|sem-radio r1 teto-todas n= 8 | 1000 decisoes | mediana    10731 us, IQR    10585-10960    us, p99    11806 us, max    11837 us | estado ON  065bedc7 | pilha usada ate aqui 13700 B | heap livre minimo 136304 B
+16758303|sem-radio r1 teto-todas n=10 | 1000 decisoes | mediana    11889 us, IQR    11734-12078    us, p99    12913 us, max    12948 us | estado OFF 81493d77 | pilha usada ate aqui 13700 B | heap livre minimo 136304 B
+16758303|sem-radio r1 teto-todas n=13 | 1000 decisoes | mediana    13863 us, IQR    13692-14086    us, p99    18435 us, max    20933 us | estado ON  247f85bd | pilha usada ate aqui 13700 B | heap livre minimo 136304 B
+16758303|sem-radio r1 teto-todas n=16 | 1000 decisoes | mediana    25745 us, IQR    25222-26793    us, p99    49154 us, max    51079 us | estado ON  158aaaaf | pilha usada ate aqui 13700 B | heap livre minimo 136304 B
+16758303|sem-radio r1 teto-todas n=17 | 1000 decisoes | mediana    27688 us, IQR    26959-29595    us, p99    53951 us, max    56168 us | estado ON  1440ad3d | pilha usada ate aqui 13700 B | heap livre minimo 135904 B
+16758303|sem-radio r1 teto-todas n=18 | 1000 decisoes | mediana    29375 us, IQR    28002-50969    us, p99    57218 us, max    60398 us | estado ON  5217f0d7 | pilha usada ate aqui 13700 B | heap livre minimo 135544 B
+16758509|sem-radio r1 teto-todas n=20 | 1000 decisoes | mediana    31336 us, IQR    29172-54399    us, p99    59868 us, max    61685 us | estado ON  486e82f7 | pilha usada ate aqui 13700 B | heap livre minimo 135048 B
+16758509|sem-radio r1 teto-todas n=30 | 1000 decisoes | mediana   899518 us, IQR   896858-902179   us, p99   927530 us, max   930711 us | estado ON  8c76c367 | pilha usada ate aqui 13700 B | heap livre minimo 133528 B
+16758509|sem-radio r1 pior       n= 2 | 1000 decisoes | mediana     6874 us, IQR     6867-6882     us, p99     6891 us, max     9602 us | estado ON  88b7a5c5 | pilha usada ate aqui 13700 B | heap livre minimo 133528 B
+16758509|sem-radio r1 pior       n= 4 | 1000 decisoes | mediana     7042 us, IQR     7030-7050     us, p99     7084 us, max     9714 us | estado ON  88b7a5c5 | pilha usada ate aqui 13700 B | heap livre minimo 133528 B
+16758509|sem-radio r1 pior       n= 6 | 1000 decisoes | mediana     8205 us, IQR     8191-8221     us, p99     8262 us, max    10864 us | estado ON  88b7a5c5 | pilha usada ate aqui 13700 B | heap livre minimo 133528 B
+16758509|sem-radio r1 pior       n= 8 | 1000 decisoes | mediana     8702 us, IQR     8671-8733     us, p99     8830 us, max    11354 us | estado ON  88b7a5c5 | pilha usada ate aqui 13700 B | heap livre minimo 133528 B
+16758509|sem-radio r1 pior       n=10 | 1000 decisoes | mediana    11551 us, IQR    11418-11678    us, p99    11921 us, max    14457 us | estado ON  88b7a5c5 | pilha usada ate aqui 13700 B | heap livre minimo 133528 B
+16758509|sem-radio r1 pior       n=13 | 1000 decisoes | mediana    31847 us, IQR    31800-31892    us, p99    32016 us, max    34525 us | estado ON  88b7a5c5 | pilha usada ate aqui 13700 B | heap livre minimo 133528 B
+16758509|sem-radio r1 pior       n=16 | 1000 decisoes | mediana   132403 us, IQR   126242-138773   us, p99   149529 us, max   161535 us | estado ON  88b7a5c5 | pilha usada ate aqui 13700 B | heap livre minimo 133288 B
+16758509|sem-radio r1 pior       n=17 | 1000 decisoes | mediana   322836 us, IQR   322608-323076   us, p99   323772 us, max   325802 us | estado ON  88b7a5c5 | pilha usada ate aqui 13700 B | heap livre minimo 132712 B
+16758509|sem-radio r1 pior       n=18 | 1000 decisoes | mediana   476805 us, IQR   454647-499021   us, p99   528187 us, max   541114 us | estado ON  88b7a5c5 | pilha usada ate aqui 13700 B | heap livre minimo 132364 B
+16758509|sem-radio r1 pior       n=20 | 1000 decisoes | mediana   854825 us, IQR   850397-859647   us, p99   869529 us, max   876789 us | estado ON  88b7a5c5 | pilha usada ate aqui 13700 B | heap livre minimo 131880 B
+16758715|sem-radio r1 pior       n=30 | 1000 decisoes | mediana   796682 us, IQR   793540-800344   us, p99   811682 us, max   825680 us | estado ON  88b7a5c5 | pilha usada ate aqui 13700 B | heap livre minimo 130448 B
+16758715|sem-radio r1 mochila    n= 2 | 1000 decisoes | mediana     9283 us, IQR     9176-9484     us, p99    10317 us, max    10328 us | estado OFF ceac1c5d | pilha usada ate aqui 13700 B | heap livre minimo 130448 B
+16758715|sem-radio r1 mochila    n= 4 | 1000 decisoes | mediana     9276 us, IQR     9256-9300     us, p99    10417 us, max    10451 us | estado ON  10cb1987 | pilha usada ate aqui 13700 B | heap livre minimo 130448 B
+16758715|sem-radio r1 mochila    n= 6 | 1000 decisoes | mediana    10428 us, IQR    10379-10490    us, p99    11604 us, max    12076 us | estado OFF 9142b8f7 | pilha usada ate aqui 13700 B | heap livre minimo 130448 B
+16758715|sem-radio r1 mochila    n= 8 | 1000 decisoes | mediana    10785 us, IQR    10655-10990    us, p99    12134 us, max    12256 us | estado OFF 1bce651d | pilha usada ate aqui 13700 B | heap livre minimo 130448 B
+16758715|sem-radio r1 mochila    n=10 | 1000 decisoes | mediana    12621 us, IQR    12381-12902    us, p99    14405 us, max    15113 us | estado OFF 51a29c45 | pilha usada ate aqui 13700 B | heap livre minimo 130448 B
+16758715|sem-radio r1 mochila    n=13 | 1000 decisoes | mediana    18226 us, IQR    16669-19457    us, p99    25951 us, max    26912 us | estado OFF ee790b75 | pilha usada ate aqui 13700 B | heap livre minimo 130448 B
+16758715|sem-radio r1 mochila    n=16 | 1000 decisoes | mediana    41027 us, IQR    31771-47978    us, p99    84928 us, max    89624 us | estado OFF e49dfab7 | pilha usada ate aqui 13700 B | heap livre minimo 130448 B
+16758715|sem-radio r1 mochila    n=17 | 1000 decisoes | mediana    56423 us, IQR    46193-72036    us, p99   125854 us, max   175071 us | estado OFF 7d176255 | pilha usada ate aqui 13700 B | heap livre minimo 130140 B
+16758715|sem-radio r1 mochila    n=18 | 1000 decisoes | mediana    83704 us, IQR    63188-127668   us, p99   243575 us, max   311579 us | estado OFF 313f9777 | pilha usada ate aqui 13700 B | heap livre minimo 129788 B
+16758921|sem-radio r1 mochila    n=20 | 1000 decisoes | mediana   230091 us, IQR   169204-301003   us, p99   604995 us, max   679653 us | estado OFF 8db482e7 | pilha usada ate aqui 13700 B | heap livre minimo 129280 B
+16758921|sem-radio r1 mochila    n=30 | 1000 decisoes | mediana   862408 us, IQR   849195-875731   us, p99   908540 us, max   930434 us | estado OFF b9c65715 | pilha usada ate aqui 13700 B | heap livre minimo 127764 B
+16758921|com-radio r0 folgado    n= 2 | 1000 decisoes | mediana     4997 us, IQR     4962-5026     us, p99     7416 us, max     7955 us | estado OFF 8fb75941 | pilha usada ate aqui  6924 B | heap livre minimo  62224 B
+16758921|com-radio r0 folgado    n= 4 | 1000 decisoes | mediana     4926 us, IQR     4902-4950     us, p99     7305 us, max     7747 us | estado OFF 8fb75941 | pilha usada ate aqui  6940 B | heap livre minimo  62224 B
+16758921|com-radio r0 folgado    n= 6 | 1000 decisoes | mediana     5590 us, IQR     5546-5735     us, p99     8147 us, max     9948 us | estado OFF 8fb75941 | pilha usada ate aqui  6940 B | heap livre minimo  62224 B
+16758921|com-radio r0 folgado    n= 8 | 1000 decisoes | mediana     5625 us, IQR     5585-5662     us, p99     8048 us, max     9429 us | estado OFF 8fb75941 | pilha usada ate aqui  6940 B | heap livre minimo  62224 B
+16758921|com-radio r0 folgado    n=10 | 1000 decisoes | mediana     6233 us, IQR     6197-6276     us, p99     8665 us, max    10739 us | estado OFF 8fb75941 | pilha usada ate aqui  6956 B | heap livre minimo  62224 B
+16758921|com-radio r0 folgado    n=13 | 1000 decisoes | mediana     6712 us, IQR     6661-6759     us, p99     9262 us, max     9658 us | estado OFF 8fb75941 | pilha usada ate aqui  6956 B | heap livre minimo  62224 B
+16758921|com-radio r0 folgado    n=16 | 1000 decisoes | mediana     6729 us, IQR     6682-6795     us, p99     9263 us, max     9557 us | estado OFF 8fb75941 | pilha usada ate aqui  6956 B | heap livre minimo  62224 B
+16758921|com-radio r0 folgado    n=17 | 1000 decisoes | mediana     7219 us, IQR     7175-7290     us, p99     9701 us, max    12385 us | estado OFF 8fb75941 | pilha usada ate aqui  6956 B | heap livre minimo  62224 B
+16758921|com-radio r0 folgado    n=18 | 1000 decisoes | mediana     7354 us, IQR     7301-7419     us, p99     9839 us, max    10226 us | estado OFF 8fb75941 | pilha usada ate aqui  6956 B | heap livre minimo  62224 B
+16758921|com-radio r0 folgado    n=20 | 1000 decisoes | mediana     7261 us, IQR     7212-7368     us, p99     9833 us, max    10166 us | estado OFF 8fb75941 | pilha usada ate aqui  6956 B | heap livre minimo  62224 B
+16759128|com-radio r0 folgado    n=30 | 1000 decisoes | mediana     9636 us, IQR     9564-9723     us, p99    12326 us, max    12640 us | estado OFF 8fb75941 | pilha usada ate aqui 12828 B | heap livre minimo  62224 B
+16759128|com-radio r0 teto-4     n= 2 | 1000 decisoes | mediana     6934 us, IQR     6921-6953     us, p99     9539 us, max    10049 us | estado ON  88b7a5c5 | pilha usada ate aqui 12828 B | heap livre minimo  62224 B
+16759128|com-radio r0 teto-4     n= 4 | 1000 decisoes | mediana     7113 us, IQR     7102-7133     us, p99     9641 us, max     9890 us | estado ON  88b7a5c5 | pilha usada ate aqui 12828 B | heap livre minimo  62224 B
+16759128|com-radio r0 teto-4     n= 6 | 1000 decisoes | mediana     8123 us, IQR     8012-8328     us, p99    11367 us, max    13711 us | estado ON  b26ff6d7 | pilha usada ate aqui 12828 B | heap livre minimo  62224 B
+16759128|com-radio r0 teto-4     n= 8 | 1000 decisoes | mediana     8065 us, IQR     7949-8476     us, p99    13319 us, max    14211 us | estado ON  edd0e57f | pilha usada ate aqui 12828 B | heap livre minimo  62224 B
+16759128|com-radio r0 teto-4     n=10 | 1000 decisoes | mediana    10834 us, IQR     8838-11509    us, p99    14492 us, max    15254 us | estado ON  0ca81f3d | pilha usada ate aqui 12828 B | heap livre minimo  62224 B
+16759128|com-radio r0 teto-4     n=13 | 1000 decisoes | mediana    10098 us, IQR     9508-11933    us, p99    14973 us, max    15984 us | estado ON  c53028cf | pilha usada ate aqui 12828 B | heap livre minimo  62224 B
+16759128|com-radio r0 teto-4     n=16 | 1000 decisoes | mediana    10786 us, IQR     9670-12545    us, p99    23223 us, max    29550 us | estado ON  b263fd9d | pilha usada ate aqui 12828 B | heap livre minimo  62224 B
+16759128|com-radio r0 teto-4     n=17 | 1000 decisoes | mediana    11722 us, IQR    10404-13383    us, p99    24095 us, max    30685 us | estado ON  d741b61d | pilha usada ate aqui 12828 B | heap livre minimo  62224 B
+16759128|com-radio r0 teto-4     n=18 | 1000 decisoes | mediana    11736 us, IQR    10424-13391    us, p99    22916 us, max    30540 us | estado ON  62135b15 | pilha usada ate aqui 12828 B | heap livre minimo  62224 B
+16759128|com-radio r0 teto-4     n=20 | 1000 decisoes | mediana    12598 us, IQR    10632-13753    us, p99    24960 us, max    29940 us | estado OFF e8f3575d | pilha usada ate aqui 12828 B | heap livre minimo  62224 B
+16759128|com-radio r0 teto-4     n=30 | 1000 decisoes | mediana    17125 us, IQR    15125-35000    us, p99   712817 us, max   955214 us | estado ON  4844527f | pilha usada ate aqui 13708 B | heap livre minimo  62224 B
+16759334|com-radio r0 teto-todas n= 2 | 1000 decisoes | mediana     6928 us, IQR     6912-6945     us, p99     9511 us, max     9952 us | estado ON  88b7a5c5 | pilha usada ate aqui 13708 B | heap livre minimo  62224 B
+16759334|com-radio r0 teto-todas n= 4 | 1000 decisoes | mediana     9516 us, IQR     9266-10040    us, p99    12691 us, max    13030 us | estado ON  d4da8555 | pilha usada ate aqui 13708 B | heap livre minimo  62224 B
+16759334|com-radio r0 teto-todas n= 6 | 1000 decisoes | mediana    10674 us, IQR    10460-11293    us, p99    14218 us, max    14388 us | estado OFF e6e1eff7 | pilha usada ate aqui 13708 B | heap livre minimo  62224 B
+16759334|com-radio r0 teto-todas n= 8 | 1000 decisoes | mediana    10839 us, IQR    10619-11667    us, p99    14321 us, max    14760 us | estado ON  1653a17d | pilha usada ate aqui 13708 B | heap livre minimo  62224 B
+16759334|com-radio r0 teto-todas n=10 | 1000 decisoes | mediana    11986 us, IQR    11759-12744    us, p99    15489 us, max    15672 us | estado ON  ff98272d | pilha usada ate aqui 13708 B | heap livre minimo  62224 B
+16759334|com-radio r0 teto-todas n=13 | 1000 decisoes | mediana    14026 us, IQR    13781-14611    us, p99    19559 us, max    23158 us | estado ON  cbe0aead | pilha usada ate aqui 13708 B | heap livre minimo  62224 B
+16759334|com-radio r0 teto-todas n=16 | 1000 decisoes | mediana    26651 us, IQR    25608-28287    us, p99    51518 us, max    52829 us | estado ON  de54a68d | pilha usada ate aqui 13708 B | heap livre minimo  62224 B
+16759334|com-radio r0 teto-todas n=17 | 1000 decisoes | mediana    28869 us, IQR    27248-30929    us, p99    56285 us, max    58634 us | estado ON  6cb600af | pilha usada ate aqui 13708 B | heap livre minimo  62224 B
+16759334|com-radio r0 teto-todas n=18 | 1000 decisoes | mediana    30714 us, IQR    28540-52913    us, p99    59574 us, max    60919 us | estado ON  d2180b87 | pilha usada ate aqui 13708 B | heap livre minimo  62224 B
+16759334|com-radio r0 teto-todas n=20 | 1000 decisoes | mediana    32426 us, IQR    29768-55954    us, p99    62108 us, max    65084 us | estado ON  deec262d | pilha usada ate aqui 13708 B | heap livre minimo  62224 B
+16759540|com-radio r0 teto-todas n=30 | 1000 decisoes | mediana   908437 us, IQR   905697-911121   us, p99   937094 us, max   939940 us | estado ON  49e8290d | pilha usada ate aqui 13804 B | heap livre minimo  62224 B
+16759540|com-radio r0 pior       n= 2 | 1000 decisoes | mediana     6911 us, IQR     6893-6930     us, p99     9516 us, max    11840 us | estado ON  88b7a5c5 | pilha usada ate aqui 13804 B | heap livre minimo  62224 B
+16759540|com-radio r0 pior       n= 4 | 1000 decisoes | mediana     7069 us, IQR     7053-7096     us, p99     9635 us, max     9840 us | estado ON  88b7a5c5 | pilha usada ate aqui 13804 B | heap livre minimo  62224 B
+16759540|com-radio r0 pior       n= 6 | 1000 decisoes | mediana     8240 us, IQR     8215-8272     us, p99    10858 us, max    11486 us | estado ON  88b7a5c5 | pilha usada ate aqui 13804 B | heap livre minimo  62224 B
+16759540|com-radio r0 pior       n= 8 | 1000 decisoes | mediana     8753 us, IQR     8713-8817     us, p99    11409 us, max    11590 us | estado ON  88b7a5c5 | pilha usada ate aqui 13804 B | heap livre minimo  62224 B
+16759540|com-radio r0 pior       n=10 | 1000 decisoes | mediana    11652 us, IQR    11484-11824    us, p99    14460 us, max    15005 us | estado ON  88b7a5c5 | pilha usada ate aqui 13804 B | heap livre minimo  62224 B
+16759540|com-radio r0 pior       n=13 | 1000 decisoes | mediana    32114 us, IQR    31939-34237    us, p99    34738 us, max    36957 us | estado ON  88b7a5c5 | pilha usada ate aqui 13804 B | heap livre minimo  62224 B
+16759540|com-radio r0 pior       n=16 | 1000 decisoes | mediana   136157 us, IQR   129457-142683   us, p99   153192 us, max   159113 us | estado ON  88b7a5c5 | pilha usada ate aqui 13804 B | heap livre minimo  62224 B
+16759540|com-radio r0 pior       n=17 | 1000 decisoes | mediana   327677 us, IQR   327267-328140   us, p99   329830 us, max   331072 us | estado ON  88b7a5c5 | pilha usada ate aqui 13804 B | heap livre minimo  62224 B
+16759540|com-radio r0 pior       n=18 | 1000 decisoes | mediana   484153 us, IQR   461494-507250   us, p99   540250 us, max   559200 us | estado ON  88b7a5c5 | pilha usada ate aqui 13804 B | heap livre minimo  62224 B
+16759540|com-radio r0 pior       n=20 | 1000 decisoes | mediana   864716 us, IQR   860784-869339   us, p99   879826 us, max   882988 us | estado ON  88b7a5c5 | pilha usada ate aqui 13804 B | heap livre minimo  62224 B
+16759540|com-radio r0 pior       n=30 | 1000 decisoes | mediana   804901 us, IQR   801744-808896   us, p99   820272 us, max   825139 us | estado ON  88b7a5c5 | pilha usada ate aqui 13804 B | heap livre minimo  62104 B
+16759746|com-radio r0 mochila    n= 2 | 1000 decisoes | mediana     9384 us, IQR     9209-9945     us, p99    12839 us, max    13027 us | estado OFF 2b440ccf | pilha usada ate aqui 13804 B | heap livre minimo  62104 B
+16759746|com-radio r0 mochila    n= 4 | 1000 decisoes | mediana     9308 us, IQR     9278-9417     us, p99    11975 us, max    13150 us | estado OFF 71c6b22f | pilha usada ate aqui 13804 B | heap livre minimo  62104 B
+16759746|com-radio r0 mochila    n= 6 | 1000 decisoes | mediana    10487 us, IQR    10430-10705    us, p99    13352 us, max    14403 us | estado OFF 68d783d7 | pilha usada ate aqui 13804 B | heap livre minimo  62104 B
+16759746|com-radio r0 mochila    n= 8 | 1000 decisoes | mediana    10914 us, IQR    10705-11184    us, p99    13746 us, max    14746 us | estado OFF 2cea4b55 | pilha usada ate aqui 13804 B | heap livre minimo  62104 B
+16759746|com-radio r0 mochila    n=10 | 1000 decisoes | mediana    12730 us, IQR    12470-13394    us, p99    16367 us, max    17378 us | estado OFF 61dbee4d | pilha usada ate aqui 13804 B | heap livre minimo  62104 B
+16759746|com-radio r0 mochila    n=13 | 1000 decisoes | mediana    18609 us, IQR    17183-20071    us, p99    26707 us, max    28805 us | estado OFF da0aeafd | pilha usada ate aqui 13804 B | heap livre minimo  62104 B
+16759746|com-radio r0 mochila    n=16 | 1000 decisoes | mediana    41860 us, IQR    32245-49196    us, p99    85593 us, max    94309 us | estado OFF f81726b5 | pilha usada ate aqui 13804 B | heap livre minimo  62104 B
+16759746|com-radio r0 mochila    n=17 | 1000 decisoes | mediana    58399 us, IQR    47899-72473    us, p99   126715 us, max   147744 us | estado OFF 44d0d7cd | pilha usada ate aqui 13804 B | heap livre minimo  61808 B
+16759746|com-radio r0 mochila    n=18 | 1000 decisoes | mediana    92152 us, IQR    68998-134893   us, p99   244465 us, max   321437 us | estado OFF 81ae0177 | pilha usada ate aqui 13804 B | heap livre minimo  61448 B
+16759746|com-radio r0 mochila    n=20 | 1000 decisoes | mediana   230054 us, IQR   166957-306081   us, p99   589248 us, max   882028 us | estado OFF 3b6e7bf5 | pilha usada ate aqui 13804 B | heap livre minimo  60980 B
+16759746|com-radio r0 mochila    n=30 | 1000 decisoes | mediana   871930 us, IQR   857831-885590   us, p99   915131 us, max   935831 us | estado OFF c0296edd | pilha usada ate aqui 13804 B | heap livre minimo  59776 B
+16759746|=== fim

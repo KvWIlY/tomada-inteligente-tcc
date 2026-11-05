@@ -1,0 +1,21 @@
+# Cargas FORA do sistema (sem tomada inteligente): o MILP nunca as ve. So para gerar-base.
+nome = "c5-limite-fora"
+duracao = "30d"
+passo_s = 10
+[base]
+arquivo = "c5-limite-fora.csv"
+passo_s = 10
+[casa]
+p_max_w = 100000
+[[grupo]]
+nome = "chuveiro"
+perfil = "janelas"
+uso_w = 4400
+standby_w = 0
+janelas = ["19:00-19:10"]
+[[grupo]]
+nome = "ar-quarto"
+perfil = "janelas"
+uso_w = 808
+standby_w = 0
+janelas = ["21:00-06:00"]

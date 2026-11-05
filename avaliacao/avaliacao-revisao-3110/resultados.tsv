@@ -1,0 +1,7 @@
+caso	acima	maior_seq	pior_w	negado_min	corte_a_mais	off_critica	trocas_em_uso	passos_ausente	maior_l_w	digest
+c6-sem-perda	32	1	616	870	30	0	62	0	0	sha256:855481eb91abc
+c6-surda-airfryer	3631	120	616	270	30	0	61	6240	1056	sha256:993ca589f5c0f
+c6-surda-microondas	572	18	616	780	30	0	62	6240	1056	sha256:3effa2d948a2d
+c6-surda-ferro	32	1	616	870	30	0	62	6240	56	sha256:91651f1814dbe
+c6-surda-airfryer-microondas	3631	120	2016	180	30	0	61	6240	1056	sha256:77382a13dd92e
+c6-surdas-todas	3631	120	2016	180	30	0	61	6240	1056	sha256:1a25840b8559a

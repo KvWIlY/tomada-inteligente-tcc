@@ -1,0 +1,259 @@
+58|ets Jul 29 2019 12:21:46
+58|
+58|rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+58|configsip: 0, SPIWP:0xee
+58|clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+58|mode:DIO, clock div:2
+58|load:0x3fff0030,len:6384
+58|load:0x40078000,len:15916
+58|load:0x40080400,len:3920
+58|entry 0x40080644
+58|I (27) boot: ESP-IDF v5.5.1-838-gd66ebb86d2e 2nd stage bootloader
+58|I (27) boot: compile time Nov 26 2025 10:51:37
+58|I (28) boot: Multicore bootloader
+58|I (30) boot: chip revision: v3.1
+58|I (33) boot.esp32: SPI Speed      : 40MHz
+58|I (37) boot.esp32: SPI Mode       : DIO
+58|I (40) boot.esp32: SPI Flash Size : 4MB
+58|I (44) boot: Enabling RNG early entropy source...
+267|I (48) boot: Partition Table:
+267|I (51) boot: ## Label            Usage          Type ST Offset   Length
+267|I (57) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+267|I (64) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+267|I (70) boot:  2 factory          factory app      00 00 00010000 00350000
+267|I (77) boot:  3 storage          Unknown data     01 83 00360000 000a0000
+267|I (83) boot: End of partition table
+267|I (87) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=413b0h (267184) map
+267|I (185) esp_image: segment 1: paddr=000513d8 vaddr=3ffb0000 size=04124h ( 16676) load
+267|I (192) esp_image: segment 2: paddr=00055504 vaddr=40080000 size=0ab14h ( 43796) load
+267|I (209) esp_image: segment 3: paddr=00060020 vaddr=400d0020 size=fca70h (1034864) map
+686|I (563) esp_image: segment 4: paddr=0015ca98 vaddr=4008ab14 size=0a564h ( 42340) load
+686|I (590) boot: Loaded app from partition at offset 0x10000
+686|I (590) boot: Disabling RNG early entropy source...
+686|[0;32mI (600) cpu_start: Multicore app[0m
+686|[0;32mI (609) cpu_start: Pro cpu start user code[0m
+686|[0;32mI (609) cpu_start: cpu freq: 160000000 Hz[0m
+686|[0;32mI (609) cpu_start: Application information:[0m
+686|[0;32mI (612) cpu_start: Project name:     libespidf[0m
+686|[0;32mI (617) cpu_start: App version:      76c8a05-dirty[0m
+686|[0;32mI (622) cpu_start: Compile time:     Aug  5 2026 00:57:47[0m
+686|[0;32mI (628) cpu_start: ELF file SHA256:  000000000...[0m
+686|[0;32mI (634) cpu_start: ESP-IDF:          v5.2.3[0m
+686|[0;32mI (639) cpu_start: Min chip rev:     v0.0[0m
+686|[0;32mI (643) cpu_start: Max chip rev:     v3.99 [0m
+686|[0;32mI (648) cpu_start: Chip rev:         v3.1[0m
+686|[0;32mI (653) heap_init: Initializing. RAM available for dynamic allocation:[0m
+686|[0;32mI (660) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+686|[0;32mI (666) heap_init: At 3FFB82E0 len 00027D20 (159 KiB): DRAM[0m
+920|[0;32mI (672) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+920|[0;32mI (679) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+920|[0;32mI (685) heap_init: At 40095078 len 0000AF88 (43 KiB): IRAM[0m
+920|[0;32mI (693) spi_flash: detected chip: generic[0m
+920|[0;32mI (696) spi_flash: flash io: dio[0m
+920|[0;33mW (700) i2c: This driver is an old driver, please migrate your application code to adapt `driver/i2c_master.h`[0m
+920|[0;32mI (711) main_task: Started on CPU0[0m
+920|[0;32mI (715) main_task: Calling app_main()[0m
+920|I (721) wifi:wifi driver task: 3ffc9380, prio:23, stack:6656, core=0
+920|I (726) wifi:wifi firmware version: 82f54d2
+920|I (728) wifi:wifi certification version: v7.0
+920|I (732) wifi:config NVS flash: disabled
+920|I (736) wifi:config nano formating: disabled
+920|I (740) wifi:Init data frame dynamic rx buffer num: 32
+920|I (745) wifi:Init static rx mgmt buffer num: 5
+920|I (749) wifi:Init management short buffer num: 32
+920|I (753) wifi:Init dynamic tx buffer num: 32
+920|I (758) wifi:Init static rx buffer size: 1600
+920|I (762) wifi:Init static rx buffer num: 10
+920|I (765) wifi:Init dynamic rx buffer num: 32
+920|[0;32mI (770) wifi_init: rx ba win: 6[0m
+920|[0;32mI (773) wifi_init: tcpip mbox: 32[0m
+920|[0;32mI (777) wifi_init: udp mbox: 6[0m
+920|[0;32mI (781) wifi_init: tcp mbox: 6[0m
+920|[0;32mI (784) wifi_init: tcp tx win: 5760[0m
+920|[0;32mI (789) wifi_init: tcp rx win: 5760[0m
+920|[0;32mI (793) wifi_init: tcp mss: 1440[0m
+920|[0;32mI (797) wifi_init: WiFi IRAM OP enabled[0m
+920|[0;32mI (801) wifi_init: WiFi RX IRAM OP enabled[0m
+920|W (811) wifi:Password length is zero, but authmode threshold is 3, making it impossible to connect to an AP with authmode OPEN
+920|[0;32mI (818) phy_init: phy_version 4840,a40f0ac,Aug 16 2024,16:48:06[0m
+920|[0;31mE (824) phy_init: esp_phy_load_cal_data_from_nvs: NVS has not been initialized. Call nvs_flash_init before starting WiFi/BT.[0m
+920|[0;33mW (836) phy_init: failed to load RF calibration data (0x1101), falling back to full calibration[0m
+1162|[0;33mW (920) phy_init: saving new calibration data because of checksum failure, mode(2)[0m
+1162|I (923) wifi:mode : sta (a0:a3:b3:ab:24:ac)
+1162|I (924) wifi:enable tsf
+1162|I (929) wifi:Set ps type: 0, coexist: 0
+1162|
+1162|[0;32mI (931) esp_idf_svc::espnow: Initializing ESP NOW[0m
+1162|I (934) ESPNOW: espnow [version: 1.0] init
+1162|I,microondas,a0:a3:b3:ab:24:ac,inicio
+8791|L,microondas,7,0,1,0,STD,0,0,2,0,140,1
+18915|L,microondas,18,1,1,1,STD,0,0,2,0,180,1
+29211|L,microondas,28,2,1,1,STD,0,0,2,0,201,1
+39464|L,microondas,38,3,1,1,STD,0,0,2,0,201,1
+49671|L,microondas,48,4,1,1,STD,0,0,2,0,201,1
+59861|L,microondas,58,5,1,1,STD,0,0,2,0,201,1
+70010|L,microondas,69,6,1,1,STD,0,0,2,0,235,1
+80383|L,microondas,79,7,1,1,STD,0,0,2,0,234,1
+90501|L,microondas,89,8,1,1,STD,0,0,2,0,234,1
+100782|L,microondas,99,9,1,1,STD,0,0,2,0,234,1
+111039|L,microondas,110,10,1,1,STD,0,0,2,0,235,1
+122373|L,microondas,120,11,1400,1400,ON,1,0,2,0,1240,1
+133621|L,microondas,131,12,1400,1400,ON,1,0,2,0,1237,1
+144825|L,microondas,142,13,1400,1400,ON,1,0,2,0,1237,1
+155129|L,microondas,154,14,1,1,STD,0,0,2,0,221,1
+165332|L,microondas,164,15,1,1,STD,0,0,2,0,219,1
+175514|L,microondas,174,16,1,1,STD,0,0,2,0,219,1
+185649|L,microondas,184,17,1,1,STD,0,0,2,0,219,1
+195989|L,microondas,194,18,1,1,STD,0,0,2,0,219,1
+206155|L,microondas,205,19,1,1,STD,0,0,2,0,190,1
+216306|L,microondas,215,20,1,1,STD,0,0,2,0,190,1
+226622|L,microondas,225,21,1,1,STD,0,0,2,0,190,1
+236688|L,microondas,235,22,1,1,STD,0,0,2,0,190,1
+246919|L,microondas,245,23,1,1,STD,0,0,2,0,139,1
+257136|L,microondas,256,24,1,1,STD,0,0,2,0,139,1
+267181|L,microondas,266,25,1,1,STD,0,0,2,0,139,1
+277374|L,microondas,276,26,1,1,STD,0,0,2,0,139,1
+287535|L,microondas,286,27,1,1,STD,0,0,2,0,139,1
+297655|L,microondas,296,28,1,1,STD,0,0,2,0,139,1
+307747|L,microondas,306,29,1,1,STD,0,0,2,0,139,1
+317979|L,microondas,316,30,1,1,STD,0,0,2,0,139,1
+328048|L,microondas,327,31,1,1,STD,0,0,2,0,139,1
+338186|L,microondas,337,32,1,1,STD,0,0,2,0,139,1
+348375|L,microondas,347,33,1,1,STD,0,0,2,0,139,1
+358535|L,microondas,357,34,1,1,STD,0,0,2,0,139,1
+368656|L,microondas,367,35,1,1,STD,0,0,2,0,139,1
+378852|L,microondas,377,36,1,1,STD,0,0,2,0,139,1
+389041|L,microondas,388,37,1,1,STD,0,0,2,0,191,1
+399247|L,microondas,398,38,1,1,STD,0,0,2,0,190,1
+409359|L,microondas,408,39,1,1,STD,0,0,2,0,190,1
+419678|L,microondas,418,40,1,1,STD,0,0,2,0,190,1
+429859|L,microondas,428,41,1,1,STD,0,0,2,0,219,1
+440021|L,microondas,439,42,1,1,STD,0,0,2,0,219,1
+450196|L,microondas,449,43,1,1,STD,0,0,2,0,219,1
+460562|L,microondas,459,44,1,1,STD,0,0,2,0,219,1
+470713|L,microondas,469,45,1,1,STD,0,0,2,0,219,1
+481023|L,microondas,479,46,1,1,STD,0,0,2,0,219,1
+492257|L,microondas,490,47,1400,1400,ON,1,0,2,0,1239,1
+503469|L,microondas,501,48,1400,1400,ON,1,0,2,0,1237,1
+513771|L,microondas,512,49,1,1,STD,0,0,2,0,220,1
+524015|L,microondas,522,50,1,1,STD,0,0,2,0,219,1
+534204|L,microondas,533,51,1,1,STD,0,0,2,0,219,1
+544403|L,microondas,543,52,1,1,STD,0,0,2,0,219,1
+554624|L,microondas,553,53,1,1,STD,0,0,2,0,219,1
+564716|L,microondas,563,54,1,1,STD,0,0,2,0,190,1
+574942|L,microondas,574,55,1,1,STD,0,0,2,0,191,1
+585133|L,microondas,584,56,1,1,STD,0,0,2,0,190,1
+595441|L,microondas,594,57,1,1,STD,0,0,2,0,190,1
+605584|L,microondas,604,58,1,1,STD,0,0,2,0,190,1
+615849|L,microondas,614,59,1,1,STD,0,0,2,0,139,1
+625985|L,microondas,624,60,1,1,STD,0,0,2,0,139,1
+636031|L,microondas,635,61,1,1,STD,0,0,2,0,139,1
+646215|L,microondas,645,62,1,1,STD,0,0,2,0,139,1
+656304|L,microondas,655,63,1,1,STD,0,0,2,0,139,1
+666439|L,microondas,665,64,1,1,STD,0,0,2,0,139,1
+676666|L,microondas,675,65,1,1,STD,0,0,2,0,139,1
+686784|L,microondas,685,66,1,1,STD,0,0,2,0,139,1
+696983|L,microondas,695,67,1,1,STD,0,0,2,0,139,1
+707135|L,microondas,706,68,1,1,STD,0,0,2,0,139,1
+717308|L,microondas,716,69,1,1,STD,0,0,2,0,139,1
+727341|L,microondas,726,70,1,1,STD,0,0,2,0,139,1
+737428|L,microondas,736,71,1,1,STD,0,0,2,0,139,1
+747667|L,microondas,746,72,1,1,STD,0,0,2,0,190,1
+758018|L,microondas,756,73,1,1,STD,0,0,2,0,191,1
+768025|L,microondas,767,74,1,1,STD,0,0,2,0,190,1
+778256|L,microondas,777,75,1,1,STD,0,0,2,0,190,1
+788454|L,microondas,787,76,1,1,STD,0,0,2,0,219,1
+798849|L,microondas,797,77,1,1,STD,0,0,2,0,219,1
+809092|L,microondas,807,78,1,1,STD,0,0,2,0,219,1
+819295|L,microondas,818,79,1,1,STD,0,0,2,0,219,1
+829570|L,microondas,828,80,1,1,STD,0,0,2,0,219,1
+839716|L,microondas,838,81,1,1,STD,0,0,2,0,219,1
+851003|L,microondas,848,82,1400,1400,ON,1,0,2,0,1240,1
+862133|L,microondas,860,83,1400,1400,ON,1,0,2,0,1237,1
+872350|L,microondas,871,84,1,1,STD,0,0,2,0,220,1
+882587|L,microondas,881,85,1,1,STD,0,0,2,0,219,1
+892794|L,microondas,891,86,1,1,STD,0,0,2,0,219,1
+903186|L,microondas,902,87,1,1,STD,0,0,2,0,219,1
+913293|L,microondas,912,88,1,1,STD,0,0,2,0,219,1
+923603|L,microondas,922,89,1,1,STD,0,0,2,0,190,1
+933645|L,microondas,932,90,1,1,STD,0,0,2,0,190,1
+943829|L,microondas,942,91,1,1,STD,0,0,2,0,191,1
+954217|L,microondas,953,92,1,1,STD,0,0,2,0,190,1
+964376|L,microondas,963,93,1,1,STD,0,0,2,0,190,1
+974523|L,microondas,973,94,1,1,STD,0,0,2,0,139,1
+984654|L,microondas,983,95,1,1,STD,0,0,2,0,139,1
+994866|L,microondas,993,96,1,1,STD,0,0,2,0,139,1
+1005008|L,microondas,1003,97,1,1,STD,0,0,2,0,139,1
+1015124|L,microondas,1014,98,1,1,STD,0,0,2,0,139,1
+1025180|L,microondas,1024,99,1,1,STD,0,0,2,0,139,1
+1035352|L,microondas,1034,100,1,1,STD,0,0,2,0,139,1
+1045472|L,microondas,1044,101,1,1,STD,0,0,2,0,139,1
+1055665|L,microondas,1054,102,1,1,STD,0,0,2,0,139,1
+1065792|L,microondas,1064,103,1,1,STD,0,0,2,0,139,1
+1075897|L,microondas,1075,104,1,1,STD,0,0,2,0,139,1
+1086173|L,microondas,1085,105,1,1,STD,0,0,2,0,139,1
+1096163|L,microondas,1095,106,1,1,STD,0,0,2,0,139,1
+1106472|L,microondas,1105,107,1,1,STD,0,0,2,0,190,1
+1116559|L,microondas,1115,108,1,1,STD,0,0,2,0,190,1
+1126904|L,microondas,1125,109,1,1,STD,0,0,2,0,190,1
+1137134|L,microondas,1136,110,1,1,STD,0,0,2,0,191,1
+1147248|L,microondas,1146,111,1,1,STD,0,0,2,0,219,1
+1157579|L,microondas,1156,112,1,1,STD,0,0,2,0,219,1
+1167672|L,microondas,1166,113,1,1,STD,0,0,2,0,219,1
+1177853|L,microondas,1176,114,1,1,STD,0,0,2,0,219,1
+1188252|L,microondas,1187,115,1,1,STD,0,0,2,0,219,1
+1198390|L,microondas,1197,116,1,1,STD,0,0,2,0,219,1
+1209663|L,microondas,1207,117,1400,1400,ON,1,0,2,0,1239,1
+1220897|L,microondas,1218,118,1400,1400,ON,1,0,2,0,1236,1
+1231102|L,microondas,1230,119,1,1,STD,0,0,1,1000,148,1
+1241140|L,microondas,1240,120,1,1,STD,0,0,1,1000,146,1
+1251327|L,microondas,1250,121,1,1,STD,0,0,1,1000,146,1
+1261473|L,microondas,1260,122,1,1,STD,0,0,1,1000,146,1
+1271698|L,microondas,1270,123,1,1,STD,0,0,1,1000,146,1
+1281873|L,microondas,1280,124,1,1,STD,0,0,1,1000,146,1
+1292065|L,microondas,1291,125,1,1,STD,0,0,1,1000,147,1
+1302139|L,microondas,1301,126,1,1,STD,0,0,2,0,190,1
+1312416|L,microondas,1311,127,1,1,STD,0,0,2,0,190,1
+1322492|L,microondas,1321,128,1,1,STD,0,0,2,0,190,1
+1332725|L,microondas,1331,129,1,1,STD,0,0,2,0,139,1
+1342891|L,microondas,1341,130,1,1,STD,0,0,2,0,139,1
+1352945|L,microondas,1352,131,1,1,STD,0,0,2,0,139,1
+1363168|L,microondas,1362,132,1,1,STD,0,0,2,0,139,1
+1373388|L,microondas,1372,133,1,1,STD,0,0,2,0,139,1
+1383377|L,microondas,1382,134,1,1,STD,0,0,2,0,139,1
+1393632|L,microondas,1392,135,1,1,STD,0,0,2,0,139,1
+1403830|L,microondas,1402,136,1,1,STD,0,0,2,0,139,1
+1413896|L,microondas,1412,137,1,1,STD,0,0,2,0,139,1
+1424088|L,microondas,1423,138,1,1,STD,0,0,2,0,139,1
+1434272|L,microondas,1433,139,1,1,STD,0,0,2,0,139,1
+1444456|L,microondas,1443,140,1,1,STD,0,0,2,0,139,1
+1454613|L,microondas,1453,141,1,1,STD,0,0,2,0,139,1
+1464645|L,microondas,1463,142,1,1,STD,0,0,2,0,190,1
+1474856|L,microondas,1473,143,1,1,STD,0,0,2,0,190,1
+1485109|L,microondas,1484,144,1,1,STD,0,0,2,0,191,1
+1495338|L,microondas,1494,145,1,1,STD,0,0,2,0,190,1
+1505615|L,microondas,1504,146,1,1,STD,0,0,2,0,190,1
+1515713|L,microondas,1514,147,1,1,STD,0,0,2,0,219,1
+1525878|L,microondas,1524,148,1,1,STD,0,0,2,0,219,1
+1536271|L,microondas,1535,149,1,1,STD,0,0,2,0,219,1
+1546468|L,microondas,1545,150,1,1,STD,0,0,2,0,219,1
+1556589|L,microondas,1555,151,1,1,STD,0,0,2,0,219,1
+1567882|L,microondas,1565,152,1400,1400,ON,1,0,2,0,1239,1
+1579201|L,microondas,1577,153,1400,1400,ON,1,0,2,0,1237,1
+1590318|L,microondas,1588,154,1400,1400,ON,1,0,2,0,1237,1
+1600564|L,microondas,1599,155,1,1,STD,0,0,2,0,220,1
+1610883|L,microondas,1609,156,1,1,STD,0,0,2,0,219,1
+1621118|L,microondas,1620,157,1,1,STD,0,0,2,0,220,1
+1631334|L,microondas,1630,158,1,1,STD,0,0,2,0,219,1
+1641564|L,microondas,1640,159,1,1,STD,0,0,2,0,219,1
+1651751|L,microondas,1650,160,1,1,STD,0,0,2,0,190,1
+1661980|L,microondas,1660,161,1,1,STD,0,0,2,0,191,1
+1672227|L,microondas,1671,162,1,1,STD,0,0,2,0,190,1
+1682241|L,microondas,1681,163,1,1,STD,0,0,2,0,190,1
+1692449|L,microondas,1691,164,1,1,STD,0,0,2,0,139,1
+1702671|L,microondas,1701,165,1,1,STD,0,0,2,0,139,1
+1712682|L,microondas,1711,166,1,1,STD,0,0,2,0,139,1
+1722910|L,microondas,1721,167,1,1,STD,0,0,2,0,139,1
+1733142|L,microondas,1732,168,1,1,STD,0,0,2,0,139,1
+1743172|L,microondas,1742,169,1,1,STD,0,0,2,0,139,1
+1753313|L,microondas,1752,170,1,1,STD,0,0,2,0,139,1

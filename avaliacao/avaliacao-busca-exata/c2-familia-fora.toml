@@ -1,0 +1,41 @@
+# Cargas FORA do sistema (sem tomada inteligente): o MILP nunca as ve. So para gerar-base.
+nome = "c2-familia-fora"
+duracao = "30d"
+passo_s = 10
+[base]
+arquivo = "c2-familia-fora.csv"
+passo_s = 10
+[casa]
+p_max_w = 100000
+[[grupo]]
+nome = "ar-casal"
+perfil = "janelas"
+uso_w = 1146
+standby_w = 0
+janelas = ["21:00-06:00"]
+[[grupo]]
+nome = "ar-criancas"
+perfil = "janelas"
+uso_w = 808
+standby_w = 0
+janelas = ["21:00-06:00"]
+[[grupo]]
+nome = "iluminacao"
+perfil = "janelas"
+uso_w = 40
+standby_w = 0
+janelas = ["18:00-23:00"]
+[[grupo]]
+nome = "maquina-lavar"
+perfil = "janelas"
+uso_w = 360
+standby_w = 0
+janelas = []
+janelas_fds = ["09:00-10:00"]
+[[grupo]]
+nome = "ferro"
+perfil = "janelas"
+uso_w = 1000
+standby_w = 0
+janelas = []
+janelas_fds = ["08:00-08:10"]

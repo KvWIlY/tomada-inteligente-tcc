@@ -1,0 +1,18 @@
+aviso: grupo "geladeira": consumo fora de uso (31.5 W) acima do limiar_uso_w (15 W). O aparelho parece "em uso" o tempo todo, o fantasma nunca é detectado e a rodada tende a sair verde com economia zero
+caso c1-t5: 6 tomadas, 259.200 passos de 10 s (30 d), 1.555.200 solves
+Com realimentação: a tomada decidida OFF lê 0 W no passo seguinte, como a placa com o relé aberto. A base é o que o aparelho puxaria se estivesse energizado.
+
+tomada                cortes passos_off religamentos      off_h      std_h       on_h
+geladeira                  0          0            0       0,00       0,00     720,00
+roteador                   0          0            0       0,00     720,00       0,00
+tv                        31    204.300           30     567,50       2,50     150,00
+decodificador             31    204.300           30     567,50       2,50     150,00
+microondas                61    248.370           60     689,92      25,08       5,00
+carregador-celular        30    247.529           30     687,58       2,42      30,00
+
+casa: base 49518,0 Wh, com o sistema 46003,1 Wh, economia 3514,9 Wh
+cortes 153, passos acima do teto 0 (pior excesso 0,0 W), penalidades: nenhuma
+custo: 18 binárias por solve, decidir mediana 0 us / p90 0 us / max 2.679 us, 1.555.200 solves, parede 2,0 s (tempo de PC, não do Xtensa)
+desfecho: completou
+digest: sha256:b9f70519cdddd6a36530c0ba51e0094c472693fe10ecc7d89633f1cefd0d3b1e
+pasta: rodadas\c1-t5\20261029-223433

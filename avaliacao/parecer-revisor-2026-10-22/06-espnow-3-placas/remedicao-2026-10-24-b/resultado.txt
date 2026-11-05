@@ -1,0 +1,40 @@
+alinhamento (PC - uptime, s): {'ferro': 1.54, 'air-fryer': 1.51, 'microondas': 1.51}
+ferro: 175 ciclos, decidir mediana 190 ms, max 1245 ms, enviados 167, botoes 0
+air-fryer: 175 ciclos, decidir mediana 190 ms, max 1242 ms, enviados None, botoes None
+microondas: 175 ciclos, decidir mediana 190 ms, max 1247 ms, enviados 175, botoes 0
+acima do teto: 51 s em 5 rajadas (maior 11 s, pior +1360 W)
+uso negado (s): {'ferro': 0, 'air-fryer': 168, 'microondas': 0}
+enlaces (recebidos / perdidos):
+  ferro <- a0:a3:b3:ab:24:ac: 175 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 175 recebidos, 0 perdidos (0.0%)
+  microondas <- a8:42:e3:a7:db:c8: 175 recebidos, 0 perdidos (0.0%)
+  microondas <- e8:6b:ea:d0:ad:c0: 167 recebidos, 0 perdidos (0.0%)
+falha do ferro (1200-1290 s), visto pelas outras:
+  air-fryer t=1190 vivas=2 carga_fixa=0 estado=ON
+  air-fryer t=1200 vivas=2 carga_fixa=0 estado=ON
+  air-fryer t=1210 vivas=2 carga_fixa=0 estado=OFF
+  air-fryer t=1221 vivas=2 carga_fixa=0 estado=OFF
+  air-fryer t=1233 vivas=1 carga_fixa=1000 estado=OFF
+  air-fryer t=1243 vivas=1 carga_fixa=1000 estado=ON
+  air-fryer t=1254 vivas=1 carga_fixa=1000 estado=ON
+  air-fryer t=1264 vivas=1 carga_fixa=1000 estado=ON
+  air-fryer t=1274 vivas=1 carga_fixa=1000 estado=ON
+  air-fryer t=1284 vivas=1 carga_fixa=1000 estado=ON
+  air-fryer t=1294 vivas=2 carga_fixa=0 estado=ON
+  air-fryer t=1304 vivas=2 carga_fixa=0 estado=ON
+  air-fryer t=1315 vivas=2 carga_fixa=0 estado=ON
+  air-fryer t=1325 vivas=2 carga_fixa=0 estado=STD
+  microondas t=1186 vivas=2 carga_fixa=0 estado=STD
+  microondas t=1196 vivas=2 carga_fixa=0 estado=STD
+  microondas t=1206 vivas=2 carga_fixa=0 estado=ON
+  microondas t=1217 vivas=2 carga_fixa=0 estado=ON
+  microondas t=1229 vivas=1 carga_fixa=1000 estado=ON
+  microondas t=1239 vivas=1 carga_fixa=1000 estado=STD
+  microondas t=1249 vivas=1 carga_fixa=1000 estado=STD
+  microondas t=1260 vivas=1 carga_fixa=1000 estado=STD
+  microondas t=1270 vivas=1 carga_fixa=1000 estado=STD
+  microondas t=1280 vivas=1 carga_fixa=1000 estado=STD
+  microondas t=1290 vivas=1 carga_fixa=1000 estado=STD
+  microondas t=1300 vivas=2 carga_fixa=0 estado=STD
+  microondas t=1310 vivas=2 carga_fixa=0 estado=STD
+  microondas t=1321 vivas=2 carga_fixa=0 estado=STD

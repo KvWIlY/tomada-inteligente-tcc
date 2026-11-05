@@ -1,0 +1,23 @@
+aviso: grupo "geladeira": consumo fora de uso (55.6 W) acima do limiar_uso_w (15 W). O aparelho parece "em uso" o tempo todo, o fantasma nunca é detectado e a rodada tende a sair verde com economia zero
+caso c4-pausas-t10: 11 tomadas, 259.200 passos de 10 s (30 d), 2.851.200 solves
+Com realimentação: a tomada decidida OFF lê 0 W no passo seguinte, como a placa com o relé aberto. A base é o que o aparelho puxaria se estivesse energizado.
+
+tomada                cortes passos_off religamentos      off_h      std_h       on_h
+geladeira                  0          0            0       0,00       0,00     720,00
+roteador                   0          0            0       0,00     720,00       0,00
+tv                        91    207.030           90     575,08      14,92     130,00
+decodificador             91    207.030           90     575,08      14,92     130,00
+console                   61    230.400           60     640,00      10,00      70,00
+soundbar                  91    207.030           90     575,08      14,92     130,00
+home-theater              61    230.400           60     640,00      10,00      70,00
+computador                31    246.570           30     684,92       8,58      26,50
+microondas                61    248.340           60     689,83      25,17       5,00
+carregador-celular        30    246.630           30     685,08       4,92      30,00
+carregador-celular-2      30    246.630           29     685,08       4,92      30,00
+
+casa: base 101228,5 Wh, com o sistema 91239,9 Wh, economia 9988,6 Wh
+cortes 547, passos acima do teto 0 (pior excesso 0,0 W), penalidades: nenhuma
+custo: 33 binárias por solve, decidir mediana 0 us / p90 0 us / max 425 us, 2.851.200 solves, parede 3,6 s (tempo de PC, não do Xtensa)
+desfecho: completou
+digest: sha256:2dcb2e46c5e78ccef10e4bb50c18369dcf1babb3396f2a819e0beaa85cf6eaf4
+pasta: rodadas\c4-pausas-t10\20261029-223541

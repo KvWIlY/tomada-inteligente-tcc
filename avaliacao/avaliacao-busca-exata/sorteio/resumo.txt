@@ -1,0 +1,45 @@
+c4-eletronicos (30 sementes: 1-30)
+  base_kwh        media   108.450  dp   0.760  min   106.420  max   110.064  IC95 +-0.284
+  sistema_kwh     media    98.569  dp   0.764  min    96.531  max   100.217  IC95 +-0.285
+  eco_pct         media     9.112  dp   0.071  min     8.947  max     9.292  IC95 +-0.026
+  eco_kwh         media     9.881  dp   0.024  min     9.824  max     9.927  IC95 +-0.009
+  eco_rs          media     9.538  dp   0.024  min     9.480  max     9.580  IC95 +-0.009
+  usar_agora_dia  media    10.087  dp   0.025  min    10.030  max    10.130  IC95 +-0.009
+  negado_kwh      media     0.000  dp   0.000  min     0.000  max     0.000  IC95 +-0.000
+  cortes          media   306.967  dp   0.928  min   305.000  max   309.000  IC95 +-0.346
+c1-solteiro (30 sementes: 1-30)
+  base_kwh        media    49.563  dp   0.390  min    48.814  max    50.199  IC95 +-0.145
+  sistema_kwh     media    46.055  dp   0.391  min    45.317  max    46.713  IC95 +-0.146
+  eco_pct         media     7.077  dp   0.074  min     6.941  max     7.202  IC95 +-0.028
+  eco_kwh         media     3.507  dp   0.023  min     3.456  max     3.555  IC95 +-0.009
+  eco_rs          media     3.385  dp   0.022  min     3.340  max     3.430  IC95 +-0.008
+  usar_agora_dia  media     5.066  dp   0.027  min     5.030  max     5.100  IC95 +-0.010
+  negado_kwh      media     0.000  dp   0.000  min     0.000  max     0.000  IC95 +-0.000
+  cortes          media   153.000  dp   0.695  min   152.000  max   154.000  IC95 +-0.259
+c2-familia (30 sementes: 1-30)
+  base_kwh        media    85.024  dp   0.527  min    84.196  max    86.295  IC95 +-0.197
+  sistema_kwh     media    78.692  dp   0.534  min    77.823  max    79.979  IC95 +-0.199
+  eco_pct         media     7.448  dp   0.060  min     7.318  max     7.570  IC95 +-0.023
+  eco_kwh         media     6.332  dp   0.024  min     6.291  max     6.384  IC95 +-0.009
+  eco_rs          media     6.112  dp   0.024  min     6.070  max     6.160  IC95 +-0.009
+  usar_agora_dia  media    12.081  dp   0.030  min    12.030  max    12.130  IC95 +-0.011
+  negado_kwh      media     0.000  dp   0.000  min     0.000  max     0.000  IC95 +-0.000
+  cortes          media   369.400  dp   1.003  min   367.000  max   371.000  IC95 +-0.375
+c3-home-office (30 sementes: 1-30)
+  base_kwh        media   122.744  dp   1.253  min   120.084  max   124.639  IC95 +-0.468
+  sistema_kwh     media   117.862  dp   1.289  min   115.129  max   119.813  IC95 +-0.481
+  eco_pct         media     3.979  dp   0.071  min     3.872  max     4.127  IC95 +-0.026
+  eco_kwh         media     4.883  dp   0.037  min     4.826  max     4.956  IC95 +-0.014
+  eco_rs          media     4.713  dp   0.036  min     4.660  max     4.780  IC95 +-0.013
+  usar_agora_dia  media    12.532  dp   0.115  min    12.300  max    12.730  IC95 +-0.043
+  negado_kwh      media     0.000  dp   0.000  min     0.000  max     0.000  IC95 +-0.000
+  cortes          media   380.167  dp   3.130  min   374.000  max   386.000  IC95 +-1.169
+c4-fds (30 sementes: 1-30)
+  base_kwh        media   120.585  dp   0.990  min   117.899  max   122.640  IC95 +-0.369
+  sistema_kwh     media   110.978  dp   1.000  min   108.250  max   113.057  IC95 +-0.373
+  eco_pct         media     7.968  dp   0.076  min     7.814  max     8.184  IC95 +-0.028
+  eco_kwh         media     9.607  dp   0.021  min     9.571  max     9.649  IC95 +-0.008
+  eco_rs          media     9.273  dp   0.019  min     9.240  max     9.310  IC95 +-0.007
+  usar_agora_dia  media    11.120  dp   0.067  min    10.970  max    11.230  IC95 +-0.025
+  negado_kwh      media     0.000  dp   0.000  min     0.000  max     0.000  IC95 +-0.000
+  cortes          media   337.633  dp   1.866  min   333.000  max   341.000  IC95 +-0.697

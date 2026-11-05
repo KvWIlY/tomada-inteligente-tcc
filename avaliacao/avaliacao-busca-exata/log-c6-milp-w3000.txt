@@ -1,0 +1,17 @@
+aviso: grupo "geladeira": consumo fora de uso (55.6 W) acima do limiar_uso_w (15 W). O aparelho parece "em uso" o tempo todo, o fantasma nunca é detectado e a rodada tende a sair verde com economia zero
+caso c6-milp-w3000: 5 tomadas, 259.200 passos de 10 s (30 d), 1.296.000 solves
+Com realimentação: a tomada decidida OFF lê 0 W no passo seguinte, como a placa com o relé aberto. A base é o que o aparelho puxaria se estivesse energizado.
+
+tomada                cortes passos_off religamentos      off_h      std_h       on_h
+geladeira                  0          0            0       0,00       0,00     720,00
+ferro                    121    248.878          120     691,33      10,00      18,67
+cafeteira                 61    248.340           60     689,83      12,67      17,50
+air-fryer                121    247.650          120     687,92      10,08      22,00
+microondas                91    242.940           90     674,83      40,67       4,50
+
+casa: base 125603,1 Wh, com o sistema 108464,8 Wh, economia 17138,4 Wh
+cortes 394, passos acima do teto 120 (pior excesso 1015,6 W), penalidades: penalidade_uso=10.406
+custo: 15 binárias por solve, decidir mediana 0 us / p90 0 us / max 528 us, 1.296.000 solves, parede 1,8 s (tempo de PC, não do Xtensa)
+desfecho: completou
+digest: sha256:6edc37ac8d5ce67be14d6c388f8eab96a74f21c912f306dd5d286c0aacf52dad
+pasta: rodadas\c6-milp-w3000\20261029-223424

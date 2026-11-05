@@ -1,0 +1,407 @@
+9|ets Jul 29 2019 12:21:46
+9|
+9|rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+9|configsip: 0, SPIWP:0xee
+9|clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+9|mode:DIO, clock div:2
+265|load:0x3fff0030,len:6384
+265|load:0x40078000,len:15916
+265|load:0x40080400,len:3920
+265|entry 0x40080644
+265|I (27) boot: ESP-IDF v5.5.1-838-gd66ebb86d2e 2nd stage bootloader
+265|I (27) boot: compile time Nov 26 2025 10:51:37
+265|I (28) boot: Multicore bootloader
+265|I (30) boot: chip revision: v3.1
+265|I (33) boot.esp32: SPI Speed      : 40MHz
+265|I (37) boot.esp32: SPI Mode       : DIO
+265|I (40) boot.esp32: SPI Flash Size : 4MB
+265|I (44) boot: Enabling RNG early entropy source...
+265|I (48) boot: Partition Table:
+265|I (51) boot: ## Label            Usage          Type ST Offset   Length
+265|I (57) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+265|I (64) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+265|I (70) boot:  2 factory          factory app      00 00 00010000 00350000
+265|I (77) boot:  3 storage          Unknown data     01 83 00360000 000a0000
+265|I (83) boot: End of partition table
+265|I (87) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=413b0h (267184) map
+265|I (185) esp_image: segment 1: paddr=000513d8 vaddr=3ffb0000 size=04124h ( 16676) load
+265|I (192) esp_image: segment 2: paddr=00055504 vaddr=40080000 size=0ab14h ( 43796) load
+265|I (209) esp_image: segment 3: paddr=00060020 vaddr=400d0020 size=fca70h (1034864) map
+684|I (563) esp_image: segment 4: paddr=0015ca98 vaddr=4008ab14 size=0a564h ( 42340) load
+684|I (590) boot: Loaded app from partition at offset 0x10000
+684|I (590) boot: Disabling RNG early entropy source...
+684|[0;32mI (600) cpu_start: Multicore app[0m
+684|[0;32mI (609) cpu_start: Pro cpu start user code[0m
+684|[0;32mI (609) cpu_start: cpu freq: 160000000 Hz[0m
+684|[0;32mI (609) cpu_start: Application information:[0m
+684|[0;32mI (612) cpu_start: Project name:     libespidf[0m
+684|[0;32mI (617) cpu_start: App version:      76c8a05-dirty[0m
+684|[0;32mI (622) cpu_start: Compile time:     Aug  5 2026 00:57:47[0m
+684|[0;32mI (628) cpu_start: ELF file SHA256:  000000000...[0m
+684|[0;32mI (634) cpu_start: ESP-IDF:          v5.2.3[0m
+684|[0;32mI (639) cpu_start: Min chip rev:     v0.0[0m
+684|[0;32mI (643) cpu_start: Max chip rev:     v3.99 [0m
+684|[0;32mI (648) cpu_start: Chip rev:         v3.1[0m
+684|[0;32mI (653) heap_init: Initializing. RAM available for dynamic allocation:[0m
+684|[0;32mI (660) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+684|[0;32mI (666) heap_init: At 3FFB82E0 len 00027D20 (159 KiB): DRAM[0m
+684|[0;32mI (672) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+903|[0;32mI (679) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+903|[0;32mI (685) heap_init: At 40095078 len 0000AF88 (43 KiB): IRAM[0m
+903|[0;32mI (693) spi_flash: detected chip: generic[0m
+903|[0;32mI (696) spi_flash: flash io: dio[0m
+903|[0;33mW (700) i2c: This driver is an old driver, please migrate your application code to adapt `driver/i2c_master.h`[0m
+903|[0;32mI (711) main_task: Started on CPU0[0m
+903|[0;32mI (715) main_task: Calling app_main()[0m
+903|I (721) wifi:wifi driver task: 3ffc9380, prio:23, stack:6656, core=0
+903|I (726) wifi:wifi firmware version: 82f54d2
+903|I (728) wifi:wifi certification version: v7.0
+903|I (732) wifi:config NVS flash: disabled
+903|I (736) wifi:config nano formating: disabled
+903|I (740) wifi:Init data frame dynamic rx buffer num: 32
+903|I (745) wifi:Init static rx mgmt buffer num: 5
+903|I (749) wifi:Init management short buffer num: 32
+903|I (753) wifi:Init dynamic tx buffer num: 32
+903|I (758) wifi:Init static rx buffer size: 1600
+903|I (762) wifi:Init static rx buffer num: 10
+903|I (765) wifi:Init dynamic rx buffer num: 32
+903|[0;32mI (770) wifi_init: rx ba win: 6[0m
+903|[0;32mI (773) wifi_init: tcpip mbox: 32[0m
+903|[0;32mI (777) wifi_init: udp mbox: 6[0m
+903|[0;32mI (781) wifi_init: tcp mbox: 6[0m
+903|[0;32mI (784) wifi_init: tcp tx win: 5760[0m
+903|[0;32mI (789) wifi_init: tcp rx win: 5760[0m
+903|[0;32mI (793) wifi_init: tcp mss: 1440[0m
+903|[0;32mI (797) wifi_init: WiFi IRAM OP enabled[0m
+903|[0;32mI (801) wifi_init: WiFi RX IRAM OP enabled[0m
+903|W (811) wifi:Password length is zero, but authmode threshold is 3, making it impossible to connect to an AP with authmode OPEN
+903|[0;32mI (818) phy_init: phy_version 4840,a40f0ac,Aug 16 2024,16:48:06[0m
+903|[0;31mE (824) phy_init: esp_phy_load_cal_data_from_nvs: NVS has not been initialized. Call nvs_flash_init before starting WiFi/BT.[0m
+903|[0;33mW (836) phy_init: failed to load RF calibration data (0x1101), falling back to full calibration[0m
+1130|[0;33mW (920) phy_init: saving new calibration data because of checksum failure, mode(2)[0m
+1130|I (923) wifi:mode : sta (e8:6b:ea:d0:ad:c0)
+1130|I (924) wifi:enable tsf
+1130|I (929) wifi:Set ps type: 0, coexist: 0
+1130|
+1130|[0;32mI (931) esp_idf_svc::espnow: Initializing ESP NOW[0m
+1130|I (934) ESPNOW: espnow [version: 1.0] init
+1130|I,ferro,e8:6b:ea:d0:ad:c0,inicio
+6935|L,ferro,6,0,0,0,STD,0,0,1,0,102,1
+17268|L,ferro,16,1,0,0,STD,0,0,2,0,139,1
+27356|L,ferro,26,2,1000,1000,ON,1,0,2,0,204,1
+37598|L,ferro,36,3,1000,1000,ON,1,0,2,0,201,1
+47821|L,ferro,46,4,1000,1000,ON,1,0,2,0,201,1
+57992|L,ferro,57,5,1000,1000,ON,1,0,2,0,202,1
+68334|L,ferro,67,6,1000,1000,ON,1,0,2,0,234,1
+78529|L,ferro,77,7,1000,1000,ON,1,0,2,0,234,1
+88679|L,ferro,87,8,1000,1000,ON,1,0,2,0,234,1
+99087|L,ferro,97,9,1000,1000,ON,1,0,2,0,235,1
+109158|L,ferro,108,10,1000,1000,ON,1,0,2,0,234,1
+119432|L,ferro,118,11,1000,1000,ON,1,0,2,0,234,1
+130679|L,ferro,128,12,1000,1000,ON,1,0,2,0,1237,1
+141887|L,ferro,139,13,1000,1000,ON,1,0,2,0,1237,1
+153260|L,ferro,151,14,1000,1000,ON,1,0,2,0,1237,1
+163446|L,ferro,162,15,1000,1000,ON,1,0,2,0,219,1
+173664|L,ferro,172,16,1000,1000,ON,1,0,2,0,219,1
+183999|L,ferro,182,17,1000,1000,ON,1,0,2,0,219,1
+194148|L,ferro,193,18,1000,1000,ON,1,0,2,0,219,1
+204305|L,ferro,203,19,0,0,STD,0,0,2,0,192,1
+214468|L,ferro,213,20,0,0,STD,0,0,2,0,190,1
+224739|L,ferro,223,21,0,0,STD,0,0,2,0,190,1
+235019|L,ferro,233,22,0,0,STD,0,0,2,0,191,1
+245015|L,ferro,244,23,0,0,STD,0,0,2,0,139,1
+255255|L,ferro,254,24,0,0,STD,0,0,2,0,139,1
+265300|L,ferro,264,25,0,0,STD,0,0,2,0,139,1
+275477|L,ferro,274,26,0,0,STD,0,0,2,0,139,1
+285655|L,ferro,284,27,0,0,STD,0,0,2,0,139,1
+295799|L,ferro,294,28,0,0,STD,0,0,2,0,139,1
+305895|L,ferro,305,29,0,0,STD,0,0,2,0,139,1
+316077|L,ferro,315,30,0,0,STD,0,0,2,0,139,1
+326155|L,ferro,325,31,0,0,STD,0,0,2,0,139,1
+336313|L,ferro,335,32,0,0,STD,0,0,2,0,139,1
+346520|L,ferro,345,33,0,0,STD,0,0,2,0,139,1
+356653|L,ferro,355,34,0,0,STD,0,0,2,0,139,1
+366818|L,ferro,365,35,0,0,STD,0,0,2,0,139,1
+376985|L,ferro,376,36,0,0,STD,0,0,2,0,139,1
+387154|L,ferro,386,37,1000,1000,ON,1,0,2,0,192,1
+397367|L,ferro,396,38,1000,1000,ON,1,0,2,0,190,1
+407515|L,ferro,406,39,1000,1000,ON,1,0,2,0,190,1
+417816|L,ferro,416,40,1000,1000,ON,1,0,2,0,190,1
+427992|L,ferro,427,41,1000,1000,ON,1,0,2,0,219,1
+438360|L,ferro,437,42,1000,1000,ON,1,0,2,0,219,1
+448499|L,ferro,447,43,1000,1000,ON,1,0,2,0,219,1
+458680|L,ferro,457,44,1000,1000,ON,1,0,2,0,219,1
+469019|L,ferro,467,45,1000,1000,ON,1,0,2,0,219,1
+479134|L,ferro,478,46,1000,1000,ON,1,0,2,0,219,1
+489331|L,ferro,488,47,1000,1000,ON,1,0,2,0,219,1
+500593|L,ferro,498,48,1000,1000,ON,1,0,2,0,1236,1
+511893|L,ferro,509,49,1000,1000,ON,1,0,2,0,1237,1
+522136|L,ferro,521,50,1000,1000,ON,1,0,2,0,219,1
+532332|L,ferro,531,51,1000,1000,ON,1,0,2,0,219,1
+542535|L,ferro,541,52,1000,1000,ON,1,0,2,0,219,1
+552757|L,ferro,551,53,1000,1000,ON,1,0,2,0,219,1
+563065|L,ferro,562,54,0,0,STD,0,0,2,0,192,1
+573282|L,ferro,572,55,0,0,STD,0,0,2,0,190,1
+583457|L,ferro,582,56,0,0,STD,0,0,2,0,190,1
+593569|L,ferro,592,57,0,0,STD,0,0,2,0,190,1
+603742|L,ferro,602,58,0,0,STD,0,0,2,0,190,1
+613954|L,ferro,613,59,0,0,STD,0,0,2,0,139,1
+624131|L,ferro,623,60,0,0,STD,0,0,2,0,139,1
+634202|L,ferro,633,61,0,0,STD,0,0,2,0,139,1
+644366|L,ferro,643,62,0,0,STD,0,0,2,0,139,1
+654452|L,ferro,653,63,0,0,STD,0,0,2,0,139,1
+664586|L,ferro,663,64,0,0,STD,0,0,2,0,139,1
+674787|L,ferro,673,65,0,0,STD,0,0,2,0,139,1
+684920|L,ferro,684,66,0,0,STD,0,0,2,0,139,1
+695095|L,ferro,694,67,0,0,STD,0,0,2,0,139,1
+705252|L,ferro,704,68,0,0,STD,0,0,2,0,139,1
+715450|L,ferro,714,69,0,0,STD,0,0,2,0,139,1
+725482|L,ferro,724,70,0,0,STD,0,0,2,0,139,1
+735758|L,ferro,734,71,0,0,STD,0,0,2,0,139,1
+745976|L,ferro,744,72,1000,1000,ON,1,0,2,0,192,1
+756193|L,ferro,755,73,1000,1000,ON,1,0,2,0,190,1
+766349|L,ferro,765,74,1000,1000,ON,1,0,2,0,190,1
+776413|L,ferro,775,75,1000,1000,ON,1,0,2,0,190,1
+786815|L,ferro,785,76,1000,1000,ON,1,0,2,0,219,1
+796991|L,ferro,795,77,1000,1000,ON,1,0,2,0,219,1
+807215|L,ferro,806,78,1000,1000,ON,1,0,2,0,219,1
+817404|L,ferro,816,79,1000,1000,ON,1,0,2,0,219,1
+827682|L,ferro,826,80,1000,1000,ON,1,0,2,0,219,1
+837849|L,ferro,836,81,1000,1000,ON,1,0,2,0,219,1
+848107|L,ferro,847,82,1000,1000,ON,1,0,2,0,219,1
+859254|L,ferro,857,83,1000,1000,ON,1,0,2,0,1237,1
+870642|L,ferro,868,84,1000,1000,ON,1,0,2,0,1237,1
+880726|L,ferro,879,85,1000,1000,ON,1,0,2,0,219,1
+891131|L,ferro,890,86,1000,1000,ON,1,0,2,0,219,1
+901302|L,ferro,900,87,1000,1000,ON,1,0,2,0,219,1
+911429|L,ferro,910,88,1000,1000,ON,1,0,2,0,219,1
+921723|L,ferro,920,89,0,0,STD,0,0,2,0,192,1
+931804|L,ferro,930,90,0,0,STD,0,0,2,0,190,1
+942164|L,ferro,941,91,0,0,STD,0,0,2,0,190,1
+952333|L,ferro,951,92,0,0,STD,0,0,2,0,190,1
+962512|L,ferro,961,93,0,0,STD,0,0,2,0,190,1
+972650|L,ferro,971,94,0,0,STD,0,0,2,0,139,1
+982816|L,ferro,981,95,0,0,STD,0,0,2,0,139,1
+992969|L,ferro,992,96,0,0,STD,0,0,2,0,139,1
+1003144|L,ferro,1002,97,0,0,STD,0,0,2,0,139,1
+1013287|L,ferro,1012,98,0,0,STD,0,0,2,0,139,1
+1023326|L,ferro,1022,99,0,0,STD,0,0,2,0,139,1
+1033449|L,ferro,1032,100,0,0,STD,0,0,2,0,139,1
+1043618|L,ferro,1042,101,0,0,STD,0,0,2,0,139,1
+1053788|L,ferro,1052,102,0,0,STD,0,0,2,0,139,1
+1063935|L,ferro,1063,103,0,0,STD,0,0,2,0,139,1
+1074214|L,ferro,1073,104,0,0,STD,0,0,2,0,139,1
+1084331|L,ferro,1083,105,0,0,STD,0,0,2,0,139,1
+1094511|L,ferro,1093,106,0,0,STD,0,0,2,0,139,1
+1104604|L,ferro,1103,107,1000,1000,ON,1,0,2,0,192,1
+1114719|L,ferro,1113,108,1000,1000,ON,1,0,2,0,190,1
+1125039|L,ferro,1124,109,1000,1000,ON,1,0,2,0,190,1
+1135241|L,ferro,1134,110,1000,1000,ON,1,0,2,0,190,1
+1145409|L,ferro,1144,111,1000,1000,ON,1,0,2,0,219,1
+1155685|L,ferro,1154,112,1000,1000,ON,1,0,2,0,219,1
+1165832|L,ferro,1164,113,1000,1000,ON,1,0,2,0,219,1
+1176204|L,ferro,1175,114,1000,1000,ON,1,0,2,0,218,1
+1186387|L,ferro,1185,115,1000,1000,ON,1,0,2,0,219,1
+1196516|L,ferro,1195,116,1000,1000,ON,1,0,2,0,219,1
+1206766|L,ferro,1205,117,1000,1000,ON,1,0,2,0,219,0
+1217991|L,ferro,1216,118,1000,1000,ON,1,0,2,0,1237,0
+1229228|L,ferro,1227,119,1000,1000,ON,1,0,2,0,1237,0
+1239469|L,ferro,1238,120,1000,1000,ON,1,0,2,0,219,0
+1249662|L,ferro,1248,121,1000,1000,ON,1,0,2,0,219,0
+1260032|L,ferro,1258,122,1000,1000,ON,1,0,2,0,219,0
+1270215|L,ferro,1269,123,1000,1000,ON,1,0,2,0,219,0
+1280412|L,ferro,1279,124,1000,1000,ON,1,0,2,0,219,0
+1290632|L,ferro,1289,125,0,0,STD,0,0,2,0,192,0
+1300846|L,ferro,1299,126,0,0,STD,0,0,2,0,190,1
+1310959|L,ferro,1310,127,0,0,STD,0,0,2,0,191,1
+1321237|L,ferro,1320,128,0,0,STD,0,0,2,0,191,1
+1331270|L,ferro,1330,129,0,0,STD,0,0,2,0,139,1
+1341410|L,ferro,1340,130,0,0,STD,0,0,2,0,139,1
+1351689|L,ferro,1350,131,0,0,STD,0,0,2,0,139,1
+1361714|L,ferro,1360,132,0,0,STD,0,0,2,0,139,1
+1371902|L,ferro,1370,133,0,0,STD,0,0,2,0,139,1
+1382105|L,ferro,1381,134,0,0,STD,0,0,2,0,139,1
+1392149|L,ferro,1391,135,0,0,STD,0,0,2,0,139,1
+1402364|L,ferro,1401,136,0,0,STD,0,0,2,0,139,1
+1412449|L,ferro,1411,137,0,0,STD,0,0,2,0,139,1
+1422626|L,ferro,1421,138,0,0,STD,0,0,2,0,139,1
+1432818|L,ferro,1431,139,0,0,STD,0,0,2,0,139,1
+1443008|L,ferro,1442,140,0,0,STD,0,0,2,0,139,1
+1453148|L,ferro,1452,141,0,0,STD,0,0,2,0,139,1
+1463410|L,ferro,1462,142,1000,1000,ON,1,0,2,0,192,1
+1473395|L,ferro,1472,143,1000,1000,ON,1,0,2,0,190,1
+1483630|L,ferro,1482,144,1000,1000,ON,1,0,2,0,190,1
+1493864|L,ferro,1492,145,1000,1000,ON,1,0,2,0,191,1
+1504131|L,ferro,1503,146,1000,1000,ON,1,0,2,0,190,1
+1514236|L,ferro,1513,147,1000,1000,ON,1,0,2,0,219,1
+1524611|L,ferro,1523,148,1000,1000,ON,1,0,2,0,219,1
+1534800|L,ferro,1533,149,1000,1000,ON,1,0,2,0,219,1
+1544995|L,ferro,1544,150,1000,1000,ON,1,0,2,0,219,1
+1555297|L,ferro,1554,151,1000,1000,ON,1,0,2,0,219,1
+1565403|L,ferro,1564,152,1000,1000,ON,1,0,2,0,219,1
+1576702|L,ferro,1574,153,1000,1000,ON,1,0,2,0,1237,1
+1588026|L,ferro,1585,154,1000,1000,ON,1,0,2,0,1237,1
+1599109|L,ferro,1597,155,1000,1000,ON,1,0,2,0,1237,1
+1609415|L,ferro,1608,156,1000,1000,ON,1,0,2,0,219,1
+1619649|L,ferro,1618,157,1000,1000,ON,1,0,2,0,219,1
+1629905|L,ferro,1628,158,1000,1000,ON,1,0,2,0,219,1
+1640082|L,ferro,1639,159,1000,1000,ON,1,0,2,0,219,1
+1650292|L,ferro,1649,160,0,0,STD,0,0,2,0,192,1
+1660506|L,ferro,1659,161,0,0,STD,0,0,2,0,190,1
+1670758|L,ferro,1669,162,0,0,STD,0,0,2,0,190,1
+1681002|L,ferro,1679,163,0,0,STD,0,0,2,0,191,1
+1690973|L,ferro,1690,164,0,0,STD,0,0,2,0,139,1
+1701229|L,ferro,1700,165,0,0,STD,0,0,2,0,139,1
+1711416|L,ferro,1710,166,0,0,STD,0,0,2,0,139,1
+1721438|L,ferro,1720,167,0,0,STD,0,0,2,0,139,1
+1731698|L,ferro,1730,168,0,0,STD,0,0,2,0,139,1
+1741714|L,ferro,1740,169,0,0,STD,0,0,2,0,139,1
+1751863|L,ferro,1751,170,0,0,STD,0,0,2,0,139,1
+1762120|L,ferro,1761,171,0,0,STD,0,0,2,0,139,1
+1772348|L,ferro,1771,172,0,0,STD,0,0,2,0,180,1
+1782567|L,ferro,1781,173,0,0,STD,0,0,2,0,180,1
+1792570|L,ferro,1791,174,0,0,STD,0,0,2,0,180,1
+1802626|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1802626|R,ferro,a0:a3:b3:ab:24:ac,recebidos,176,perdidos,0
+1802626|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1802626|F,ferro
+1807618|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1807618|R,ferro,a0:a3:b3:ab:24:ac,recebidos,176,perdidos,0
+1807618|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1807618|F,ferro
+1812636|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1812636|R,ferro,a0:a3:b3:ab:24:ac,recebidos,177,perdidos,0
+1812636|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1812636|F,ferro
+1817630|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1817630|R,ferro,a0:a3:b3:ab:24:ac,recebidos,177,perdidos,0
+1817630|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1817630|F,ferro
+1822642|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1822642|R,ferro,a0:a3:b3:ab:24:ac,recebidos,178,perdidos,0
+1822642|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1822642|F,ferro
+1827621|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1827621|R,ferro,a0:a3:b3:ab:24:ac,recebidos,178,perdidos,0
+1827621|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1827621|F,ferro
+1832838|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1832838|R,ferro,a0:a3:b3:ab:24:ac,recebidos,179,perdidos,0
+1832838|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1832838|F,ferro
+1837668|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1837668|R,ferro,a0:a3:b3:ab:24:ac,recebidos,179,perdidos,0
+1837668|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1837668|F,ferro
+1842689|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1842689|R,ferro,a0:a3:b3:ab:24:ac,recebidos,180,perdidos,0
+1842689|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1842689|F,ferro
+1847806|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1847806|R,ferro,a0:a3:b3:ab:24:ac,recebidos,180,perdidos,0
+1847806|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1847806|F,ferro
+1852884|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1852884|R,ferro,a0:a3:b3:ab:24:ac,recebidos,181,perdidos,0
+1852884|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1852884|F,ferro
+1857743|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1857743|R,ferro,a0:a3:b3:ab:24:ac,recebidos,181,perdidos,0
+1857743|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1857743|F,ferro
+1862712|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1862712|R,ferro,a0:a3:b3:ab:24:ac,recebidos,182,perdidos,0
+1862712|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1862712|F,ferro
+1867820|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1867820|R,ferro,a0:a3:b3:ab:24:ac,recebidos,182,perdidos,0
+1867820|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1867820|F,ferro
+1872878|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1872878|R,ferro,a0:a3:b3:ab:24:ac,recebidos,183,perdidos,0
+1872878|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1872878|F,ferro
+1877892|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1877892|R,ferro,a0:a3:b3:ab:24:ac,recebidos,183,perdidos,0
+1877892|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1877892|F,ferro
+1882918|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1882918|R,ferro,a0:a3:b3:ab:24:ac,recebidos,184,perdidos,0
+1882918|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1882918|F,ferro
+1887945|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1887945|R,ferro,a0:a3:b3:ab:24:ac,recebidos,184,perdidos,0
+1887945|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1887945|F,ferro
+1892796|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1892796|R,ferro,a0:a3:b3:ab:24:ac,recebidos,185,perdidos,0
+1892796|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1892796|F,ferro
+1897824|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1897824|R,ferro,a0:a3:b3:ab:24:ac,recebidos,185,perdidos,0
+1897824|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1897824|F,ferro
+1902845|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1902845|R,ferro,a0:a3:b3:ab:24:ac,recebidos,186,perdidos,0
+1902845|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1902845|F,ferro
+1907867|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1907867|R,ferro,a0:a3:b3:ab:24:ac,recebidos,186,perdidos,0
+1907867|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1907867|F,ferro
+1912892|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1912892|R,ferro,a0:a3:b3:ab:24:ac,recebidos,187,perdidos,0
+1912892|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1912892|F,ferro
+1917923|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1917923|R,ferro,a0:a3:b3:ab:24:ac,recebidos,187,perdidos,0
+1917923|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1917923|F,ferro
+1922937|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1922937|R,ferro,a0:a3:b3:ab:24:ac,recebidos,188,perdidos,0
+1922937|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1922937|F,ferro
+1927956|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1927956|R,ferro,a0:a3:b3:ab:24:ac,recebidos,188,perdidos,0
+1927956|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1927956|F,ferro
+1933007|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1933007|R,ferro,a0:a3:b3:ab:24:ac,recebidos,189,perdidos,0
+1933007|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1933007|F,ferro
+1938080|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1938080|R,ferro,a0:a3:b3:ab:24:ac,recebidos,189,perdidos,0
+1938080|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1938080|F,ferro
+1942926|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1942926|R,ferro,a0:a3:b3:ab:24:ac,recebidos,190,perdidos,0
+1942926|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1942926|F,ferro
+1947891|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1948107|R,ferro,a0:a3:b3:ab:24:ac,recebidos,190,perdidos,0
+1948107|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1948107|F,ferro
+1952997|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1952997|R,ferro,a0:a3:b3:ab:24:ac,recebidos,191,perdidos,0
+1952997|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1952997|F,ferro
+1958024|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1958024|R,ferro,a0:a3:b3:ab:24:ac,recebidos,191,perdidos,0
+1958024|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1958024|F,ferro
+1963029|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1963029|R,ferro,a0:a3:b3:ab:24:ac,recebidos,192,perdidos,0
+1963029|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1963029|F,ferro
+1968037|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1968037|R,ferro,a0:a3:b3:ab:24:ac,recebidos,192,perdidos,0
+1968037|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1968037|F,ferro
+1973122|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1973122|R,ferro,a0:a3:b3:ab:24:ac,recebidos,193,perdidos,0
+1973122|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1973122|F,ferro
+1978112|S,ferro,e8:6b:ea:d0:ad:c0,enviados,166,botoes,0
+1978112|R,ferro,a0:a3:b3:ab:24:ac,recebidos,193,perdidos,0
+1978112|R,ferro,a8:42:e3:a7:db:c8,recebidos,176,perdidos,0
+1978112|F,ferro

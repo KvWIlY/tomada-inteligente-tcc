@@ -1,0 +1,263 @@
+62|ets Jul 29 2019 12:21:46
+62|
+62|rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+62|configsip: 0, SPIWP:0xee
+62|clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+62|mode:DIO, clock div:2
+62|load:0x3fff0030,len:6384
+62|load:0x40078000,len:15916
+62|load:0x40080400,len:3920
+62|entry 0x40080644
+62|I (27) boot: ESP-IDF v5.5.1-838-gd66ebb86d2e 2nd stage bootloader
+62|I (27) boot: compile time Nov 26 2025 10:51:37
+62|I (28) boot: Multicore bootloader
+62|I (30) boot: chip revision: v3.1
+62|I (33) boot.esp32: SPI Speed      : 40MHz
+62|I (37) boot.esp32: SPI Mode       : DIO
+62|I (40) boot.esp32: SPI Flash Size : 4MB
+62|I (44) boot: Enabling RNG early entropy source...
+62|I (48) boot: Partition Table:
+268|I (51) boot: ## Label            Usage          Type ST Offset   Length
+268|I (57) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+268|I (64) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+268|I (70) boot:  2 factory          factory app      00 00 00010000 00350000
+268|I (77) boot:  3 storage          Unknown data     01 83 00360000 000a0000
+268|I (83) boot: End of partition table
+268|I (87) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=413b0h (267184) map
+268|I (185) esp_image: segment 1: paddr=000513d8 vaddr=3ffb0000 size=04124h ( 16676) load
+268|I (192) esp_image: segment 2: paddr=00055504 vaddr=40080000 size=0ab14h ( 43796) load
+268|I (209) esp_image: segment 3: paddr=00060020 vaddr=400d0020 size=fca70h (1034864) map
+687|I (563) esp_image: segment 4: paddr=0015ca98 vaddr=4008ab14 size=0a564h ( 42340) load
+687|I (590) boot: Loaded app from partition at offset 0x10000
+687|I (590) boot: Disabling RNG early entropy source...
+687|[0;32mI (600) cpu_start: Multicore app[0m
+687|[0;32mI (609) cpu_start: Pro cpu start user code[0m
+687|[0;32mI (609) cpu_start: cpu freq: 160000000 Hz[0m
+687|[0;32mI (609) cpu_start: Application information:[0m
+687|[0;32mI (612) cpu_start: Project name:     libespidf[0m
+687|[0;32mI (617) cpu_start: App version:      76c8a05-dirty[0m
+687|[0;32mI (623) cpu_start: Compile time:     Aug  5 2026 00:57:47[0m
+687|[0;32mI (629) cpu_start: ELF file SHA256:  000000000...[0m
+687|[0;32mI (634) cpu_start: ESP-IDF:          v5.2.3[0m
+687|[0;32mI (639) cpu_start: Min chip rev:     v0.0[0m
+687|[0;32mI (644) cpu_start: Max chip rev:     v3.99 [0m
+687|[0;32mI (648) cpu_start: Chip rev:         v3.1[0m
+687|[0;32mI (653) heap_init: Initializing. RAM available for dynamic allocation:[0m
+687|[0;32mI (660) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+687|[0;32mI (666) heap_init: At 3FFB82E0 len 00027D20 (159 KiB): DRAM[0m
+687|[0;32mI (673) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+903|[0;32mI (679) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+903|[0;32mI (685) heap_init: At 40095078 len 0000AF88 (43 KiB): IRAM[0m
+903|[0;32mI (693) spi_flash: detected chip: generic[0m
+903|[0;32mI (696) spi_flash: flash io: dio[0m
+903|[0;33mW (700) i2c: This driver is an old driver, please migrate your application code to adapt `driver/i2c_master.h`[0m
+903|[0;32mI (712) main_task: Started on CPU0[0m
+903|[0;32mI (716) main_task: Calling app_main()[0m
+903|I (722) wifi:wifi driver task: 3ffc9380, prio:23, stack:6656, core=0
+903|I (727) wifi:wifi firmware version: 82f54d2
+903|I (729) wifi:wifi certification version: v7.0
+903|I (733) wifi:config NVS flash: disabled
+903|I (737) wifi:config nano formating: disabled
+903|I (741) wifi:Init data frame dynamic rx buffer num: 32
+903|I (746) wifi:Init static rx mgmt buffer num: 5
+903|I (750) wifi:Init management short buffer num: 32
+903|I (754) wifi:Init dynamic tx buffer num: 32
+903|I (759) wifi:Init static rx buffer size: 1600
+903|I (763) wifi:Init static rx buffer num: 10
+903|I (766) wifi:Init dynamic rx buffer num: 32
+903|[0;32mI (771) wifi_init: rx ba win: 6[0m
+903|[0;32mI (774) wifi_init: tcpip mbox: 32[0m
+903|[0;32mI (778) wifi_init: udp mbox: 6[0m
+903|[0;32mI (782) wifi_init: tcp mbox: 6[0m
+903|[0;32mI (785) wifi_init: tcp tx win: 5760[0m
+903|[0;32mI (790) wifi_init: tcp rx win: 5760[0m
+903|[0;32mI (794) wifi_init: tcp mss: 1440[0m
+903|[0;32mI (798) wifi_init: WiFi IRAM OP enabled[0m
+903|[0;32mI (802) wifi_init: WiFi RX IRAM OP enabled[0m
+903|W (812) wifi:Password length is zero, but authmode threshold is 3, making it impossible to connect to an AP with authmode OPEN
+903|[0;32mI (819) phy_init: phy_version 4840,a40f0ac,Aug 16 2024,16:48:06[0m
+903|[0;31mE (825) phy_init: esp_phy_load_cal_data_from_nvs: NVS has not been initialized. Call nvs_flash_init before starting WiFi/BT.[0m
+903|[0;33mW (837) phy_init: failed to load RF calibration data (0x1101), falling back to full calibration[0m
+1107|[0;33mW (933) phy_init: saving new calibration data because of checksum failure, mode(2)[0m
+1107|I (936) wifi:mode : sta (a8:42:e3:a7:db:c8)
+1107|I (936) wifi:enable tsf
+1107|I (942) wifi:Set ps type: 0, coexist: 0
+1107|
+1107|[0;32mI (944) esp_idf_svc::espnow: Initializing ESP NOW[0m
+1107|I (947) ESPNOW: espnow [version: 1.0] init
+1107|I,air-fryer,a8:42:e3:a7:db:c8,inicio
+9840|L,air-fryer,8,0,0,0,STD,0,0,2,0,140,1
+19992|L,air-fryer,19,1,0,0,STD,0,0,2,0,180,1
+30284|L,air-fryer,29,2,0,0,STD,0,0,2,0,201,1
+40514|L,air-fryer,39,3,0,0,STD,0,0,2,0,201,1
+50743|L,air-fryer,49,4,0,0,STD,0,0,2,0,201,1
+60950|L,air-fryer,59,5,0,0,STD,0,0,2,0,201,1
+71031|L,air-fryer,70,6,1500,1500,ON,1,0,2,0,237,1
+81314|L,air-fryer,80,7,1500,1500,ON,1,0,2,0,234,1
+91595|L,air-fryer,90,8,1500,1500,ON,1,0,2,0,234,1
+101858|L,air-fryer,100,9,1500,1500,ON,1,0,2,0,234,1
+112033|L,air-fryer,111,10,1500,1500,ON,1,0,2,0,235,1
+122307|L,air-fryer,121,11,1500,1500,ON,1,0,2,0,234,1
+133635|L,air-fryer,131,12,1500,1500,OFF,1,0,2,0,1239,1
+144783|L,air-fryer,142,13,1500,0,OFF,1,0,2,0,1240,1
+156133|L,air-fryer,154,14,1500,0,OFF,1,0,2,0,1241,1
+166298|L,air-fryer,165,15,1500,0,ON,1,0,2,0,220,1
+176559|L,air-fryer,175,16,1500,1500,ON,1,0,2,0,219,1
+186680|L,air-fryer,185,17,1500,1500,ON,1,0,2,0,219,1
+197010|L,air-fryer,195,18,1500,1500,ON,1,0,2,0,219,1
+207257|L,air-fryer,206,19,1500,1500,ON,1,0,2,0,190,1
+217368|L,air-fryer,216,20,1500,1500,ON,1,0,2,0,190,1
+227643|L,air-fryer,226,21,1500,1500,ON,1,0,2,0,190,1
+237739|L,air-fryer,236,22,1500,1500,ON,1,0,2,0,190,1
+247991|L,air-fryer,247,23,0,0,STD,0,0,2,0,141,1
+258083|L,air-fryer,257,24,0,0,STD,0,0,2,0,139,1
+268152|L,air-fryer,267,25,0,0,STD,0,0,2,0,139,1
+278482|L,air-fryer,277,26,0,0,STD,0,0,2,0,139,1
+288604|L,air-fryer,287,27,0,0,STD,0,0,2,0,139,1
+298725|L,air-fryer,297,28,0,0,STD,0,0,2,0,139,1
+308795|L,air-fryer,307,29,0,0,STD,0,0,2,0,139,1
+319018|L,air-fryer,318,30,0,0,STD,0,0,2,0,139,1
+329096|L,air-fryer,328,31,0,0,STD,0,0,2,0,139,1
+339274|L,air-fryer,338,32,0,0,STD,0,0,2,0,139,1
+349369|L,air-fryer,348,33,0,0,STD,0,0,2,0,139,1
+359634|L,air-fryer,358,34,0,0,STD,0,0,2,0,139,1
+369649|L,air-fryer,368,35,0,0,STD,0,0,2,0,139,1
+379899|L,air-fryer,378,36,0,0,STD,0,0,2,0,139,1
+390046|L,air-fryer,389,37,0,0,STD,0,0,2,0,191,1
+400345|L,air-fryer,399,38,0,0,STD,0,0,2,0,190,1
+410447|L,air-fryer,409,39,0,0,STD,0,0,2,0,190,1
+420617|L,air-fryer,419,40,0,0,STD,0,0,2,0,190,1
+430952|L,air-fryer,429,41,1500,1500,ON,1,0,2,0,221,1
+441202|L,air-fryer,440,42,1500,1500,ON,1,0,2,0,219,1
+451427|L,air-fryer,450,43,1500,1500,ON,1,0,2,0,219,1
+461592|L,air-fryer,460,44,1500,1500,ON,1,0,2,0,219,1
+471713|L,air-fryer,470,45,1500,1500,ON,1,0,2,0,219,1
+482025|L,air-fryer,481,46,1500,1500,ON,1,0,2,0,219,1
+493363|L,air-fryer,491,47,1500,1500,OFF,1,0,2,0,1241,1
+504503|L,air-fryer,502,48,1500,0,OFF,1,0,2,0,1240,1
+515793|L,air-fryer,513,49,1500,0,OFF,1,0,2,0,1240,1
+526072|L,air-fryer,524,50,1500,0,ON,1,0,2,0,221,1
+536149|L,air-fryer,535,51,1500,1500,ON,1,0,2,0,219,1
+546461|L,air-fryer,545,52,1500,1500,ON,1,0,2,0,219,1
+556740|L,air-fryer,555,53,1500,1500,ON,1,0,2,0,219,1
+566856|L,air-fryer,565,54,1500,1500,ON,1,0,2,0,190,1
+577019|L,air-fryer,576,55,1500,1500,ON,1,0,2,0,191,1
+587243|L,air-fryer,586,56,1500,1500,ON,1,0,2,0,190,1
+597526|L,air-fryer,596,57,1500,1500,ON,1,0,2,0,190,1
+607641|L,air-fryer,606,58,0,0,STD,0,0,2,0,141,1
+617834|L,air-fryer,616,59,0,0,STD,0,0,2,0,139,1
+627948|L,air-fryer,627,60,0,0,STD,0,0,2,0,139,1
+637992|L,air-fryer,637,61,0,0,STD,0,0,2,0,139,1
+648315|L,air-fryer,647,62,0,0,STD,0,0,2,0,139,1
+658442|L,air-fryer,657,63,0,0,STD,0,0,2,0,139,1
+668546|L,air-fryer,667,64,0,0,STD,0,0,2,0,139,1
+678686|L,air-fryer,677,65,0,0,STD,0,0,2,0,139,1
+688844|L,air-fryer,687,66,0,0,STD,0,0,2,0,139,1
+699026|L,air-fryer,698,67,0,0,STD,0,0,2,0,139,1
+709196|L,air-fryer,708,68,0,0,STD,0,0,2,0,139,1
+719336|L,air-fryer,718,69,0,0,STD,0,0,2,0,139,1
+729419|L,air-fryer,728,70,0,0,STD,0,0,2,0,139,1
+739574|L,air-fryer,738,71,0,0,STD,0,0,2,0,139,1
+749824|L,air-fryer,748,72,0,0,STD,0,0,2,0,190,1
+759976|L,air-fryer,758,73,0,0,STD,0,0,2,0,191,1
+770111|L,air-fryer,769,74,0,0,STD,0,0,2,0,190,1
+780397|L,air-fryer,779,75,0,0,STD,0,0,2,0,190,1
+790587|L,air-fryer,789,76,1500,1500,ON,1,0,2,0,221,1
+800911|L,air-fryer,799,77,1500,1500,ON,1,0,2,0,219,1
+810958|L,air-fryer,810,78,1500,1500,ON,1,0,2,0,219,1
+821289|L,air-fryer,820,79,1500,1500,ON,1,0,2,0,219,1
+831493|L,air-fryer,830,80,1500,1500,ON,1,0,2,0,219,1
+841691|L,air-fryer,840,81,1500,1500,ON,1,0,2,0,219,1
+852921|L,air-fryer,850,82,1500,1500,OFF,1,0,2,0,1242,1
+864146|L,air-fryer,862,83,1500,0,OFF,1,0,2,0,1240,1
+875432|L,air-fryer,873,84,1500,0,OFF,1,0,2,0,1241,1
+885698|L,air-fryer,884,85,1500,0,ON,1,0,2,0,220,1
+896006|L,air-fryer,894,86,1500,1500,ON,1,0,2,0,219,1
+906076|L,air-fryer,905,87,1500,1500,ON,1,0,2,0,219,1
+916430|L,air-fryer,915,88,1500,1500,ON,1,0,2,0,219,1
+926639|L,air-fryer,925,89,1500,1500,ON,1,0,2,0,190,1
+936794|L,air-fryer,935,90,1500,1500,ON,1,0,2,0,190,1
+947051|L,air-fryer,946,91,1500,1500,ON,1,0,2,0,191,1
+957270|L,air-fryer,956,92,1500,1500,ON,1,0,2,0,190,1
+967304|L,air-fryer,966,93,0,0,STD,0,0,2,0,141,1
+977602|L,air-fryer,976,94,0,0,STD,0,0,2,0,139,1
+987649|L,air-fryer,986,95,0,0,STD,0,0,2,0,139,1
+997822|L,air-fryer,996,96,0,0,STD,0,0,2,0,139,1
+1007851|L,air-fryer,1006,97,0,0,STD,0,0,2,0,139,1
+1018075|L,air-fryer,1017,98,0,0,STD,0,0,2,0,139,1
+1028201|L,air-fryer,1027,99,0,0,STD,0,0,2,0,139,1
+1038345|L,air-fryer,1037,100,0,0,STD,0,0,2,0,139,1
+1048491|L,air-fryer,1047,101,0,0,STD,0,0,2,0,139,1
+1058598|L,air-fryer,1057,102,0,0,STD,0,0,2,0,139,1
+1068868|L,air-fryer,1067,103,0,0,STD,0,0,2,0,139,1
+1078914|L,air-fryer,1078,104,0,0,STD,0,0,2,0,139,1
+1089052|L,air-fryer,1088,105,0,0,STD,0,0,2,0,139,1
+1099354|L,air-fryer,1098,106,0,0,STD,0,0,2,0,139,1
+1109508|L,air-fryer,1108,107,0,0,STD,0,0,2,0,190,1
+1119716|L,air-fryer,1118,108,0,0,STD,0,0,2,0,190,1
+1129930|L,air-fryer,1128,109,0,0,STD,0,0,2,0,190,1
+1140167|L,air-fryer,1139,110,0,0,STD,0,0,2,0,191,1
+1150292|L,air-fryer,1149,111,1500,1500,ON,1,0,2,0,221,1
+1160536|L,air-fryer,1159,112,1500,1500,ON,1,0,2,0,219,1
+1170793|L,air-fryer,1169,113,1500,1500,ON,1,0,2,0,219,1
+1181072|L,air-fryer,1179,114,1500,1500,ON,1,0,2,0,219,1
+1191272|L,air-fryer,1190,115,1500,1500,ON,1,0,2,0,219,1
+1201367|L,air-fryer,1200,116,1500,1500,ON,1,0,2,0,219,1
+1212665|L,air-fryer,1210,117,1500,1500,OFF,1,0,2,0,1241,1
+1223914|L,air-fryer,1221,118,1500,0,OFF,1,0,2,0,1241,1
+1234701|L,air-fryer,1233,119,1500,0,OFF,1,0,1,1000,751,1
+1244885|L,air-fryer,1243,120,1500,0,ON,1,0,1,1000,148,1
+1254966|L,air-fryer,1254,121,1500,1500,ON,1,0,1,1000,147,1
+1265205|L,air-fryer,1264,122,1500,1500,ON,1,0,1,1000,146,1
+1275318|L,air-fryer,1274,123,1500,1500,ON,1,0,1,1000,146,1
+1285453|L,air-fryer,1284,124,1500,1500,ON,1,0,1,1000,146,1
+1295757|L,air-fryer,1294,125,1500,1500,ON,1,0,2,0,190,1
+1305899|L,air-fryer,1304,126,1500,1500,ON,1,0,2,0,190,1
+1315996|L,air-fryer,1315,127,1500,1500,ON,1,0,2,0,190,1
+1326156|L,air-fryer,1325,128,0,0,STD,0,0,2,0,141,1
+1336289|L,air-fryer,1335,129,0,0,STD,0,0,2,0,139,1
+1346514|L,air-fryer,1345,130,0,0,STD,0,0,2,0,139,1
+1356616|L,air-fryer,1355,131,0,0,STD,0,0,2,0,139,1
+1366733|L,air-fryer,1365,132,0,0,STD,0,0,2,0,139,1
+1377082|L,air-fryer,1376,133,0,0,STD,0,0,2,0,139,1
+1387089|L,air-fryer,1386,134,0,0,STD,0,0,2,0,139,1
+1397263|L,air-fryer,1396,135,0,0,STD,0,0,2,0,139,1
+1407355|L,air-fryer,1406,136,0,0,STD,0,0,2,0,139,1
+1417611|L,air-fryer,1416,137,0,0,STD,0,0,2,0,139,1
+1427673|L,air-fryer,1426,138,0,0,STD,0,0,2,0,139,1
+1437763|L,air-fryer,1436,139,0,0,STD,0,0,2,0,139,1
+1448033|L,air-fryer,1447,140,0,0,STD,0,0,2,0,139,1
+1458126|L,air-fryer,1457,141,0,0,STD,0,0,2,0,139,1
+1468353|L,air-fryer,1467,142,0,0,STD,0,0,2,0,190,1
+1478563|L,air-fryer,1477,143,0,0,STD,0,0,2,0,190,1
+1488799|L,air-fryer,1487,144,0,0,STD,0,0,2,0,190,1
+1498900|L,air-fryer,1497,145,0,0,STD,0,0,2,0,191,1
+1509176|L,air-fryer,1508,146,1500,1500,ON,1,0,2,0,221,1
+1519465|L,air-fryer,1518,147,1500,1500,ON,1,0,2,0,219,1
+1529578|L,air-fryer,1528,148,1500,1500,ON,1,0,2,0,219,1
+1539841|L,air-fryer,1538,149,1500,1500,ON,1,0,2,0,219,1
+1550142|L,air-fryer,1549,150,1500,1500,ON,1,0,2,0,219,1
+1560408|L,air-fryer,1559,151,1500,1500,ON,1,0,2,0,219,1
+1571601|L,air-fryer,1569,152,1500,1500,OFF,1,0,2,0,1241,1
+1582728|L,air-fryer,1580,153,1500,0,OFF,1,0,2,0,1240,1
+1594039|L,air-fryer,1592,154,1500,0,OFF,1,0,2,0,1241,1
+1604209|L,air-fryer,1603,155,1500,0,ON,1,0,2,0,220,1
+1614617|L,air-fryer,1613,156,1500,1500,ON,1,0,2,0,219,1
+1624837|L,air-fryer,1623,157,1500,1500,ON,1,0,2,0,219,1
+1634946|L,air-fryer,1633,158,1500,1500,ON,1,0,2,0,219,1
+1645228|L,air-fryer,1644,159,1500,1500,ON,1,0,2,0,190,1
+1655367|L,air-fryer,1654,160,1500,1500,ON,1,0,2,0,190,1
+1665495|L,air-fryer,1664,161,1500,1500,ON,1,0,2,0,190,1
+1675803|L,air-fryer,1674,162,1500,1500,ON,1,0,2,0,190,1
+1685853|L,air-fryer,1684,163,0,0,STD,0,0,2,0,141,1
+1696135|L,air-fryer,1695,164,0,0,STD,0,0,2,0,139,1
+1706233|L,air-fryer,1705,165,0,0,STD,0,0,2,0,139,1
+1716328|L,air-fryer,1715,166,0,0,STD,0,0,2,0,139,1
+1726622|L,air-fryer,1725,167,0,0,STD,0,0,2,0,139,1
+1736715|L,air-fryer,1735,168,0,0,STD,0,0,2,0,139,1
+1746841|L,air-fryer,1745,169,0,0,STD,0,0,2,0,139,1
+1756972|L,air-fryer,1756,170,0,0,STD,0,0,2,0,139,1
+1767147|L,air-fryer,1766,171,0,0,STD,0,0,2,0,139,1
+1777281|L,air-fryer,1776,172,0,0,STD,0,0,2,0,139,1
+1787355|L,air-fryer,1786,173,0,0,STD,0,0,2,0,139,1
+1797526|L,air-fryer,1796,174,0,0,STD,0,0,2,0,139,1

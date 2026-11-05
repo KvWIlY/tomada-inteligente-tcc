@@ -1,0 +1,25 @@
+aviso: grupo "geladeira": consumo fora de uso (55.6 W) acima do limiar_uso_w (15 W). O aparelho parece "em uso" o tempo todo, o fantasma nunca é detectado e a rodada tende a sair verde com economia zero
+caso c2-t2: 13 tomadas, 259.200 passos de 10 s (30 d), 3.369.600 solves
+Com realimentação: a tomada decidida OFF lê 0 W no passo seguinte, como a placa com o relé aberto. A base é o que o aparelho puxaria se estivesse energizado.
+
+tomada                cortes passos_off religamentos      off_h      std_h       on_h
+geladeira                  0          0            0       0,00       0,00     720,00
+roteador                   0          0            0       0,00     720,00       0,00
+tv-sala                   31    204.858           30     569,05       0,95     150,00
+decodificador             31    204.858           30     569,05       0,95     150,00
+tv-quarto                 31    237.258           30     659,05       0,95      60,00
+tv-quarto-2               31    237.258           30     659,05       0,95      60,00
+microondas                61    248.388           60     689,97      25,03       5,00
+cafeteira                 31    253.788           30     704,97      10,03       5,00
+carregador-celular        31    248.058           30     689,05       0,95      30,00
+carregador-celular-2      31    248.058           30     689,05       0,95      30,00
+carregador-celular-3      31    248.058           30     689,05       0,95      30,00
+carregador-celular-4      30    248.069           30     689,08       0,92      30,00
+notebook                  31    226.458           30     629,05       0,95      90,00
+
+casa: base 85020,5 Wh, com o sistema 78655,7 Wh, economia 6364,8 Wh
+cortes 370, passos acima do teto 0 (pior excesso 0,0 W), penalidades: nenhuma
+custo: 39 binárias por solve, decidir mediana 0 us / p90 0 us / max 363 us, 3.369.600 solves, parede 4,2 s (tempo de PC, não do Xtensa)
+desfecho: completou
+digest: sha256:d34284fe30117c229f367c2dbf29f112a1280ada48180eb05ae8cb3ce54ac863
+pasta: rodadas\c2-t2\20261029-223437

@@ -1,0 +1,46 @@
+# Cenario 5b: igual ao 5a, mas o usuario reserva o chuveiro: P_max = 5.080 - 4400 = 680 W.
+nome = "c5b-reserva"
+descricao = "Caso limite: teto apertado e consumo dominado por cargas essenciais"
+duracao = "30d"
+passo_s = 10
+[base]
+arquivo = "c5-limite.csv"
+passo_s = 10
+[casa]
+p_max_w = 680
+[[grupo]]
+nome = "geladeira"
+perfil = "constante"
+w = 31.5
+critica = true
+[[grupo]]
+nome = "freezer"
+perfil = "constante"
+w = 41.5
+critica = true
+[[grupo]]
+nome = "roteador"
+perfil = "constante"
+w = 10
+critica = true
+[[grupo]]
+nome = "microondas"
+perfil = "janelas"
+uso_w = 1400
+standby_w = 0.8
+janelas = ["12:00-12:05", "19:00-19:05"]
+peso = 10
+[[grupo]]
+nome = "air-fryer"
+perfil = "janelas"
+uso_w = 1500
+standby_w = 0.5
+janelas = ["19:00-19:45"]
+peso = 10
+[[grupo]]
+nome = "tv"
+perfil = "janelas"
+uso_w = 46
+standby_w = 0.3
+janelas = ["18:00-23:00"]
+peso = 10

@@ -1,0 +1,67 @@
+# Cenario 3: casal, um trabalha em casa das 08:00 as 18:00. Pouco tempo ocioso nos equipamentos de trabalho.
+# Disjuntor 50 A x 127 V = 6350 W: faixa M2 (carga instalada 4.0 kW), Tabela 07 da NT/RRE-002 (Roraima Energia).
+nome = "c3-home-office"
+descricao = "Home office; computador e monitores em uso o dia todo"
+duracao = "30d"
+passo_s = 10
+[base]
+arquivo = "c3-home-office.csv"
+passo_s = 10
+[casa]
+p_max_w = 6350
+[[grupo]]
+nome = "geladeira"
+perfil = "constante"
+w = 55.6
+critica = true
+[[grupo]]
+nome = "roteador"
+perfil = "constante"
+w = 10
+critica = true
+[[grupo]]
+nome = "computador"
+perfil = "janelas"
+uso_w = 150
+standby_w = 5
+janelas = ["08:00-12:00", "13:00-18:00"]
+peso = 10
+[[grupo]]
+nome = "monitor"
+quantidade = 2
+defasagem_min = 0
+perfil = "janelas"
+uso_w = 25
+standby_w = 0.5
+janelas = ["08:00-12:00", "13:00-18:00"]
+peso = 10
+[[grupo]]
+nome = "impressora"
+perfil = "janelas"
+uso_w = 300
+standby_w = 2
+janelas = ["10:00-10:05", "16:00-16:05"]
+peso = 10
+[[grupo]]
+nome = "tv"
+perfil = "janelas"
+uso_w = 46
+standby_w = 0.3
+janelas = ["18:00-23:00"]
+peso = 10
+[[grupo]]
+nome = "microondas"
+perfil = "janelas"
+uso_w = 1400
+standby_w = 0.8
+janelas = ["12:00-12:05", "19:00-19:05"]
+peso = 10
+[[grupo]]
+nome = "carregador-celular"
+quantidade = 2
+defasagem_min = 30
+perfil = "janelas"
+uso_w = 18
+standby_w = 0.1
+janelas = ["23:00-00:00"]
+peso = 10

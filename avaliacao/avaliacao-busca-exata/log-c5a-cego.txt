@@ -1,0 +1,24 @@
+aviso: grupo "geladeira": consumo fora de uso (31.5 W) acima do limiar_uso_w (15 W). O aparelho parece "em uso" o tempo todo, o fantasma nunca é detectado e a rodada tende a sair verde com economia zero
+aviso: grupo "freezer": consumo fora de uso (41.5 W) acima do limiar_uso_w (15 W). O aparelho parece "em uso" o tempo todo, o fantasma nunca é detectado e a rodada tende a sair verde com economia zero
+caso c5a-cego: 6 tomadas, 259.200 passos de 10 s (30 d), 1.555.200 solves
+Com realimentação: a tomada decidida OFF lê 0 W no passo seguinte, como a placa com o relé aberto. A base é o que o aparelho puxaria se estivesse energizado.
+
+tomada                cortes passos_off religamentos      off_h      std_h       on_h
+geladeira                  0          0            0       0,00       0,00     720,00
+freezer                    0          0            0       0,00       0,00     720,00
+roteador                   0          0            0       0,00     720,00       0,00
+microondas                61    248.340           60     689,83      25,17       5,00
+air-fryer                 31    249.270           30     692,42       5,08      22,50
+tv                        31    203.370           30     564,92       5,08     150,00
+
+casa: base 108501,8 Wh, com o sistema 107434,2 Wh, economia 1067,6 Wh
+cortes 123, passos acima do teto 0 (pior excesso 0,0 W), penalidades: nenhuma
+custo: 18 binárias por solve, decidir mediana 0 us / p90 0 us / max 470 us, 1.555.200 solves, parede 2,1 s (tempo de PC, não do Xtensa)
+desfecho: completou
+digest: sha256:f79d93bd8eb24423fa010031f2e5bb4cf6fa62e7c70ccf9ec84482c644b90f8a
+pasta: rodadas\c5a-cego\20261029-223259
+tomadas: base 108.50 kWh, com PL 107.43 kWh, economia 0.98%
+fora do sistema: 240.16 kWh
+casa: normal 348.66 kWh, com PL 347.59 kWh, economia 0.31%
+economia: 1.068 kWh = R$ 1.03 (tarifa 0.965232)
+passos acima do disjuntor (5080 W): sem sistema 1800, com sistema 1800

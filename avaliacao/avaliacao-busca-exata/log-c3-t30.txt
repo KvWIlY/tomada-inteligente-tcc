@@ -1,0 +1,22 @@
+aviso: grupo "geladeira": consumo fora de uso (55.6 W) acima do limiar_uso_w (15 W). O aparelho parece "em uso" o tempo todo, o fantasma nunca é detectado e a rodada tende a sair verde com economia zero
+caso c3-t30: 10 tomadas, 259.200 passos de 10 s (30 d), 2.592.000 solves
+Com realimentação: a tomada decidida OFF lê 0 W no passo seguinte, como a placa com o relé aberto. A base é o que o aparelho puxaria se estivesse energizado.
+
+tomada                cortes passos_off religamentos      off_h      std_h       on_h
+geladeira                  0          0            0       0,00       0,00     720,00
+roteador                   0          0            0       0,00     720,00       0,00
+computador                61    151.080           60     419,67      30,33     270,00
+monitor                   61    151.080           60     419,67      30,33     270,00
+monitor-2                 61    151.080           60     419,67      30,33     270,00
+impressora                61    246.480           60     684,67      30,33       5,00
+tv                        31    199.650           30     554,58      15,42     150,00
+microondas                61    246.480           60     684,67      30,33       5,00
+carregador-celular        30    243.029           30     675,08      14,92      30,00
+carregador-celular-2      30    243.030           30     675,08      14,92      30,00
+
+casa: base 122723,0 Wh, com o sistema 117986,5 Wh, economia 4736,5 Wh
+cortes 396, passos acima do teto 0 (pior excesso 0,0 W), penalidades: nenhuma
+custo: 30 binárias por solve, decidir mediana 0 us / p90 0 us / max 413 us, 2.592.000 solves, parede 3,3 s (tempo de PC, não do Xtensa)
+desfecho: completou
+digest: sha256:fba0e88f4ced86f67126e1959b7d68065e698da8b9af7b2756a4edd1cd4aa4ad
+pasta: rodadas\c3-t30\20261029-223507

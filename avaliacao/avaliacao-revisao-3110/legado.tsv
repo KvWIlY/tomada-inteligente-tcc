@@ -1,0 +1,17 @@
+caso	espera_kwh	negado_kwh	usar_agora_dia	saldo_sempre	saldo_sleep
+c1-solteiro-orig	3.50	0.00	0.0	-1.85 a -1.11	-0.08 a +1.00
+c1-solteiro-legado	5.65	0.00	0.0	+0.01 a +0.74	+1.78 a +2.86
+c1-solteiro-legado-corta-deco	11.46	0.00	0.0	+6.12 a +6.85	+7.89 a +8.97
+c2-familia-orig	6.33	0.00	0.0	-4.34 a -2.75	-0.51 a +1.83
+c2-familia-legado	17.47	0.00	0.0	+6.51 a +8.10	+10.35 a +12.69
+c2-familia-legado-corta-deco	23.28	0.00	0.0	+12.62 a +14.21	+16.46 a +18.80
+c3-home-office-orig	4.88	0.00	0.0	-3.80 a -2.58	-0.85 a +0.95
+c3-home-office-legado	12.57	0.00	0.0	+3.90 a +5.12	+6.85 a +8.65
+c3-home-office-legado-corta-deco	12.57	0.00	0.0	+3.90 a +5.12	+6.85 a +8.65
+c4-eletronicos-orig	9.87	0.00	0.0	+0.64 a +1.98	+3.88 a +5.86
+c4-eletronicos-legado	13.72	0.00	0.0	+4.19 a +5.54	+7.44 a +9.42
+c4-eletronicos-legado-corta-deco	19.54	0.00	0.0	+10.30 a +11.65	+13.55 a +15.53
+c1-solteiro-legado-regra	5.62	0.00	0.0	-0.03 a +0.71	+1.74 a +2.82
+c2-familia-legado-regra	17.37	0.00	0.0	+6.40 a +8.00	+10.24 a +12.58
+c3-home-office-legado-regra	12.54	0.00	0.0	+3.86 a +5.09	+6.82 a +8.62
+c4-eletronicos-legado-regra	13.69	0.00	0.0	+4.16 a +5.50	+7.41 a +9.39

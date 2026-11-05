@@ -1,0 +1,54 @@
+# Cenario 1: 1 morador, trabalha fora das 08:00 as 18:00. Casa vazia quase o dia todo.
+# Varredura de t_limite: 5 min nos aparelhos nao essenciais (o padrao e 10 min).
+nome = "c1-t5"
+descricao = "1 morador que trabalha fora; muito standby ocioso"
+duracao = "30d"
+passo_s = 10
+[base]
+arquivo = "c1-solteiro.csv"
+passo_s = 10
+[casa]
+p_max_w = 5080
+[[grupo]]
+nome = "geladeira"
+perfil = "constante"
+w = 31.5
+critica = true
+[[grupo]]
+nome = "roteador"
+perfil = "constante"
+w = 10
+critica = true
+[[grupo]]
+nome = "tv"
+perfil = "janelas"
+uso_w = 46
+standby_w = 0.3
+janelas = ["18:00-23:00"]
+peso = 10
+limite_ociosidade_s = 300
+[[grupo]]
+nome = "decodificador"
+perfil = "janelas"
+uso_w = 11
+standby_w = 4.8
+limiar_uso_w = 8
+janelas = ["18:00-23:00"]
+peso = 10
+limite_ociosidade_s = 300
+[[grupo]]
+nome = "microondas"
+perfil = "janelas"
+uso_w = 1400
+standby_w = 0.8
+janelas = ["07:00-07:05", "19:00-19:05"]
+peso = 10
+limite_ociosidade_s = 300
+[[grupo]]
+nome = "carregador-celular"
+perfil = "janelas"
+uso_w = 18
+standby_w = 0.1
+janelas = ["23:00-00:00"]
+peso = 10
+limite_ociosidade_s = 300

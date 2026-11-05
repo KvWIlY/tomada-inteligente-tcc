@@ -1,0 +1,24 @@
+c6-sem-perda >1.0 In: 32 passos, maior 10 s
+c6-sem-perda >1.13 In: 32 passos, maior 10 s
+c6-sem-perda >1.45 In: 0 passos, maior 0 s
+c6-sem-perda pico 1.24 In
+c6-surda-airfryer >1.0 In: 3631 passos, maior 1200 s
+c6-surda-airfryer >1.13 In: 2731 passos, maior 900 s
+c6-surda-airfryer >1.45 In: 0 passos, maior 0 s
+c6-surda-airfryer pico 1.24 In
+c6-surda-microondas >1.0 In: 572 passos, maior 180 s
+c6-surda-microondas >1.13 In: 572 passos, maior 180 s
+c6-surda-microondas >1.45 In: 0 passos, maior 0 s
+c6-surda-microondas pico 1.24 In
+c6-surda-ferro >1.0 In: 32 passos, maior 10 s
+c6-surda-ferro >1.13 In: 32 passos, maior 10 s
+c6-surda-ferro >1.45 In: 0 passos, maior 0 s
+c6-surda-ferro pico 1.24 In
+c6-surda-airfryer-microondas >1.0 In: 3631 passos, maior 1200 s
+c6-surda-airfryer-microondas >1.13 In: 2731 passos, maior 900 s
+c6-surda-airfryer-microondas >1.45 In: 540 passos, maior 180 s
+c6-surda-airfryer-microondas pico 1.79 In
+c6-surdas-todas >1.0 In: 3631 passos, maior 1200 s
+c6-surdas-todas >1.13 In: 2731 passos, maior 900 s
+c6-surdas-todas >1.45 In: 540 passos, maior 180 s
+c6-surdas-todas pico 1.79 In

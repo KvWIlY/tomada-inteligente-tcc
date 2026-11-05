@@ -1,0 +1,179 @@
+alinhamento (PC - uptime, s): {'ferro': 1.45, 'air-fryer': 1.48, 'microondas': 1.54}
+ferro: 175 ciclos, decidir mediana 190 ms, max 1237 ms, enviados 166, botoes 0
+air-fryer: 176 ciclos, decidir mediana 190 ms, max 1242 ms, enviados 176, botoes 1
+microondas: 171 ciclos, decidir mediana 190 ms, max 1240 ms, enviados None, botoes None
+acima do teto: 55 s em 5 rajadas (maior 15 s, pior +1360 W)
+uso negado (s): {'ferro': 0, 'air-fryer': 136, 'microondas': 0}
+enlaces (recebidos / perdidos):
+  ferro <- a0:a3:b3:ab:24:ac: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 177 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 177 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 178 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 178 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 179 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 179 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 180 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 180 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 181 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 181 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 182 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 182 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 183 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 183 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 184 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 184 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 185 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 185 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 186 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 186 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 187 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 187 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 188 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 188 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 189 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 189 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 190 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 190 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 191 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 191 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 192 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 192 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 193 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  ferro <- a0:a3:b3:ab:24:ac: 193 recebidos, 0 perdidos (0.0%)
+  ferro <- a8:42:e3:a7:db:c8: 176 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 176 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 177 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 177 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 178 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 178 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 179 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 179 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 180 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 180 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 181 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 181 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 182 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 182 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 183 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 183 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 184 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 184 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 185 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 185 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 186 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 186 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 187 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 187 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 188 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 188 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 189 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 189 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 190 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 190 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 191 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 191 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 192 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 192 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 193 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+  air-fryer <- a0:a3:b3:ab:24:ac: 193 recebidos, 0 perdidos (0.0%)
+  air-fryer <- e8:6b:ea:d0:ad:c0: 166 recebidos, 0 perdidos (0.0%)
+falha do ferro (1200-1290 s), visto pelas outras:
+  air-fryer t=1182 vivas=2 carga_fixa=0 estado=ON
+  air-fryer t=1192 vivas=2 carga_fixa=0 estado=ON
+  air-fryer t=1202 vivas=2 carga_fixa=0 estado=ON
+  air-fryer t=1212 vivas=2 carga_fixa=0 estado=OFF
+  air-fryer t=1223 vivas=2 carga_fixa=0 estado=OFF
+  air-fryer t=1235 vivas=1 carga_fixa=1000 estado=ON
+  air-fryer t=1245 vivas=1 carga_fixa=1000 estado=ON
+  air-fryer t=1255 vivas=1 carga_fixa=1000 estado=ON
+  air-fryer t=1265 vivas=1 carga_fixa=1000 estado=ON
+  air-fryer t=1275 vivas=1 carga_fixa=1000 estado=ON
+  air-fryer t=1285 vivas=1 carga_fixa=1000 estado=ON
+  air-fryer t=1296 vivas=1 carga_fixa=1000 estado=ON
+  air-fryer t=1306 vivas=2 carga_fixa=0 estado=ON
+  air-fryer t=1316 vivas=2 carga_fixa=0 estado=ON
+  air-fryer t=1326 vivas=2 carga_fixa=0 estado=STD
+  microondas t=1187 vivas=2 carga_fixa=0 estado=STD
+  microondas t=1197 vivas=2 carga_fixa=0 estado=STD
+  microondas t=1207 vivas=2 carga_fixa=0 estado=ON
+  microondas t=1218 vivas=2 carga_fixa=0 estado=ON
+  microondas t=1230 vivas=1 carga_fixa=1000 estado=STD
+  microondas t=1240 vivas=1 carga_fixa=1000 estado=STD
+  microondas t=1250 vivas=1 carga_fixa=1000 estado=STD
+  microondas t=1260 vivas=1 carga_fixa=1000 estado=STD
+  microondas t=1270 vivas=1 carga_fixa=1000 estado=STD
+  microondas t=1280 vivas=1 carga_fixa=1000 estado=STD
+  microondas t=1291 vivas=1 carga_fixa=1000 estado=STD
+  microondas t=1301 vivas=2 carga_fixa=0 estado=STD
+  microondas t=1311 vivas=2 carga_fixa=0 estado=STD
+  microondas t=1321 vivas=2 carga_fixa=0 estado=STD

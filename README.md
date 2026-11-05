@@ -189,6 +189,8 @@ de decisões e o *hash* dos fontes do firmware usados. O caso (`.toml`) também 
 modelo pela regra fixa, pela regra de prioridade ou por uma execução centralizada, simular perda
 de pacotes ESP-NOW e um morador que demora a religar os aparelhos.
 
+Os casos, scripts e resultados dos experimentos do artigo estão em [`avaliacao/`](avaliacao/README.md).
+
 ## Estado
 
 O que está pronto e verificado por compilação: firmware para Xtensa, backend contra o MySQL,

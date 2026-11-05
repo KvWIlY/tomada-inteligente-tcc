@@ -1,0 +1,18 @@
+aviso: grupo "geladeira": consumo fora de uso (55.6 W) acima do limiar_uso_w (15 W). O aparelho parece "em uso" o tempo todo, o fantasma nunca é detectado e a rodada tende a sair verde com economia zero
+caso c6-regra: 5 tomadas, 259.200 passos de 10 s (30 d), 1.296.000 solves
+Com realimentação: a tomada decidida OFF lê 0 W no passo seguinte, como a placa com o relé aberto. A base é o que o aparelho puxaria se estivesse energizado.
+decisão: regra (regra de comparação, não o MILP)
+
+tomada                cortes passos_off religamentos      off_h      std_h       on_h
+geladeira                  0          0            0       0,00       0,00     720,00
+ferro                     61    244.800           60     680,00      10,00      30,00
+cafeteira                 61    248.340           60     689,83      12,67      17,50
+air-fryer                 61    246.570           60     684,92      10,08      25,00
+microondas                91    242.940           90     674,83      40,67       4,50
+
+casa: base 125603,1 Wh, com o sistema 124375,9 Wh, economia 1227,2 Wh
+cortes 274, passos acima do teto 4.678 (pior excesso 2015,6 W), penalidades: nenhuma
+custo: 15 binárias por solve, decidir mediana 0 us / p90 0 us / max 869 us, 1.296.000 solves, parede 1,7 s (tempo de PC, não do Xtensa)
+desfecho: completou
+digest: sha256:1702b065f4c11471d9321533310772bc69c7fffff0a47fc657f6e528dd639689
+pasta: rodadas\c6-regra\20261029-223420

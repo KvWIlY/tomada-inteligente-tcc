@@ -1,0 +1,27 @@
+# Cargas FORA do sistema (sem tomada inteligente): o MILP nunca as ve. So para gerar-base.
+nome = "c3-home-office-fora"
+duracao = "30d"
+passo_s = 10
+[base]
+arquivo = "c3-home-office-fora.csv"
+passo_s = 10
+[casa]
+p_max_w = 100000
+[[grupo]]
+nome = "ar-escritorio"
+perfil = "janelas"
+uso_w = 808
+standby_w = 0
+janelas = ["08:00-18:00"]
+[[grupo]]
+nome = "ar-quarto"
+perfil = "janelas"
+uso_w = 1146
+standby_w = 0
+janelas = ["21:00-06:00"]
+[[grupo]]
+nome = "iluminacao"
+perfil = "janelas"
+uso_w = 40
+standby_w = 0
+janelas = ["18:00-23:00"]

@@ -1,0 +1,404 @@
+57|ets Jul 29 2019 12:21:46
+57|
+57|rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+57|configsip: 0, SPIWP:0xee
+57|clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+57|mode:DIO, clock div:2
+57|load:0x3fff0030,len:6384
+57|load:0x40078000,len:15916
+57|load:0x40080400,len:3920
+57|entry 0x40080644
+57|I (27) boot: ESP-IDF v5.5.1-838-gd66ebb86d2e 2nd stage bootloader
+57|I (27) boot: compile time Nov 26 2025 10:51:37
+57|I (28) boot: Multicore bootloader
+57|I (30) boot: chip revision: v3.1
+57|I (33) boot.esp32: SPI Speed      : 40MHz
+57|I (37) boot.esp32: SPI Mode       : DIO
+57|I (40) boot.esp32: SPI Flash Size : 4MB
+57|I (44) boot: Enabling RNG early entropy source...
+57|I (48) boot: Partition Table:
+266|I (51) boot: ## Label            Usage          Type ST Offset   Length
+266|I (57) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+266|I (64) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+266|I (70) boot:  2 factory          factory app      00 00 00010000 00350000
+266|I (77) boot:  3 storage          Unknown data     01 83 00360000 000a0000
+266|I (83) boot: End of partition table
+266|I (87) esp_image: segment 0: paddr=00010020 vaddr=3f400020 size=413b0h (267184) map
+266|I (185) esp_image: segment 1: paddr=000513d8 vaddr=3ffb0000 size=04124h ( 16676) load
+266|I (192) esp_image: segment 2: paddr=00055504 vaddr=40080000 size=0ab14h ( 43796) load
+266|I (209) esp_image: segment 3: paddr=00060020 vaddr=400d0020 size=fca70h (1034864) map
+685|I (563) esp_image: segment 4: paddr=0015ca98 vaddr=4008ab14 size=0a564h ( 42340) load
+685|I (590) boot: Loaded app from partition at offset 0x10000
+685|I (590) boot: Disabling RNG early entropy source...
+685|[0;32mI (600) cpu_start: Multicore app[0m
+685|[0;32mI (609) cpu_start: Pro cpu start user code[0m
+685|[0;32mI (609) cpu_start: cpu freq: 160000000 Hz[0m
+685|[0;32mI (609) cpu_start: Application information:[0m
+685|[0;32mI (612) cpu_start: Project name:     libespidf[0m
+685|[0;32mI (617) cpu_start: App version:      76c8a05-dirty[0m
+685|[0;32mI (622) cpu_start: Compile time:     Aug  5 2026 00:57:47[0m
+685|[0;32mI (629) cpu_start: ELF file SHA256:  000000000...[0m
+685|[0;32mI (634) cpu_start: ESP-IDF:          v5.2.3[0m
+685|[0;32mI (639) cpu_start: Min chip rev:     v0.0[0m
+685|[0;32mI (644) cpu_start: Max chip rev:     v3.99 [0m
+685|[0;32mI (648) cpu_start: Chip rev:         v3.1[0m
+685|[0;32mI (653) heap_init: Initializing. RAM available for dynamic allocation:[0m
+685|[0;32mI (660) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+685|[0;32mI (666) heap_init: At 3FFB82E0 len 00027D20 (159 KiB): DRAM[0m
+685|[0;32mI (673) heap_init: At 3FFE0440 len 00003AE0 (14 KiB): D/IRAM[0m
+911|[0;32mI (679) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+911|[0;32mI (685) heap_init: At 40095078 len 0000AF88 (43 KiB): IRAM[0m
+911|[0;32mI (693) spi_flash: detected chip: generic[0m
+911|[0;32mI (696) spi_flash: flash io: dio[0m
+911|[0;33mW (700) i2c: This driver is an old driver, please migrate your application code to adapt `driver/i2c_master.h`[0m
+911|[0;32mI (712) main_task: Started on CPU0[0m
+911|[0;32mI (716) main_task: Calling app_main()[0m
+911|I (722) wifi:wifi driver task: 3ffc9380, prio:23, stack:6656, core=0
+911|I (727) wifi:wifi firmware version: 82f54d2
+911|I (729) wifi:wifi certification version: v7.0
+911|I (733) wifi:config NVS flash: disabled
+911|I (737) wifi:config nano formating: disabled
+911|I (741) wifi:Init data frame dynamic rx buffer num: 32
+911|I (746) wifi:Init static rx mgmt buffer num: 5
+911|I (750) wifi:Init management short buffer num: 32
+911|I (754) wifi:Init dynamic tx buffer num: 32
+911|I (759) wifi:Init static rx buffer size: 1600
+911|I (763) wifi:Init static rx buffer num: 10
+911|I (766) wifi:Init dynamic rx buffer num: 32
+911|[0;32mI (771) wifi_init: rx ba win: 6[0m
+911|[0;32mI (774) wifi_init: tcpip mbox: 32[0m
+911|[0;32mI (778) wifi_init: udp mbox: 6[0m
+911|[0;32mI (782) wifi_init: tcp mbox: 6[0m
+911|[0;32mI (785) wifi_init: tcp tx win: 5760[0m
+911|[0;32mI (790) wifi_init: tcp rx win: 5760[0m
+911|[0;32mI (794) wifi_init: tcp mss: 1440[0m
+911|[0;32mI (798) wifi_init: WiFi IRAM OP enabled[0m
+911|[0;32mI (802) wifi_init: WiFi RX IRAM OP enabled[0m
+911|W (812) wifi:Password length is zero, but authmode threshold is 3, making it impossible to connect to an AP with authmode OPEN
+911|[0;32mI (819) phy_init: phy_version 4840,a40f0ac,Aug 16 2024,16:48:06[0m
+911|[0;31mE (825) phy_init: esp_phy_load_cal_data_from_nvs: NVS has not been initialized. Call nvs_flash_init before starting WiFi/BT.[0m
+911|[0;33mW (837) phy_init: failed to load RF calibration data (0x1101), falling back to full calibration[0m
+1161|[0;33mW (923) phy_init: saving new calibration data because of checksum failure, mode(2)[0m
+1161|I (926) wifi:mode : sta (a8:42:e3:a7:db:c8)
+1161|I (927) wifi:enable tsf
+1161|I (932) wifi:Set ps type: 0, coexist: 0
+1161|
+1161|[0;32mI (934) esp_idf_svc::espnow: Initializing ESP NOW[0m
+1161|I (937) ESPNOW: espnow [version: 1.0] init
+1161|I,air-fryer,a8:42:e3:a7:db:c8,inicio
+3829|L,air-fryer,2,0,0,0,STD,0,0,0,0,65,1
+13956|L,air-fryer,12,1,0,0,STD,0,0,2,0,139,1
+24073|L,air-fryer,23,2,0,0,STD,0,0,2,0,180,1
+34245|L,air-fryer,33,3,0,0,STD,0,0,2,0,201,1
+44477|L,air-fryer,43,4,0,0,STD,0,0,2,0,201,1
+54666|L,air-fryer,53,5,0,0,STD,0,0,2,0,201,1
+64996|L,air-fryer,63,6,1500,1500,ON,1,0,2,0,237,1
+75174|L,air-fryer,74,7,1500,1500,ON,1,0,2,0,234,1
+85351|L,air-fryer,84,8,1500,1500,ON,1,0,2,0,234,1
+95737|L,air-fryer,94,9,1500,1500,ON,1,0,2,0,234,1
+105838|L,air-fryer,104,10,1500,1500,ON,1,0,2,0,235,1
+116080|L,air-fryer,115,11,1500,1500,ON,1,0,2,0,234,1
+127353|L,air-fryer,125,12,1500,1500,OFF,1,0,2,0,1240,1
+138573|L,air-fryer,136,13,1500,0,OFF,1,0,2,0,1240,1
+149931|L,air-fryer,147,14,1500,0,OFF,1,0,2,0,1240,1
+160101|L,air-fryer,159,15,1500,0,ON,1,0,2,0,220,1
+170343|L,air-fryer,169,16,1500,1500,ON,1,0,2,0,219,1
+180666|L,air-fryer,179,17,1500,1500,ON,1,0,2,0,219,1
+190822|L,air-fryer,189,18,1500,1500,ON,1,0,2,0,219,1
+200975|L,air-fryer,200,19,1500,1500,ON,1,0,2,0,219,1
+211331|L,air-fryer,210,20,1500,1500,ON,1,0,2,0,190,1
+221386|L,air-fryer,220,21,1500,1500,ON,1,0,2,0,190,1
+231665|L,air-fryer,230,22,1500,1500,ON,1,0,2,0,190,1
+241725|L,air-fryer,240,23,0,0,STD,0,0,2,0,141,1
+251916|L,air-fryer,251,24,0,0,STD,0,0,2,0,139,1
+262152|L,air-fryer,261,25,0,0,STD,0,0,2,0,139,1
+272372|L,air-fryer,271,26,0,0,STD,0,0,2,0,139,1
+282340|L,air-fryer,281,27,0,0,STD,0,0,2,0,139,1
+292481|L,air-fryer,291,28,0,0,STD,0,0,2,0,139,1
+302620|L,air-fryer,301,29,0,0,STD,0,0,2,0,139,1
+312761|L,air-fryer,311,30,0,0,STD,0,0,2,0,139,1
+323018|L,air-fryer,322,31,0,0,STD,0,0,2,0,139,1
+333193|L,air-fryer,332,32,0,0,STD,0,0,2,0,139,1
+343403|L,air-fryer,342,33,0,0,STD,0,0,2,0,139,1
+353340|L,air-fryer,352,34,0,0,STD,0,0,2,0,139,1
+363513|L,air-fryer,362,35,0,0,STD,0,0,2,0,139,1
+373662|L,air-fryer,372,36,0,0,STD,0,0,2,0,139,1
+383811|L,air-fryer,382,37,0,0,STD,0,0,2,0,139,1
+394044|L,air-fryer,393,38,0,0,STD,0,0,2,0,191,1
+404208|L,air-fryer,403,39,0,0,STD,0,0,2,0,190,1
+414562|L,air-fryer,413,40,0,0,STD,0,0,2,0,190,1
+424700|L,air-fryer,423,41,1500,1500,ON,1,0,2,0,221,1
+435018|L,air-fryer,433,42,1500,1500,ON,1,0,2,0,219,1
+445212|L,air-fryer,444,43,1500,1500,ON,1,0,2,0,219,1
+455367|L,air-fryer,454,44,1500,1500,ON,1,0,2,0,219,1
+465528|L,air-fryer,464,45,1500,1500,ON,1,0,2,0,219,1
+475829|L,air-fryer,474,46,1500,1500,ON,1,0,2,0,219,1
+486029|L,air-fryer,485,47,1500,1500,ON,1,0,2,0,219,1
+497245|L,air-fryer,495,48,1500,1500,OFF,1,0,2,0,1241,1
+508545|L,air-fryer,506,49,1500,0,OFF,1,0,2,0,1240,1
+518785|L,air-fryer,517,50,1500,0,ON,1,0,2,0,220,1
+529022|L,air-fryer,528,51,1500,1500,ON,1,0,2,0,219,1
+539225|L,air-fryer,538,52,1500,1500,ON,1,0,2,0,219,1
+549438|L,air-fryer,548,53,1500,1500,ON,1,0,2,0,219,1
+559758|L,air-fryer,558,54,1500,1500,ON,1,0,2,0,219,1
+569934|L,air-fryer,568,55,1500,1500,ON,1,0,2,0,191,1
+580121|L,air-fryer,579,56,1500,1500,ON,1,0,2,0,190,1
+590282|L,air-fryer,589,57,1500,1500,ON,1,0,2,0,190,1
+600432|L,air-fryer,599,58,1500,1500,ON,1,0,2,0,190,1
+610695|L,air-fryer,609,59,0,0,STD,0,0,2,0,141,1
+620821|L,air-fryer,619,60,0,0,STD,0,0,2,0,139,1
+630945|L,air-fryer,630,61,0,0,STD,0,0,2,0,139,1
+641025|L,air-fryer,640,62,0,0,STD,0,0,2,0,139,1
+651165|L,air-fryer,650,63,0,0,STD,0,0,2,0,139,1
+661463|L,air-fryer,660,64,0,0,STD,0,0,2,0,139,1
+671651|L,air-fryer,670,65,0,0,STD,0,0,2,0,139,1
+681611|L,air-fryer,680,66,0,0,STD,0,0,2,0,139,1
+691771|L,air-fryer,690,67,0,0,STD,0,0,2,0,139,1
+701945|L,air-fryer,701,68,0,0,STD,0,0,2,0,139,1
+712122|L,air-fryer,711,69,0,0,STD,0,0,2,0,139,1
+722332|L,air-fryer,721,70,0,0,STD,0,0,2,0,139,1
+732482|L,air-fryer,731,71,0,0,STD,0,0,2,0,139,1
+742584|L,air-fryer,741,72,0,0,STD,0,0,2,0,139,1
+752894|L,air-fryer,751,73,0,0,STD,0,0,2,0,190,1
+763063|L,air-fryer,762,74,0,0,STD,0,0,2,0,191,1
+773237|L,air-fryer,772,75,0,0,STD,0,0,2,0,190,1
+783327|L,air-fryer,782,76,1500,1500,ON,1,0,2,0,221,1
+793699|L,air-fryer,792,77,1500,1500,ON,1,0,2,0,219,1
+803855|L,air-fryer,802,78,1500,1500,ON,1,0,2,0,219,1
+814052|L,air-fryer,813,79,1500,1500,ON,1,0,2,0,219,1
+824311|L,air-fryer,823,80,1500,1500,ON,1,0,2,0,219,1
+834555|L,air-fryer,833,81,1500,1500,ON,1,0,2,0,219,1
+844747|L,air-fryer,843,82,1500,1500,ON,1,0,2,0,219,1
+856158|L,air-fryer,853,83,1500,1500,OFF,1,0,2,0,1242,1
+867279|L,air-fryer,865,84,1500,0,OFF,1,0,2,0,1240,1
+877607|L,air-fryer,876,85,1500,0,ON,1,0,2,0,220,1
+887813|L,air-fryer,886,86,1500,1500,ON,1,0,2,0,219,1
+898004|L,air-fryer,896,87,1500,1500,ON,1,0,2,0,219,1
+908119|L,air-fryer,907,88,1500,1500,ON,1,0,2,0,219,1
+918419|L,air-fryer,917,89,1500,1500,ON,1,0,2,0,219,1
+928629|L,air-fryer,927,90,1500,1500,ON,1,0,2,0,190,1
+938861|L,air-fryer,937,91,1500,1500,ON,1,0,2,0,190,1
+949036|L,air-fryer,948,92,1500,1500,ON,1,0,2,0,191,1
+959188|L,air-fryer,958,93,1500,1500,ON,1,0,2,0,190,1
+969324|L,air-fryer,968,94,0,0,STD,0,0,2,0,141,1
+979499|L,air-fryer,978,95,0,0,STD,0,0,2,0,139,1
+989648|L,air-fryer,988,96,0,0,STD,0,0,2,0,139,1
+999828|L,air-fryer,998,97,0,0,STD,0,0,2,0,139,1
+1009992|L,air-fryer,1009,98,0,0,STD,0,0,2,0,139,1
+1020168|L,air-fryer,1019,99,0,0,STD,0,0,2,0,139,1
+1030332|L,air-fryer,1029,100,0,0,STD,0,0,2,0,139,1
+1040509|L,air-fryer,1039,101,0,0,STD,0,0,2,0,139,1
+1050490|L,air-fryer,1049,102,0,0,STD,0,0,2,0,139,1
+1060624|L,air-fryer,1059,103,0,0,STD,0,0,2,0,139,1
+1070873|L,air-fryer,1069,104,0,0,STD,0,0,2,0,139,1
+1081025|L,air-fryer,1080,105,0,0,STD,0,0,2,0,139,1
+1091144|L,air-fryer,1090,106,0,0,STD,0,0,2,0,139,1
+1101331|L,air-fryer,1100,107,0,0,STD,0,0,2,0,139,1
+1111422|L,air-fryer,1110,108,0,0,STD,0,0,2,0,190,1
+1121728|L,air-fryer,1120,109,0,0,STD,0,0,2,0,190,1
+1131903|L,air-fryer,1130,110,0,0,STD,0,0,2,0,190,1
+1142118|L,air-fryer,1141,111,1500,1500,ON,1,0,2,0,221,1
+1152399|L,air-fryer,1151,112,1500,1500,ON,1,0,2,0,219,1
+1162509|L,air-fryer,1161,113,1500,1500,ON,1,0,2,0,219,1
+1172903|L,air-fryer,1171,114,1500,1500,ON,1,0,2,0,219,1
+1183065|L,air-fryer,1182,115,1500,1500,ON,1,0,2,0,219,1
+1193186|L,air-fryer,1192,116,1500,1500,ON,1,0,2,0,219,1
+1203409|L,air-fryer,1202,117,1500,1500,ON,1,0,2,0,219,1
+1214857|L,air-fryer,1212,118,1500,1500,OFF,1,0,2,0,1241,1
+1225915|L,air-fryer,1223,119,1500,0,OFF,1,0,2,0,1241,1
+1236118|L,air-fryer,1235,120,1500,0,ON,1,0,1,1000,148,1
+1246372|L,air-fryer,1245,121,1500,1500,ON,1,0,1,1000,146,1
+1256461|L,air-fryer,1255,122,1500,1500,ON,1,0,1,1000,146,1
+1266690|L,air-fryer,1265,123,1500,1500,ON,1,0,1,1000,146,1
+1276855|L,air-fryer,1275,124,1500,1500,ON,1,0,1,1000,146,1
+1286843|L,air-fryer,1285,125,1500,1500,ON,1,0,1,1000,147,1
+1297074|L,air-fryer,1296,126,1500,1500,ON,1,0,1,1000,146,1
+1307197|L,air-fryer,1306,127,1500,1500,ON,1,0,2,0,190,1
+1317476|L,air-fryer,1316,128,1500,1500,ON,1,0,2,0,190,1
+1327684|L,air-fryer,1326,129,0,0,STD,0,0,2,0,141,1
+1337877|L,air-fryer,1336,130,0,0,STD,0,0,2,0,139,1
+1347960|L,air-fryer,1346,131,0,0,STD,0,0,2,0,139,1
+1358198|L,air-fryer,1357,132,0,0,STD,0,0,2,0,139,1
+1368180|L,air-fryer,1367,133,0,0,STD,0,0,2,0,139,1
+1378356|L,air-fryer,1377,134,0,0,STD,0,0,2,0,139,1
+1388610|L,air-fryer,1387,135,0,0,STD,0,0,2,0,139,1
+1398630|L,air-fryer,1397,136,0,0,STD,0,0,2,0,139,1
+1408874|L,air-fryer,1407,137,0,0,STD,0,0,2,0,139,1
+1419064|L,air-fryer,1418,138,0,0,STD,0,0,2,0,139,1
+1429074|L,air-fryer,1428,139,0,0,STD,0,0,2,0,139,1
+1439247|L,air-fryer,1438,140,0,0,STD,0,0,2,0,139,1
+1449443|L,air-fryer,1448,141,0,0,STD,0,0,2,0,139,1
+1459640|L,air-fryer,1458,142,0,0,STD,0,0,2,0,139,1
+1469855|L,air-fryer,1468,143,0,0,STD,0,0,2,0,190,1
+1479894|L,air-fryer,1478,144,0,0,STD,0,0,2,0,191,1
+1490115|L,air-fryer,1489,145,0,0,STD,0,0,2,0,190,1
+1500389|L,air-fryer,1499,146,0,0,STD,0,0,2,0,190,1
+1510667|L,air-fryer,1509,147,1500,1500,ON,1,0,2,0,221,1
+1520896|L,air-fryer,1519,148,1500,1500,ON,1,0,2,0,219,1
+1531072|L,air-fryer,1530,149,1500,1500,ON,1,0,2,0,219,1
+1541272|L,air-fryer,1540,150,1500,1500,ON,1,0,2,0,219,1
+1551555|L,air-fryer,1550,151,1500,1500,ON,1,0,2,0,219,1
+1561805|L,air-fryer,1560,152,1500,1500,ON,1,0,2,0,219,1
+1572904|L,air-fryer,1570,153,1500,1500,OFF,1,0,2,0,1242,1
+1584236|L,air-fryer,1582,154,1500,0,OFF,1,0,2,0,1240,1
+1595573|L,air-fryer,1593,155,1500,0,OFF,1,0,2,0,1240,1
+1605825|L,air-fryer,1604,156,1500,0,ON,1,0,2,0,220,1
+1615897|L,air-fryer,1614,157,1500,1500,ON,1,0,2,0,219,1
+1626140|L,air-fryer,1625,158,1500,1500,ON,1,0,2,0,219,1
+1636308|L,air-fryer,1635,159,1500,1500,ON,1,0,2,0,219,1
+1646544|L,air-fryer,1645,160,1500,1500,ON,1,0,2,0,219,1
+1656774|L,air-fryer,1655,161,1500,1500,ON,1,0,2,0,190,1
+1666989|L,air-fryer,1666,162,1500,1500,ON,1,0,2,0,191,1
+1677253|L,air-fryer,1676,163,1500,1500,ON,1,0,2,0,190,1
+1687435|L,air-fryer,1686,164,0,0,STD,0,0,2,0,141,1
+1697467|L,air-fryer,1696,165,0,0,STD,0,0,2,0,139,1
+1707666|L,air-fryer,1706,166,0,0,STD,0,0,2,0,139,1
+1717901|L,air-fryer,1716,167,0,0,STD,0,0,2,0,139,1
+1727934|L,air-fryer,1727,168,0,0,STD,0,0,2,0,139,1
+1738160|L,air-fryer,1737,169,0,0,STD,0,0,2,0,139,1
+1748352|L,air-fryer,1747,170,0,0,STD,0,0,2,0,139,1
+1758354|L,air-fryer,1757,171,0,0,STD,0,0,2,0,139,1
+1768576|L,air-fryer,1767,172,0,0,STD,0,0,2,0,139,1
+1778816|L,air-fryer,1777,173,0,0,STD,0,0,2,0,180,1
+1789007|L,air-fryer,1787,174,0,0,STD,0,0,2,0,180,1
+1799076|L,air-fryer,1798,175,0,0,STD,0,0,2,0,180,1
+1809066|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1809066|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,176,perdidos,0
+1809066|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1809066|F,air-fryer
+1814084|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1814084|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,177,perdidos,0
+1814084|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1814084|F,air-fryer
+1819089|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1819089|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,177,perdidos,0
+1819089|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1819089|F,air-fryer
+1824090|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1824090|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,178,perdidos,0
+1824090|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1824090|F,air-fryer
+1829288|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1829288|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,178,perdidos,0
+1829288|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1829288|F,air-fryer
+1834105|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1834105|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,179,perdidos,0
+1834105|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1834105|F,air-fryer
+1839147|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1839147|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,179,perdidos,0
+1839147|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1839147|F,air-fryer
+1844192|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1844192|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,180,perdidos,0
+1844192|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1844192|F,air-fryer
+1849264|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1849264|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,180,perdidos,0
+1849264|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1849264|F,air-fryer
+1854356|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1854356|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,181,perdidos,0
+1854356|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1854356|F,air-fryer
+1859207|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1859207|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,181,perdidos,0
+1859207|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1859207|F,air-fryer
+1864203|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1864203|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,182,perdidos,0
+1864203|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1864203|F,air-fryer
+1869300|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1869300|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,182,perdidos,0
+1869300|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1869300|F,air-fryer
+1874324|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1874324|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,183,perdidos,0
+1874324|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1874324|F,air-fryer
+1879349|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1879349|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,183,perdidos,0
+1879349|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1879349|F,air-fryer
+1884391|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1884391|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,184,perdidos,0
+1884391|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1884391|F,air-fryer
+1889415|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1889415|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,184,perdidos,0
+1889415|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1889415|F,air-fryer
+1894271|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1894271|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,185,perdidos,0
+1894271|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1894271|F,air-fryer
+1899297|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1899297|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,185,perdidos,0
+1899297|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1899297|F,air-fryer
+1904294|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1904294|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,186,perdidos,0
+1904294|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1904294|F,air-fryer
+1909329|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1909329|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,186,perdidos,0
+1909329|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1909329|F,air-fryer
+1914349|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1914349|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,187,perdidos,0
+1914349|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1914349|F,air-fryer
+1919397|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1919397|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,187,perdidos,0
+1919397|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1919397|F,air-fryer
+1924373|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1924373|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,188,perdidos,0
+1924373|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1924373|F,air-fryer
+1929423|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1929423|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,188,perdidos,0
+1929423|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1929423|F,air-fryer
+1934496|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1934496|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,189,perdidos,0
+1934496|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1934496|F,air-fryer
+1939350|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1939350|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,189,perdidos,0
+1939350|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1939350|F,air-fryer
+1944403|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1944403|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,190,perdidos,0
+1944403|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1944403|F,air-fryer
+1949393|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1949393|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,190,perdidos,0
+1949393|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1949393|F,air-fryer
+1954440|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1954440|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,191,perdidos,0
+1954440|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1954440|F,air-fryer
+1959484|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1959484|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,191,perdidos,0
+1959484|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1959484|F,air-fryer
+1964482|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1964482|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,192,perdidos,0
+1964482|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1964482|F,air-fryer
+1969550|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1969550|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,192,perdidos,0
+1969550|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1969550|F,air-fryer
+1974580|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1974580|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,193,perdidos,0
+1974580|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1974580|F,air-fryer
+1979583|S,air-fryer,a8:42:e3:a7:db:c8,enviados,176,botoes,1
+1979583|R,air-fryer,a0:a3:b3:ab:24:ac,recebidos,193,perdidos,0
+1979583|R,air-fryer,e8:6b:ea:d0:ad:c0,recebidos,166,perdidos,0
+1979583|F,air-fryer
